@@ -1,0 +1,246 @@
+<?php
+namespace App\Http\Controllers\web\auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\SysFailedLogin;
+use App\Models\SysLogin;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
+
+class AuthController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        // sudah login atau belum
+        if (Auth::check()) {
+            return \redirect()->route('auth.home');
+        } else {
+            return \view('admin.auth.login');
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function storeX(Request $request)
+    {
+        // validate
+        $request->validate([
+            "email"    => "required|email|max:100",
+            "password" => "required|string|max:100",
+            // 'h-captcha-response' => 'required|captcha:hcaptcha',
+            'captcha'  => 'required|captcha',
+        ], [
+            'email.required'    => 'Email wajib diisi.',
+            'email.email'       => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+            // 'h-captcha-response.required' => 'Silakan centang hCaptcha untuk verifikasi.',
+            // 'h-captcha-response.captcha' => 'Verifikasi hCaptcha gagal, silakan coba lagi.',
+            'captcha.required'  => 'Captcha Harus Diisi',
+            'captcha.captcha'   => 'Captcha Tidak Valid',
+        ]);
+
+        //Submit Login
+        $username    = $request->input('email');
+        $remember_me = $request->has('remember_me') ? true : false;
+        // $remember_me = true;
+        if (auth()->attempt(['username' => $username, 'password' => $request->input('password')], $remember_me)) {
+            $user = auth()->user();
+            if ($user->status == "1") {
+                if ($user->trashed()) {
+                    //User Telah Dihapus
+                    //Failed Login
+                    $FailedLogin = [
+                        'username' => $username,
+                        'ip'       => $request->ip(),
+                        "agent"    => $request->header('user-agent'),
+                        "status"   => "Gagal Login, Akun User Sudah Dihapus!",
+                        "device"   => "web",
+                    ];
+                    SysFailedLogin::create($FailedLogin);
+                    Auth::logout();
+                    alert()->error('Gagal Login!', 'Email/Password Yang Anda Masukkan Salah!');
+                    return \back()->withInput($request->only('email'));
+                } else {
+                    //Success Login
+                    $SuccessLogin = [
+                        'uuid_profile' => $user->uuid_user,
+                        'ip'           => $request->ip(),
+                        "agent"        => $request->header('user-agent'),
+                        "status"       => "Akun " . $username . " Login ke Aplikasi melalui Website",
+                        "device"       => "web",
+                    ];
+                    SysLogin::create($SuccessLogin);
+                    //User Aktif
+                    return \redirect()->route('auth.home');
+                }
+            } else {
+                //User Tidak Aktif
+                //Failed Login
+                $FailedLogin = [
+                    'username' => $username,
+                    'ip'       => $request->ip(),
+                    "agent"    => $request->header('user-agent'),
+                    "status"   => "Gagal Login, Akun User Sudah Di Non-Aktifkan!",
+                    "device"   => "web",
+                ];
+                SysFailedLogin::create($FailedLogin);
+                Auth::logout();
+                alert()->error('Gagal Login!', 'Akun Anda Sudah Di Non-Aktifkan!');
+                return \back()->withInput($request->only('email'));
+            }
+        } else {
+            //Failed Login
+            $FailedLogin = [
+                'username' => $username,
+                'ip'       => $request->ip(),
+                "agent"    => $request->header('user-agent'),
+                "status"   => "Gagal Login, Email/Password Salah!",
+                "device"   => "web",
+            ];
+            SysFailedLogin::create($FailedLogin);
+            alert()->error('Gagal Login!', 'Email/Password Yang Anda Masukkan Salah!');
+            return \back()->withInput($request->only('email'));
+        }
+    }
+
+    public function store(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            "email"    => "required|email|max:100",
+            "password" => "required|string|max:100",
+            'captcha'  => 'required|captcha',
+        ], [
+            'email.required'    => 'Email wajib diisi.',
+            'email.email'       => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+            'captcha.required'  => 'Captcha Harus Diisi',
+            'captcha.captcha'   => 'Captcha Tidak Valid',
+        ]);
+
+        // Gunakan hanya lowercase email untuk pencocokan
+        $email    = strtolower($request->input('email'));
+        $password = $request->input('password');
+        $remember = $request->has('remember_me');
+
+        // Cari user berdasarkan email (pastikan kolom username = email)
+        $user = \App\Models\User::where('username', $email)->first();
+
+        if ($user && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+            if ($user->status != "1") {
+                Auth::logout();
+
+                SysFailedLogin::create([
+                    'username' => $email,
+                    'ip'       => $request->ip(),
+                    'agent'    => $request->userAgent(),
+                    'status'   => 'Gagal Login, Akun User Sudah Di Non-Aktifkan!',
+                    'device'   => 'web',
+                ]);
+
+                alert()->error('Gagal Login!', 'Akun Anda Sudah Di Non-Aktifkan!');
+                return back()->withInput($request->only('email'));
+            }
+
+            if ($user->trashed()) {
+                Auth::logout();
+
+                SysFailedLogin::create([
+                    'username' => $email,
+                    'ip'       => $request->ip(),
+                    'agent'    => $request->userAgent(),
+                    'status'   => 'Gagal Login, Akun User Sudah Dihapus!',
+                    'device'   => 'web',
+                ]);
+
+                alert()->error('Gagal Login!', 'Email/Password Yang Anda Masukkan Salah!');
+                return back()->withInput($request->only('email'));
+            }
+
+            // Login berhasil
+            Auth::login($user, $remember);
+
+            SysLogin::create([
+                'uuid_profile' => $user->uuid_user,
+                'ip'           => $request->ip(),
+                'agent'        => $request->userAgent(),
+                'status'       => 'Akun ' . $email . ' Login ke Aplikasi melalui Website',
+                'device'       => 'web',
+            ]);
+
+            return redirect()->route('auth.home');
+        }
+
+        // Login gagal
+        SysFailedLogin::create([
+            'username' => $email,
+            'ip'       => $request->ip(),
+            'agent'    => $request->userAgent(),
+            'status'   => 'Gagal Login, Email/Password Salah!',
+            'device'   => 'web',
+        ]);
+
+        alert()->error('Gagal Login!', 'Email/Password Yang Anda Masukkan Salah!');
+        return back()->withInput($request->only('email'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT
+    |--------------------------------------------------------------------------
+     */
+    // logout
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        //Success Logout
+        $SuccessLogout = [
+            'uuid_profile' => $user->uuid_user,
+            'ip'           => $request->ip(),
+            "agent"        => $request->header('user-agent'),
+            "status"       => "Akun " . $user->username . " Logout dari Aplikasi melalui Website",
+            "device"       => "web",
+        ];
+        SysLogin::create($SuccessLogout);
+        Auth::logout();
+        alert()->success('Success!', 'Anda Berhasil Logout!');
+        return \redirect()->route('auth.index');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GOOGLE AUTH
+    |--------------------------------------------------------------------------
+     */
+    // redirectToGoogle
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $user     = Socialite::driver('google')->user();
+            $finduser = User::where('username', $user->email)->first();
+            if ($finduser) {
+                Auth::login($finduser);
+                alert()->success('Success!', 'Anda Berhasil Login!');
+                return \redirect()->route('auth.home');
+            } else {
+                alert()->error('Gagal Login!', 'Email Tidak Ditemukan!');
+                return \redirect()->route('auth.index');
+            }
+        } catch (Exception $e) {
+            // dd($e->getMessage());
+            alert()->error('Gagal Login!', 'Error: ' . $e->getMessage());
+            return \redirect()->route('auth.index');
+        }
+    }
+}

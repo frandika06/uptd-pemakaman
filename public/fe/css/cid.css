@@ -1,0 +1,39 @@
+/* CUSTOM BY CODINGERS.ID */
+.others-selider-section .slider-section-boxarea.owl-carousel .owl-stage-outer {
+    overflow: hidden !important;
+    max-width: 100%;
+}
+
+/* RESPONSIVE */
+/* X-Large devices (large desktops, 1200px and up) */
+@media screen and (max-width: 1200px) {
+    .others-selider-section {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width:992px) {
+    .hero4-section-area {
+        margin-top: 100px;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .hero4-section-area .hero-header h1 {
+        font-size: 30px !important;
+    }
+
+    .hero4-section-area .hero-header h3 {
+        font-size: 16px !important;
+    }
+
+    .hero4-section-area .hero-header h4 {
+        font-size: 14px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .hero4-section-area .hero-header h1 {
+        font-size: 22px !important;
+    }
+}

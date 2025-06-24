@@ -1,0 +1,19 @@
+<script src="{{ asset('fe') }}/js/plugins/bootstrap.min.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/fontawesome.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/aos.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/counter.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/chart.js"></script>
+{{-- <script src="{{ asset('fe') }}/js/plugins/chart-init.js"></script> --}}
+<script src="{{ asset('fe') }}/js/plugins/gsap.min.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/ScrollTrigger.min.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/Splitetext.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/sidebar.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/swiper-slider.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/magnific-popup.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/mobilemenu.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/owlcarousel.min.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/nice-select.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/waypoints.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/slick-slider.js"></script>
+<script src="{{ asset('fe') }}/js/plugins/circle-progress.js"></script>
+<script src="{{ asset('fe/js/main.js?v=') . date('YmdHis') }}"></script>

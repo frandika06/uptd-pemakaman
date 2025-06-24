@@ -33,14 +33,11 @@ class AuthController extends Controller
         $request->validate([
             "email"    => "required|email|max:100",
             "password" => "required|string|max:100",
-            // 'h-captcha-response' => 'required|captcha:hcaptcha',
             'captcha'  => 'required|captcha',
         ], [
             'email.required'    => 'Email wajib diisi.',
             'email.email'       => 'Format email tidak valid.',
             'password.required' => 'Password wajib diisi.',
-            // 'h-captcha-response.required' => 'Silakan centang hCaptcha untuk verifikasi.',
-            // 'h-captcha-response.captcha' => 'Verifikasi hCaptcha gagal, silakan coba lagi.',
             'captcha.required'  => 'Captcha Harus Diisi',
             'captcha.captcha'   => 'Captcha Tidak Valid',
         ]);
@@ -210,7 +207,7 @@ class AuthController extends Controller
         SysLogin::create($SuccessLogout);
         Auth::logout();
         alert()->success('Success!', 'Anda Berhasil Logout!');
-        return \redirect()->route('auth.index');
+        return \redirect()->route('prt.home.index');
     }
 
     /*
@@ -235,12 +232,12 @@ class AuthController extends Controller
                 return \redirect()->route('auth.home');
             } else {
                 alert()->error('Gagal Login!', 'Email Tidak Ditemukan!');
-                return \redirect()->route('auth.index');
+                return \redirect()->route('prt.home.index');
             }
         } catch (Exception $e) {
             // dd($e->getMessage());
             alert()->error('Gagal Login!', 'Error: ' . $e->getMessage());
-            return \redirect()->route('auth.index');
+            return \redirect()->route('prt.home.index');
         }
     }
 }

@@ -43,38 +43,38 @@
             {{-- HEADER::BEGIN --}}
             @include('partials.admin.header')
             {{-- HEADER::END --}}
-            <!--begin::Wrapper-->
+            {{-- begin::Wrapper --}}
             <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
-                <!--begin::Wrapper container-->
+                {{-- begin::Wrapper container --}}
                 <div class="app-container container-fluid d-flex flex-row-fluid">
                     {{-- Sidebar::BEGIN --}}
                     @include('partials.admin.sidebar')
                     {{-- Sidebar::END --}}
-                    <!--begin::Main-->
+                    {{-- begin::Main --}}
                     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-                        <!--begin::Content wrapper-->
+                        {{-- begin::Content wrapper --}}
                         <div class="d-flex flex-column flex-column-fluid">
-                            <!--begin::Toolbar-->
+                            {{-- begin::Toolbar --}}
                             <div id="kt_app_toolbar" class="app-toolbar d-flex pb-3 pb-lg-5">
                                 @yield('toolbar')
                             </div>
-                            <!--end::Toolbar-->
-                            <!--begin::Content-->
+                            {{-- end::Toolbar --}}
+                            {{-- begin::Content --}}
                             <div id="kt_app_content" class="app-content flex-column-fluid">
                                 @yield('content')
                             </div>
-                            <!--end::Content-->
+                            {{-- end::Content --}}
                         </div>
-                        <!--end::Content wrapper-->
-                        <!--begin::Footer-->
+                        {{-- end::Content wrapper --}}
+                        {{-- begin::Footer --}}
                         @include('partials.admin.footer')
-                        <!--end::Footer-->
+                        {{-- end::Footer --}}
                     </div>
-                    <!--end::Main-->
+                    {{-- end::Main --}}
                 </div>
-                <!--end::Wrapper container-->
+                {{-- end::Wrapper container --}}
             </div>
-            <!--end::Wrapper-->
+            {{-- end::Wrapper --}}
         </div>
         {{-- end::Page --}}
     </div>
@@ -90,6 +90,9 @@
     @include('partials.admin.js')
     @stack('scripts')
     {{-- JS::END --}}
+    {{-- sweer alert --}}
+    @include('sweetalert::alert')
+    {{-- sweer alert --}}
 </body>
 
 </html>

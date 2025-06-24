@@ -26,14 +26,19 @@ class DummySetupSeeder extends Seeder
         // Data setup
         $setups = [
             [
-                'nama'     => 'model_hero_section',
-                'value'    => 'Versi 1',
-                'kategori' => 'Hero Section',
+                'nama'     => 'footer_phone',
+                'value'    => '(021) 1234 5678',
+                'kategori' => 'Footer Section',
             ],
             [
-                'nama'     => 'header_section',
-                'value'    => '',
-                'kategori' => 'Header Section',
+                'nama'     => 'footer_map',
+                'value'    => 'Citra Raya, Kabupaten Tangerang',
+                'kategori' => 'Footer Section',
+            ],
+            [
+                'nama'     => 'footer_email',
+                'value'    => 'uptdpemakaman@gmail.com',
+                'kategori' => 'Footer Section',
             ],
         ];
 

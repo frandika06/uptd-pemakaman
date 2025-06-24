@@ -26,7 +26,8 @@ class KomparasiKategoriGlobalSeeder extends Seeder
         // kategori dan subkategori
         $kategori = [
             'Banner'    => ['Content', 'Event', 'Widget', 'Zona Integritas', 'Layanan Internal', 'Layanan Eksternal', 'Footer'],
-            'Galeri'    => ['Berita', 'Artikel', 'Kegiatan', 'Seminar', 'Event'],
+            'Galeri'    => ['Berita', 'Kegiatan', 'Seminar', 'Event'],
+            'Post'      => ['Berita', 'Artikel'],
             'Video'     => ['Umum'],
             'Testimoni' => ['Umum'],
         ];

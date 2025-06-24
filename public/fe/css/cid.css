@@ -4,6 +4,10 @@
     max-width: 100%;
 }
 
+.swal2-popup .swal2-modal .swal2-icon-warning .swal2-show>.select-wrapper.input-field {
+    display: none !important;
+}
+
 /* RESPONSIVE */
 /* X-Large devices (large desktops, 1200px and up) */
 @media screen and (max-width: 1200px) {

@@ -30,7 +30,7 @@
 <link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/owlcarousel.min.css">
 <link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/sidebar.css">
 <link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/slick-slider.css">
-<link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/nice-select.css">
+{{-- <link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/nice-select.css"> --}}
 <link rel="stylesheet" href="{{ asset('fe') }}/css/plugins/swiper-slider.css">
 <link rel="stylesheet" href="{{ asset('fe/css/main.css?v=') . date('YmdHis') }}">
 <link rel="stylesheet" href="{{ asset('fe/css/cid.css?v=') . date('YmdHis') }}">

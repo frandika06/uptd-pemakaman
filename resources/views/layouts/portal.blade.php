@@ -30,6 +30,9 @@
     {{-- FOOTER::END --}}
 
     {{-- JS::BEGIN --}}
+    {{-- sweer alert --}}
+    @include('sweetalert::alert')
+    {{-- sweer alert --}}
     @include('partials.portal.js')
     @stack('scripts')
     {{-- JS::END --}}

@@ -1,0 +1,10 @@
+/* CUSTOM BY CODINGERS.ID FOR UPTD PEMAKAMAN */
+
+/* HEADER BG */
+[data-bs-theme=light] {
+    --bs-header-bg: linear-gradient(90deg, rgb(211, 184, 255) 0%, rgb(151, 186, 255) 100%);
+}
+
+[data-bs-theme=dark] {
+    --bs-header-bg: linear-gradient(90deg, rgb(22, 9, 42) 0%, rgb(9, 17, 35) 100%);
+}

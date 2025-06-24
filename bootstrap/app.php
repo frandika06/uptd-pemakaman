@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\CustomCors::class,
         ]);
-        $middleware->redirectGuestsTo(fn(Request $request) => route('auth.index'));
+        $middleware->redirectGuestsTo(fn(Request $request) => route('prt.home.index'));
         $middleware->alias([
             'pbh'           => PreventBackHistory::class,
             'LastSeen'      => LastSeen::class,

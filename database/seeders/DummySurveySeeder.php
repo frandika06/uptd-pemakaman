@@ -28,27 +28,11 @@ class DummySurveySeeder extends Seeder
         $surveys = [
             [
                 'judul' => 'Survey Kepuasan Pelanggan',
-                'url'   => 'https://forms.gle/MsktsAeDVKHsng6Y6',
+                'url'   => 'https://forms.gle/xxxxxx',
             ],
             [
                 'judul' => 'Survey Persepsi Korupsi',
-                'url'   => 'https://forms.gle/ZQFot3pV7s8oCfHY7',
-            ],
-            [
-                'judul' => 'Survey Pendengar Podcast Cerita SMA',
-                'url'   => 'https://bit.ly/DraftSurveyPodcastCSMA',
-            ],
-            [
-                'judul' => 'Survey BOS dan DAK',
-                'url'   => 'https://bit.ly/DraftSurveyBOSDAK',
-            ],
-            [
-                'judul' => 'Survey Jaringan Virtual Ekosistem Jarkom SMA',
-                'url'   => 'https://bit.ly/DraftSurveyVirtualEkosistem',
-            ],
-            [
-                'judul' => 'Hasil Survey',
-                'url'   => 'https://sma.dikdasmen.go.id/ziwbkhasilsurvey',
+                'url'   => 'https://forms.gle/xxxxxx',
             ],
         ];
 

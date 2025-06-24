@@ -35,16 +35,19 @@
     </script>
     {{-- end::Theme mode setup on page load --}}
 
-    <!--begin::Content-->
+    {{-- begin::Content --}}
     <div class="d-flex flex-column flex-root" id="kt_app_root">
         @yield('content')
     </div>
-    <!--end::Content-->
+    {{-- end::Content --}}
 
     {{-- JS::BEGIN --}}
     @include('partials.admin.js')
     @stack('scripts')
     {{-- JS::END --}}
+    {{-- sweer alert --}}
+    @include('sweetalert::alert')
+    {{-- sweer alert --}}
 </body>
 
 </html>

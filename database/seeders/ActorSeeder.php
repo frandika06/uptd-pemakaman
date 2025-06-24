@@ -124,7 +124,7 @@ class ActorSeeder extends Seeder
             'jenis_kelamin' => 'L',
             'kontak'        => $this->generatePhoneNumber(),
             'email'         => $email,
-            'kategori'      => 'Pegawai', // Konsisten menggunakan 'kategori' bukan 'jabatan'
+            'jabatan'       => 'Pegawai',
             'foto'          => asset('logo/logo-tangkab.png'),
             'uuid_created'  => $userUuid,
             'uuid_updated'  => $userUuid,

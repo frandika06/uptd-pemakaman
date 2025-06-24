@@ -3,22 +3,15 @@ namespace App\Helpers;
 
 use App\Models\PortalBanner;
 use App\Models\PortalDataDirektur;
-use App\Models\PortalEbook;
-use App\Models\PortalEmagazine;
-use App\Models\PortalEsertifikat;
 use App\Models\PortalFAQ;
 use App\Models\PortalGaleri;
-use App\Models\PortalGreeting;
-use App\Models\PortalInfografis;
 use App\Models\PortalKategori;
 use App\Models\PortalLinks;
 use App\Models\PortalPage;
 use App\Models\PortalPesan;
 use App\Models\PortalPost;
-use App\Models\PortalRunningText;
 use App\Models\PortalSetup;
 use App\Models\PortalTanos;
-use App\Models\PortalTestimoni;
 use App\Models\PortalUnduhan;
 use App\Models\PortalVideo;
 use App\Models\SysLogAktifitas;
@@ -36,21 +29,14 @@ class Helper
 {
     // Daftar model dan URL routing
     protected static $varModels = [
-        'Postingan'   => PortalPost::class,
-        'Halaman'     => PortalPage::class,
-        'Banner'      => PortalBanner::class,
-        'Infografis'  => PortalInfografis::class,
-        'Galeri'      => PortalGaleri::class,
-        'Video'       => PortalVideo::class,
-        'Ebook'       => PortalEbook::class,
-        'Emagazine'   => PortalEmagazine::class,
-        'Esertifikat' => PortalEsertifikat::class,
-        'Unduhan'     => PortalUnduhan::class,
-        'Testimoni'   => PortalTestimoni::class,
-        'RunningText' => PortalRunningText::class,
-        'Greeting'    => PortalGreeting::class,
-        'FAQ'         => PortalFAQ::class,
-        'Pesan'       => PortalPesan::class,
+        'Postingan' => PortalPost::class,
+        'Halaman'   => PortalPage::class,
+        'Banner'    => PortalBanner::class,
+        'Galeri'    => PortalGaleri::class,
+        'Video'     => PortalVideo::class,
+        'Unduhan'   => PortalUnduhan::class,
+        'FAQ'       => PortalFAQ::class,
+        'Pesan'     => PortalPesan::class,
     ];
 
     /*
@@ -124,7 +110,7 @@ class Helper
     {
         // $nama_lengkap = $user->nama_lengkap;
         // $avatar = "https://ui-avatars.com/api/?name=$nama_lengkap";
-        $avatar = \asset('assets-admin/img/profile/no_pp.png');
+        $avatar = \asset('custom/no-img-avatar.png');
         $foto   = $user->foto;
         if (empty($foto)) {
             $avatar = $avatar;
@@ -243,11 +229,11 @@ class Helper
             } elseif (Storage::disk('public')->exists($url)) {
                 $url = asset('storage/' . $url);
             } else {
-                $url = asset('assets-admin/dist/img/no-img-avatar.png');
+                $url = asset('custom/no-img-avatar.png');
             }
             return $url;
         } else {
-            return asset('assets-admin/dist/img/no-img-avatar.png');
+            return asset('custom/no-img-avatar.png');
         }
     }
     // get thumbnail
@@ -261,11 +247,11 @@ class Helper
             } elseif (Storage::disk('public')->exists($url)) {
                 $url = asset('storage/' . $url);
             } else {
-                $url = asset('assets-admin/dist/img/no-image-sma.png');
+                $url = asset('custom/no-img-post.png');
             }
             return $url;
         } else {
-            return asset('assets-admin/dist/img/no-image-sma.png');
+            return asset('custom/no-img-post.png');
         }
     }
 
@@ -350,8 +336,8 @@ class Helper
 
         // Default image logic
         return ($model === "Versi 2")
-        ? asset('assets-admin/dist/img/hero/hero-versi-2.png')
-        : asset('assets-admin/dist/img/hero/hero-default.jpg');
+        ? asset('custom/hero/hero-versi-2.png')
+        : asset('custom/hero/hero-default.jpg');
     }
 
     // get backgroundVideoHero
@@ -364,7 +350,7 @@ class Helper
         }
 
         // Default video
-        return asset('assets-admin/dist/img/hero/videoplayback.mp4');
+        return asset('custom/hero/videoplayback.mp4');
     }
 
     // get illustrationHero
@@ -378,8 +364,8 @@ class Helper
 
         // Default illustration logic
         return ($model === "Versi 4")
-        ? asset('assets-admin/dist/img/illustration/illustration-tilt.png')
-        : asset('assets-admin/dist/img/illustration/illustration-default-min.jpg');
+        ? asset('custom/illustration/illustration-tilt.png')
+        : asset('custom/illustration/illustration-default-min.jpg');
     }
 
     /*
@@ -1330,7 +1316,7 @@ class Helper
                     $img->setAttribute('draggable', 'false');
                     $img->setAttribute('loading', 'lazy');
                     $img->setAttribute('onload', "this.classList.add('loaded')");
-                    $img->setAttribute('onerror', "this.src='/images/banner/no-image-sma.png'; this.classList.add('loaded')");
+                    $img->setAttribute('onerror', "this.src='/images/banner/no-img-post.png'; this.classList.add('loaded')");
 
                     $imgCount++;
                 } catch (\Exception $e) {
@@ -1437,7 +1423,7 @@ class Helper
             $img->setAttribute('draggable', 'false');
             $img->setAttribute('loading', 'lazy');
             $img->setAttribute('onload', "this.classList.add('loaded')");
-            $img->setAttribute('onerror', "this.src='/images/banner/no-image-sma.png'; this.classList.add('loaded')");
+            $img->setAttribute('onerror', "this.src='/images/banner/no-img-post.png'; this.classList.add('loaded')");
         }
 
         return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');

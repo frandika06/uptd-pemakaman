@@ -10,7 +10,7 @@
     $locale = str_replace('_', '-', app()->getLocale());
 @endphp
 
-<title>{{ $title }}</title>
+<title>{{ $title }} | UPTD Pemakaman DPPP Kab. Tangerang</title>
 
 <meta name="description" content="{{ $description }}">
 <meta name="keywords" content="{{ $keywords }}">

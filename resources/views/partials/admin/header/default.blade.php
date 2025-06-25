@@ -37,7 +37,7 @@ $auth = \Auth::user();
                         <div class="menu-item">
                             {{-- begin:Menu link --}}
                             <a class="menu-link active" href="{{ route('auth.home') }}">
-                                <span class="menu-title">Dashboards</span>
+                                <span class="menu-title">Dashboard</span>
                             </a>
                             {{-- end:Menu link --}}
                         </div>

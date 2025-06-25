@@ -8,7 +8,6 @@ class HomePortalController extends Controller
     // index
     public function index()
     {
-        alert()->success('Success!', 'Anda Berhasil Login!');
         return \view('portal.home.index');
     }
 }

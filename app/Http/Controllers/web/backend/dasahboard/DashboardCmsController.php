@@ -132,7 +132,7 @@ class DashboardCmsController extends Controller
         }
 
         $view = $role == "Super Admin" || $role == "Admin" || $role == "Editor"
-        ? 'pages.admin.portal_apps.dashboard.admin'
+        ? 'admin.cms.home.index'
         : ($role == "Kontributor" || $role == "Penulis" ? 'pages.admin.portal_apps.dashboard.penulis' : 'pages.admin.portal_apps.dashboard.operator');
 
         return view($view, compact('data', 'statistik'));

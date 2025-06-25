@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\web\backend\master;
 
 use App\Helpers\Helper;
@@ -46,10 +45,10 @@ class KategoriController extends Controller
                     $uuid = Helper::encode($data->uuid);
                     if ($data->status == "1") {
                         $toogle = "checked";
-                        $text = "Aktif";
+                        $text   = "Aktif";
                     } else {
                         $toogle = "";
-                        $text = "Tidak Aktif";
+                        $text   = "Tidak Aktif";
                     }
                     // role
                     $role = $auth->role;
@@ -67,7 +66,7 @@ class KategoriController extends Controller
                 })
                 ->addColumn('kategori_sub', function ($data) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $add_sub = route('prt.apps.mst.tags.sub.index', $uuid_enc);
+                    $add_sub  = route('prt.apps.mst.tags.sub.index', $uuid_enc);
                     if (count($data->RelKategoriSub) > 0) {
                         $jumlah = Helper::toDot($data->GetJumlahKetegoriSub());
                     } else {
@@ -78,8 +77,8 @@ class KategoriController extends Controller
                 })
                 ->addColumn('aksi', function ($data) use ($auth) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit = route('prt.apps.mst.tags.edit', $uuid_enc);
-                    $add_sub = route('prt.apps.mst.tags.sub.index', $uuid_enc);
+                    $edit     = route('prt.apps.mst.tags.edit', $uuid_enc);
+                    $add_sub  = route('prt.apps.mst.tags.sub.index', $uuid_enc);
                     // role
                     $role = $auth->role;
                     if ($role == "Super Admin" || $role == "Admin") {
@@ -117,7 +116,7 @@ class KategoriController extends Controller
 
         // get all type
         $getType = PortalKategori::select('type')->groupBy('type')->orderBy("type", "ASC")->get();
-        return view('pages.admin.portal_apps.kategori.index', compact(
+        return view('admin.cms.master.kategori.index', compact(
             'type',
             'getType'
         ));
@@ -128,9 +127,9 @@ class KategoriController extends Controller
      */
     public function create()
     {
-        $title = "Tambah Data Master Kategori";
+        $title  = "Tambah Data Master Kategori";
         $submit = "Simpan";
-        return view('pages.admin.portal_apps.kategori.create_edit', compact(
+        return view('admin.cms.master.kategori.create_edit', compact(
             'title',
             'submit'
         ));
@@ -177,14 +176,14 @@ class KategoriController extends Controller
             // create log
             $aktifitas = [
                 "tabel" => ["portal_kategori"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$value_1],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Menambahkan Data Master Kategori: " . $nama . " - " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Menambahkan Data Master Kategori: " . $nama . " - " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
@@ -210,11 +209,11 @@ class KategoriController extends Controller
     public function edit($uuid_enc)
     {
         // uuid
-        $uuid = Helper::decode($uuid_enc);
-        $data = PortalKategori::findOrFail($uuid);
-        $title = "Edit Data Master Kategori";
+        $uuid   = Helper::decode($uuid_enc);
+        $data   = PortalKategori::findOrFail($uuid);
+        $title  = "Edit Data Master Kategori";
         $submit = "Simpan";
-        return view('pages.admin.portal_apps.kategori.create_edit', compact(
+        return view('admin.cms.master.kategori.create_edit', compact(
             'uuid_enc',
             'title',
             'submit',
@@ -265,14 +264,14 @@ class KategoriController extends Controller
             // create log
             $aktifitas = [
                 "tabel" => ["portal_kategori"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$value_1],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Mengubah Data Master Kategori: " . $nama . " - " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Mengubah Data Master Kategori: " . $nama . " - " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
@@ -304,28 +303,28 @@ class KategoriController extends Controller
             // create log
             $aktifitas = [
                 "tabel" => ["portal_kategori"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$data],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Menghapus Data Master Kategori: " . $data->nama . " - " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Menghapus Data Master Kategori: " . $data->nama . " - " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
-            $msg = "Data Berhasil Dihapus!";
+            $msg      = "Data Berhasil Dihapus!";
             $response = [
-                "status" => true,
+                "status"  => true,
                 "message" => $msg,
             ];
             return response()->json($response, 200);
         } else {
             // success
-            $msg = "Data Gagal Dihapus!";
+            $msg      = "Data Gagal Dihapus!";
             $response = [
-                "status" => false,
+                "status"  => false,
                 "message" => $msg,
             ];
             return response()->json($response, 422);
@@ -341,7 +340,7 @@ class KategoriController extends Controller
         $auth = Auth::user();
 
         // uuid
-        $uuid = Helper::decode($request->uuid);
+        $uuid   = Helper::decode($request->uuid);
         $status = $request->status;
         if ($status == "0") {
             $status_update = "1";
@@ -363,28 +362,28 @@ class KategoriController extends Controller
             // create log
             $aktifitas = [
                 "tabel" => ["portal_kategori"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$data],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Mengubah Status Master Kategori: " . $data->nama . " - " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Mengubah Status Master Kategori: " . $data->nama . " - " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
-            $msg = "Status Berhasil Diubah!";
+            $msg      = "Status Berhasil Diubah!";
             $response = [
-                "status" => true,
+                "status"  => true,
                 "message" => $msg,
             ];
             return response()->json($response, 200);
         } else {
             // success
-            $msg = "Status Gagal Diubah!";
+            $msg      = "Status Gagal Diubah!";
             $response = [
-                "status" => false,
+                "status"  => false,
                 "message" => $msg,
             ];
             return response()->json($response, 422);

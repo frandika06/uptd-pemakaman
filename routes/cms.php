@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\web\backend\banner\BannerController;
+use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
 use App\Http\Controllers\web\backend\data_direktur\DataDirekturController;
-use App\Http\Controllers\web\backend\duta_sma\DutaSMAController;
 use App\Http\Controllers\web\backend\ebook\EbookController;
 use App\Http\Controllers\web\backend\emagazine\EmagazineController;
 use App\Http\Controllers\web\backend\esertifikat\EsertifikatController;
@@ -10,22 +10,14 @@ use App\Http\Controllers\web\backend\faq\FAQController;
 use App\Http\Controllers\web\backend\galeri\GaleriController;
 use App\Http\Controllers\web\backend\greeting\GreetingController;
 use App\Http\Controllers\web\backend\infografis\InfografisController;
-use App\Http\Controllers\web\backend\kotak_pesan\KotakPesanController;
 use App\Http\Controllers\web\backend\links\LinksController;
 use App\Http\Controllers\web\backend\master\KategoriController;
 use App\Http\Controllers\web\backend\master\KategoriSubController;
-use App\Http\Controllers\web\backend\master\SetupController;
-use App\Http\Controllers\web\backend\master\SosmedController;
-use App\Http\Controllers\web\backend\master\UsersController;
 use App\Http\Controllers\web\backend\pages\HalamanController;
 use App\Http\Controllers\web\backend\posts\PostinganController;
-use App\Http\Controllers\web\backend\profile\ProfileController;
 use App\Http\Controllers\web\backend\running_text\RunningTextController;
-use App\Http\Controllers\web\backend\tanos\TanosController;
 use App\Http\Controllers\web\backend\unduhan\UnduhanController;
 use App\Http\Controllers\web\backend\video\VideoController;
-use App\Http\Controllers\web\configs\AjaxController;
-use App\Http\Controllers\web\configs\AjaxDatatableController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,44 +26,14 @@ use App\Http\Controllers\web\configs\AjaxDatatableController;
 */
 // cms
 Route::group(['prefix' => 'cms'], function () {
+    // dashboard
+    Route::get('/', [DashboardCmsController::class, 'index'])->name('prt.apps.index');
     /*
     |--------------------------------------------------------------------------
     | MENU MASTER DATA
     |--------------------------------------------------------------------------
     */
     Route::group(['prefix' => 'master'], function () {
-        // middleware: Admin
-        Route::group(['middleware' => ['Admin']], function () {
-            // portal users
-            Route::group(['prefix' => 'users/{tags}'], function () {
-                Route::get('/', [UsersController::class, 'index'])->name('prt.apps.mst.users.index');
-                Route::get('/create', [UsersController::class, 'create'])->name('prt.apps.mst.users.create');
-                Route::post('/create', [UsersController::class, 'store'])->name('prt.apps.mst.users.store');
-                Route::get('/edit/{uuid}', [UsersController::class, 'edit'])->name('prt.apps.mst.users.edit');
-                Route::put('/edit/{uuid}', [UsersController::class, 'update'])->name('prt.apps.mst.users.update');
-                Route::post('/status', [UsersController::class, 'status'])->name('prt.apps.mst.users.status');
-                Route::post('/delete', [UsersController::class, 'destroy'])->name('prt.apps.mst.users.destroy');
-            });
-            // portal sosmed
-            Route::group(['prefix' => 'sosmed'], function () {
-                Route::get('/', [SosmedController::class, 'index'])->name('prt.apps.mst.sosmed.index');
-                Route::put('/', [SosmedController::class, 'update'])->name('prt.apps.mst.sosmed.update');
-            });
-            // portal setup
-            Route::group(['prefix' => 'pengaturan'], function () {
-                // model hero
-                Route::group(['prefix' => 'model-hero'], function () {
-                    Route::get('/', [SetupController::class, 'indexModelHero'])->name('prt.apps.mst.setup.model.hero.index');
-                    Route::put('/', [SetupController::class, 'updateModelHero'])->name('prt.apps.mst.setup.model.hero.update');
-                });
-                // hero section
-                Route::group(['prefix' => 'hero-section'], function () {
-                    Route::get('/', [SetupController::class, 'indexHeroSection'])->name('prt.apps.mst.setup.hero.section.index');
-                    Route::put('/', [SetupController::class, 'updateHeroSection'])->name('prt.apps.mst.setup.hero.section.update');
-                    Route::post('/delete', [SetupController::class, 'destroyHeroSection'])->name('prt.apps.mst.setup.hero.section.destroy');
-                });
-            });
-        });
         // middleware: Editor
         Route::group(['middleware' => ['Editor']], function () {
             // portal kategori
@@ -281,96 +243,8 @@ Route::group(['prefix' => 'cms'], function () {
         });
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | MENU KONTEN EVENT
-    |--------------------------------------------------------------------------
-    */
-    // middleware: Editor
-    Route::group(['middleware' => ['Editor']], function () {
-        // portal duta-sma
-        Route::group(['prefix' => 'duta-sma'], function () {
-            Route::get('/', [DutaSMAController::class, 'index'])->name('prt.apps.dutasma.index');
-            Route::get('/create', [DutaSMAController::class, 'create'])->name('prt.apps.dutasma.create');
-            Route::post('/create', [DutaSMAController::class, 'store'])->name('prt.apps.dutasma.store');
-            Route::get('/edit/{uuid}', [DutaSMAController::class, 'edit'])->name('prt.apps.dutasma.edit');
-            Route::put('/edit/{uuid}', [DutaSMAController::class, 'update'])->name('prt.apps.dutasma.update');
-            Route::post('/delete', [DutaSMAController::class, 'destroy'])->name('prt.apps.dutasma.destroy');
-            Route::post('/status', [DutaSMAController::class, 'status'])->name('prt.apps.dutasma.status');
-        });
-        // portal tanos
-        Route::group(['prefix' => 'tanos/{tags}'], function () {
-            Route::get('/', [TanosController::class, 'index'])->name('prt.apps.tanos.index');
-            Route::get('/create', [TanosController::class, 'create'])->name('prt.apps.tanos.create');
-            Route::get('/edit/{uuid}', [TanosController::class, 'edit'])->name('prt.apps.tanos.edit');
-            Route::put('/edit/{uuid}', [TanosController::class, 'update'])->name('prt.apps.tanos.update');
-            Route::post('/delete', [TanosController::class, 'destroy'])->name('prt.apps.tanos.destroy');
-            Route::post('/status', [TanosController::class, 'status'])->name('prt.apps.tanos.status');
-        });
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | MENU HELPDESK
-    |--------------------------------------------------------------------------
-    */
-    // middleware: Operator
-    Route::group(['middleware' => ['Operator']], function () {
-        // portal pesan
-        Route::group(['prefix' => 'pesan'], function () {
-            Route::get('/', [KotakPesanController::class, 'index'])->name('prt.apps.kotak.pesan.index');
-            Route::get('/read/{uuid}', [KotakPesanController::class, 'edit'])->name('prt.apps.kotak.pesan.edit');
-            Route::put('/read/{uuid}', [KotakPesanController::class, 'update'])->name('prt.apps.kotak.pesan.update');
-            Route::post('/delete', [KotakPesanController::class, 'destroy'])->name('prt.apps.kotak.pesan.destroy');
-        });
-    });
-
     // portal statistik
     Route::group(['prefix' => 'statistik'], function () {
         // Route::get('/', [StatistikController::class, 'index'])->name('prt.apps.stat.index');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | MENU PROFILE
-    |--------------------------------------------------------------------------
-    */
-    // profile
-    Route::group(['prefix' => 'profile'], function () {
-        Route::get('/profile', [ProfileController::class, 'index'])->name('prt.apps.profile.index');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('prt.apps.profile.update');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | AJAX
-    |--------------------------------------------------------------------------
-    */
-    Route::group(['prefix' => 'ajax'], function () {
-        // statistic
-        Route::group(['prefix' => 'statistic'], function () {
-            Route::post('/', [AjaxController::class, 'getStatisticContent'])->name('ajax.get.stats.content');
-        });
-        // datatable
-        Route::group(['prefix' => 'datatable'], function () {
-            Route::get('/list-galeri', [AjaxDatatableController::class, 'dataGaleriList'])->name('ajax.dt.galeri.list');
-            Route::get('/list-esertifikat', [AjaxDatatableController::class, 'dataEsertifikatList'])->name('ajax.dt.esertifikat.list');
-            Route::get('/list-anggota-tanos', [AjaxDatatableController::class, 'dataAnggotaTanos'])->name('ajax.dt.tanos.anggota');
-        });
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | OTHER ROUTES
-    |--------------------------------------------------------------------------
-    */
-
-    // unduh
-    Route::group(['prefix' => 'unduh'], function () {});
-
-    // export
-    Route::group(['prefix' => 'export'], function () {
-        // cetak
-        Route::group(['prefix' => 'cetak'], function () {});
     });
 });

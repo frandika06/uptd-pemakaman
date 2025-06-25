@@ -22,5 +22,9 @@ Route::group(['middleware' => ['pbh', 'auth', 'LastSeen']], function () {
         require base_path('routes/cms.php');
         // TPU
         require base_path('routes/tpu.php');
+        // pengaturan
+        require base_path('routes/pengaturan.php');
+        // general
+        require base_path('routes/general.php');
     });
 });

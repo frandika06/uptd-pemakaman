@@ -16,11 +16,11 @@ class SecurityHeaders
 
         // ✅ CSP diatur agar YouTube & CKEditor tetap bisa embed
         $csp = "default-src 'self'; "
-            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.ckeditor.com https://trusted-scripts.com; "
-            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.ckeditor.com https://trusted-scripts.com https: //cdn.datatables.net; "
+            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.datatables.net; "
             . "font-src 'self' https://fonts.gstatic.com data:; "
             . "img-src 'self' data: https:; "
-            . "connect-src 'self' http://127.0.0.1 http://10.35.4.60 https://ditsma.codingers.id https://sma.kemdikbud.go.id https://sma.dikdasmen.go.id https://sma.kemendikdasmen.go.id https://cdn.ckeditor.com; "
+            . "connect-src 'self' http://127.0.0.1 http://upt-pemakaman.test https://cdn.datatables.net https://cdn.ckeditor.com; "
             . "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; "
             . "frame-ancestors 'self'; "
             . "object-src 'none'; "

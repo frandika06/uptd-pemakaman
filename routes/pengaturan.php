@@ -6,6 +6,12 @@
 |--------------------------------------------------------------------------
 */
 // pengaturan
+
+use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
+use App\Http\Controllers\web\backend\master\SosmedController;
+use App\Http\Controllers\web\backend\master\UsersController;
+use App\Http\Controllers\web\backend\profile\ProfileController;
+
 Route::group(['prefix' => 'pengaturan'], function () {
     // dashboard
     Route::get('/', [DashboardCmsController::class, 'index'])->name('setup.apps.index');

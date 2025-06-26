@@ -4,10 +4,10 @@ namespace App\Http\Controllers\web\backend\master;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\PortalKategori;
-use DataTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Yajra\DataTables\DataTables;
 
 class KategoriController extends Controller
 {
@@ -38,72 +38,129 @@ class KategoriController extends Controller
             } else {
                 $data = PortalKategori::whereType($type)->orderBy("type", "ASC")->orderBy("nama", "ASC")->get();
             }
-            return Datatables::of($data)
+            return DataTables::of($data)
                 ->addIndexColumn()
                 ->setRowId('uuid')
+                ->addColumn('nama', function ($data) {
+                    $uuid_enc = Helper::encode($data->uuid);
+                    $edit_url = route('prt.apps.mst.tags.edit', $uuid_enc);
+                    return '
+                        <div class="d-flex align-items-center">
+                            <div class="d-flex flex-column">
+                                <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . $data->nama . '</a>
+                                <span class="text-muted fw-semibold d-block fs-7">' . Str::slug($data->nama) . '</span>
+                            </div>
+                        </div>
+                    ';
+                })
+                ->addColumn('type', function ($data) {
+                    $colors = [
+                        'Postingan' => 'primary',
+                        'Halaman'   => 'success',
+                        'Banner'    => 'warning',
+                        'Galeri'    => 'info',
+                        'Video'     => 'danger',
+                        'Unduhan'   => 'dark',
+                        'FAQ'       => 'secondary',
+                    ];
+
+                    $color = $colors[$data->type] ?? 'primary';
+
+                    return '<span class="badge badge-light-' . $color . ' fw-bold fs-7 px-3 py-2">' . $data->type . '</span>';
+                })
                 ->addColumn('status', function ($data) use ($auth) {
                     $uuid = Helper::encode($data->uuid);
                     if ($data->status == "1") {
-                        $toogle = "checked";
-                        $text   = "Aktif";
+                        $checked = "checked";
+                        $text    = "Aktif";
+                        $color   = "success";
                     } else {
-                        $toogle = "";
-                        $text   = "Tidak Aktif";
+                        $checked = "";
+                        $text    = "Tidak Aktif";
+                        $color   = "danger";
                     }
+
                     // role
                     $role = $auth->role;
                     if ($role == "Super Admin" || $role == "Admin") {
                         $status = '
-                            <div class="form-check form-switch form-switch-custom form-switch-primary mb-3">
-                                <input class="form-check-input" type="checkbox" role="switch" id="status_' . $data->uuid . '" data-onclick="ubah-status" data-status="' . $uuid . '" data-status-value="' . $data->status . '" ' . $toogle . '>
-                                <label class="form-check-label" for="status_' . $data->uuid . '">' . $text . '</label>
+                            <div class="form-check form-switch form-check-custom form-check-success">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    id="status_' . $data->uuid . '"
+                                    data-status="' . $uuid . '"
+                                    data-status-value="' . $data->status . '" ' . $checked . '>
+                                <label class="form-check-label fw-semibold text-' . $color . ' ms-3"
+                                    for="status_' . $data->uuid . '">' . $text . '</label>
                             </div>
                         ';
                     } else {
-                        $status = '<label class="form-check-label" for="status">' . $text . '</label>';
+                        $status = '<span class="badge badge-light-' . $color . ' fw-bold">' . $text . '</span>';
                     }
                     return $status;
                 })
                 ->addColumn('kategori_sub', function ($data) {
-                    $uuid_enc = Helper::encode($data->uuid);
-                    $add_sub  = route('prt.apps.mst.tags.sub.index', $uuid_enc);
-                    if (count($data->RelKategoriSub) > 0) {
+                    if (count($data->RelKategoriSub ?? []) > 0) {
                         $jumlah = Helper::toDot($data->GetJumlahKetegoriSub());
+                        $color  = "primary";
                     } else {
                         $jumlah = 0;
+                        $color  = "secondary";
                     }
-                    // $kategori_sub = $jumlah . '<a href="' . $add_sub . '" class="btn btn-primary shadow btn-xs me-1 ms-2"><i class="fas fa-plus-square"></i></a>';
-                    return $jumlah;
+
+                    return '
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span class="badge badge-circle badge-' . $color . ' w-15px h-15px me-2 fs-8 fw-bold">' . $jumlah . '</span>
+                        </div>
+                    ';
                 })
                 ->addColumn('aksi', function ($data) use ($auth) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.mst.tags.edit', $uuid_enc);
-                    $add_sub  = route('prt.apps.mst.tags.sub.index', $uuid_enc);
+                    $edit_url = route('prt.apps.mst.tags.edit', $uuid_enc);
+                    $sub_url  = route('prt.apps.mst.tags.sub.index', $uuid_enc);
+
                     // role
                     $role = $auth->role;
                     if ($role == "Super Admin" || $role == "Admin") {
                         $aksi = '
-                            <div class="d-flex">
-                                <a href="' . $add_sub . '" class="btn btn-info shadow btn-xs sharp me-1"><i class="fas fa-caret-down"></i></a>
-                                <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-                                <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
+                            <div class="d-flex justify-content-center">
+                                <a href="' . $sub_url . '" class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1" data-bs-toggle="tooltip" title="Sub Kategori">
+                                    <i class="ki-outline ki-category fs-2"></i>
+                                </a>
+                                <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                    <i class="ki-outline ki-pencil fs-2"></i>
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                    <i class="ki-outline ki-trash fs-2"></i>
+                                </a>
                             </div>
                         ';
                     } else {
-                        if ($data->uuid_created == $auth->uuid) {
+                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
                             $aksi = '
-                            <div class="d-flex">
-                                <a href="' . $add_sub . '" class="btn btn-info shadow btn-xs sharp me-1"><i class="fas fa-caret-down"></i></a>
-                                <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-                                <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
-                            </div>
-                        ';
+                                <div class="d-flex justify-content-center">
+                                    <a href="' . $sub_url . '" class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1" data-bs-toggle="tooltip" title="Sub Kategori">
+                                        <i class="ki-outline ki-category fs-2"></i>
+                                    </a>
+                                    <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="ki-outline ki-pencil fs-2"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                        <i class="ki-outline ki-trash fs-2"></i>
+                                    </a>
+                                </div>
+                            ';
                         } else {
                             $aksi = '
-                                <div class="d-flex">
-                                <a href="' . $add_sub . '" class="btn btn-info shadow btn-xs sharp me-1"><i class="fas fa-caret-down"></i></a>
-                                    <a href="javascript:void(0);" class="btn btn-primary shadow btn-xs sharp me-1 disabled"><i class="fas fa-pencil-alt"></i></a>
-                                    <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp disabled"><i class="fa fa-trash"></i></a>
+                                <div class="d-flex justify-content-center">
+                                    <a href="' . $sub_url . '" class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1" data-bs-toggle="tooltip" title="Sub Kategori">
+                                        <i class="ki-outline ki-category fs-2"></i>
+                                    </a>
+                                    <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                        <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                                    </span>
+                                    <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                        <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                                    </span>
                                 </div>
                             ';
                         }
@@ -387,6 +444,223 @@ class KategoriController extends Controller
                 "message" => $msg,
             ];
             return response()->json($response, 422);
+        }
+    }
+
+    /**
+     * Bulk delete categories
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            // auth
+            $auth = Auth::user();
+
+            // Validate request
+            $request->validate([
+                'uuids'   => 'required|array|min:1',
+                'uuids.*' => 'required|string',
+            ]);
+
+            $uuids        = $request->uuids;
+            $deletedCount = 0;
+            $failedItems  = [];
+
+            // Loop through each UUID and delete
+            foreach ($uuids as $uuid_enc) {
+                try {
+                    // Find data
+                    $data = PortalKategori::find($uuid_enc);
+
+                    if (! $data) {
+                        $failedItems[] = "Data dengan ID {$uuid_enc} tidak ditemukan";
+                        continue;
+                    }
+
+                    // Check permission (if needed)
+                    $role      = $auth->role;
+                    $canDelete = ($role == "Super Admin" || $role == "Admin");
+
+                    // If not admin, check ownership
+                    if (! $canDelete && isset($data->uuid_created)) {
+                        $canDelete = ($data->uuid_created == $auth->uuid);
+                    }
+
+                    if (! $canDelete) {
+                        $failedItems[] = "Tidak memiliki izin untuk menghapus: {$data->nama}";
+                        continue;
+                    }
+
+                    // Delete the data
+                    if ($data->delete()) {
+                        $deletedCount++;
+
+                        // Create log for each deleted item
+                        $aktifitas = [
+                            "tabel" => ["portal_kategori"],
+                            "uuid"  => [$uuid_enc],
+                            "value" => [$data->toArray()],
+                        ];
+                        $log = [
+                            "apps"      => "Portal Apps",
+                            "subjek"    => "Menghapus Data Master Kategori (Bulk): " . $data->nama . " - " . $uuid_enc,
+                            "aktifitas" => $aktifitas,
+                            "device"    => "web",
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $failedItems[] = "Gagal menghapus: {$data->nama}";
+                    }
+
+                } catch (\Exception $e) {
+                    $failedItems[] = "Error pada ID {$uuid_enc}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            // Prepare response message
+            $message = "Berhasil menghapus {$deletedCount} kategori";
+
+            if (! empty($failedItems)) {
+                $message .= ". Gagal menghapus " . count($failedItems) . " item";
+                if (count($failedItems) <= 3) {
+                    $message .= ": " . implode(", ", $failedItems);
+                }
+            }
+
+            // Create summary log
+            $summaryLog = [
+                "apps"      => "Portal Apps",
+                "subjek"    => "Bulk Delete Master Kategori - Berhasil: {$deletedCount}, Gagal: " . count($failedItems),
+                "aktifitas" => [
+                    "tabel"         => ["portal_kategori"],
+                    "total_request" => count($uuids),
+                    "total_deleted" => $deletedCount,
+                    "total_failed"  => count($failedItems),
+                    "failed_items"  => $failedItems,
+                ],
+                "device"    => "web",
+            ];
+            Helper::addToLogAktifitas($request, $summaryLog);
+
+            $response = [
+                "status"        => true,
+                "message"       => $message,
+                "deleted_count" => $deletedCount,
+                "failed_count"  => count($failedItems),
+                "failed_items"  => $failedItems,
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk Delete Error', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            $response = [
+                "status"  => false,
+                "message" => "Terjadi kesalahan saat menghapus data: " . $e->getMessage(),
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+/**
+ * Bulk status update
+ */
+    public function bulkStatus(Request $request)
+    {
+        try {
+            // auth
+            $auth = Auth::user();
+
+            // Validate request
+            $request->validate([
+                'uuids'   => 'required|array|min:1',
+                'uuids.*' => 'required|string',
+                'status'  => 'required|in:0,1',
+            ]);
+
+            $uuids        = $request->uuids;
+            $newStatus    = $request->status;
+            $updatedCount = 0;
+            $failedItems  = [];
+
+            // Loop through each UUID and update status
+            foreach ($uuids as $uuid_enc) {
+                try {
+                    // Find data
+                    $data = PortalKategori::find($uuid_enc);
+
+                    if (! $data) {
+                        $failedItems[] = "Data dengan ID {$uuid_enc} tidak ditemukan";
+                        continue;
+                    }
+
+                    // Check permission
+                    $role      = $auth->role;
+                    $canUpdate = ($role == "Super Admin" || $role == "Admin");
+
+                    if (! $canUpdate && isset($data->uuid_created)) {
+                        $canUpdate = ($data->uuid_created == $auth->uuid);
+                    }
+
+                    if (! $canUpdate) {
+                        $failedItems[] = "Tidak memiliki izin untuk mengubah: {$data->nama}";
+                        continue;
+                    }
+
+                    // Update status
+                    if ($data->update(['status' => $newStatus])) {
+                        $updatedCount++;
+
+                        // Create log
+                        $aktifitas = [
+                            "tabel" => ["portal_kategori"],
+                            "uuid"  => [$uuid_enc],
+                            "value" => [['status' => $newStatus]],
+                        ];
+                        $log = [
+                            "apps"      => "Portal Apps",
+                            "subjek"    => "Bulk Update Status Master Kategori: " . $data->nama . " - " . $uuid_enc,
+                            "aktifitas" => $aktifitas,
+                            "device"    => "web",
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $failedItems[] = "Gagal mengubah status: {$data->nama}";
+                    }
+
+                } catch (\Exception $e) {
+                    $failedItems[] = "Error pada ID {$uuid_enc}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            $statusText = $newStatus == '1' ? 'mengaktifkan' : 'menonaktifkan';
+            $message    = "Berhasil {$statusText} {$updatedCount} kategori";
+
+            if (! empty($failedItems)) {
+                $message .= ". Gagal {$statusText} " . count($failedItems) . " item";
+            }
+
+            $response = [
+                "status"        => true,
+                "message"       => $message,
+                "updated_count" => $updatedCount,
+                "failed_count"  => count($failedItems),
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            $response = [
+                "status"  => false,
+                "message" => "Terjadi kesalahan saat mengubah status: " . $e->getMessage(),
+            ];
+            return response()->json($response, 500);
         }
     }
 }

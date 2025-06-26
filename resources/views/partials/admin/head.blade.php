@@ -24,8 +24,10 @@
 {{-- ===== CSS LINK ======= --}}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 {{-- begin::Global Stylesheets Bundle(mandatory for all pages) --}}
+<link href="{{ asset('be') }}/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="{{ asset('be') }}/plugins/global/plugins.bundle.css" />
 <link rel="stylesheet" href="{{ asset('be') }}/css/style.bundle.css" />
+{{-- DATATABLES --}}
 <link rel="stylesheet" href="{{ asset('be/css/cid.css?v=') . date('YmdHis') }}">
 {{-- end::Global Stylesheets Bundle --}}
 {{-- =====  JS SCRIPT LINK ======= --}}

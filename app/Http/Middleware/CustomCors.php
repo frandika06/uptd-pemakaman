@@ -20,19 +20,13 @@ class CustomCors
 
         $allowedOrigins = [
             'localhost',
-            'portalsma.test',
+            'upt-pemakaman.test',
             '127.0.0.1',
-            '10.35.4.60',
-            'sma.kemdikbud.go.id',
-            'sma.dikdasmen.go.id',
-            'sma.kemendikdasmen.go.id',
-            'ditsma.codingers.id',
+            'tangerangkab.go.id',
         ];
 
         $wildcardOrigins = [
-            'kemdikbud.go.id',
-            'dikdasmen.go.id',
-            'kemendikdasmen.go.id',
+            'tangerangkab.go.id',
             'codingers.id',
         ];
 

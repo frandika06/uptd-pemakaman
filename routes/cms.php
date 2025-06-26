@@ -58,6 +58,9 @@ Route::group(['prefix' => 'cms'], function () {
                 Route::put('/edit/{uuid}', [KategoriSubController::class, 'update'])->name('prt.apps.mst.tags.sub.update');
                 Route::post('/status', [KategoriSubController::class, 'status'])->name('prt.apps.mst.tags.sub.status');
                 Route::post('/delete', [KategoriSubController::class, 'destroy'])->name('prt.apps.mst.tags.sub.destroy');
+                // New bulk operation routes
+                Route::post('/bulk-destroy', [KategoriSubController::class, 'bulkDestroy'])->name('prt.apps.mst.tags.sub.destroy.bulk');
+                Route::post('/bulk-status', [KategoriSubController::class, 'bulkStatus'])->name('prt.apps.mst.tags.sub.status.bulk');
             });
         });
     });

@@ -96,17 +96,6 @@ $auth = \Auth::user();
                                     {{-- end:Menu link --}}
                                     {{-- begin:Menu sub --}}
                                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item - Data Direktur --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.data.direktur.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Data Direktur</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-
                                         {{-- begin:Menu item - Halaman --}}
                                         <div data-kt-menu-trigger="click" class="menu-item menu-accordion menu-sub-indention">
                                             {{-- begin:Menu link --}}
@@ -137,16 +126,6 @@ $auth = \Auth::user();
                                                             <span class="bullet bullet-dot"></span>
                                                         </span>
                                                         <span class="menu-title">TOS</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('Kebijakan')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Kebijakan</span>
                                                     </a>
                                                 </div>
                                                 {{-- end:Menu item --}}
@@ -212,26 +191,6 @@ $auth = \Auth::user();
                                         {{-- end:Menu item --}}
                                         {{-- begin:Menu item --}}
                                         <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.runningtext.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Running Text</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.greeting.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Greeting</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
                                             <a class="menu-link" href="{{ route('prt.apps.faq.index') }}">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot"></span>
@@ -270,16 +229,6 @@ $auth = \Auth::user();
                                         {{-- end:Menu item --}}
                                         {{-- begin:Menu item --}}
                                         <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.infografis.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Infografis</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
                                             <a class="menu-link" href="{{ route('prt.apps.galeri.index') }}">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot"></span>
@@ -305,54 +254,6 @@ $auth = \Auth::user();
                                                     <span class="bullet bullet-dot"></span>
                                                 </span>
                                                 <span class="menu-title">Unduhan</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
-                                </div>
-                                {{-- end:Menu item --}}
-
-                                {{-- begin:Menu item - Konten Digital --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
-                                    <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-tablet-book fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Digital</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.ebook.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Book</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.emagazine.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Magazine</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.esertifikat.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Sertifikat</span>
                                             </a>
                                         </div>
                                         {{-- end:Menu item --}}

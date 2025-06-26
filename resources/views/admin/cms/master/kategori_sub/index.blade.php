@@ -1,13 +1,13 @@
 @push('styles')
     <style>
         /* Bulk actions toolbar animation */
-        [data-kt-category-table-toolbar="selected"] {
+        [data-kt-category-sub-table-toolbar="selected"] {
             transition: all 0.3s ease;
             opacity: 0;
             transform: translateY(-10px);
         }
 
-        [data-kt-category-table-toolbar="selected"]:not(.d-none) {
+        [data-kt-category-sub-table-toolbar="selected"]:not(.d-none) {
             opacity: 1;
             transform: translateY(0);
         }
@@ -28,7 +28,7 @@
         }
 
         /* Bulk toolbar background */
-        [data-kt-category-table-toolbar="selected"] {
+        [data-kt-category-sub-table-toolbar="selected"] {
             border: 1px solid rgba(33, 150, 243, 0.25);
         }
 
@@ -85,7 +85,7 @@
 @extends('layouts.admin')
 
 {{-- SEO::BEGIN --}}
-@section('title', 'Master Kategori')
+@section('title', 'Master Kategori Sub')
 {{-- SEO::END --}}
 
 {{-- TOOLBAR::BEGIN --}}
@@ -98,7 +98,7 @@
             <div class="page-title d-flex align-items-center me-3">
                 {{-- begin::Title --}}
                 <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
-                    <span>Master Kategori</span>
+                    <span>Master Kategori Sub</span>
                 </h1>
                 {{-- end::Title --}}
             </div>
@@ -126,7 +126,17 @@
                 </li>
                 {{-- end::Item --}}
                 {{-- begin::Item --}}
-                <li class="breadcrumb-item text-gray-700">Kategori</li>
+                <li class="breadcrumb-item text-gray-700">
+                    <a href="{{ route('prt.apps.mst.tags.index') }}" class="text-gray-700 text-hover-primary">Kategori</a>
+                </li>
+                {{-- end::Item --}}
+                {{-- begin::Item --}}
+                <li class="breadcrumb-item">
+                    <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
+                </li>
+                {{-- end::Item --}}
+                {{-- begin::Item --}}
+                <li class="breadcrumb-item text-gray-700">Sub Kategori</li>
                 {{-- end::Item --}}
             </ul>
             {{-- end::Breadcrumb --}}
@@ -134,53 +144,12 @@
         {{-- end::Toolbar container --}}
         {{-- begin::Actions --}}
         <div class="d-flex align-self-center flex-center flex-shrink-0">
-            {{-- begin::Filter dropdown --}}
-            <div class="me-3">
-                <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
-                    data-kt-menu-placement="bottom-end">
-                    <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
-                    Filter: <span id="filter-text" class="ms-1">{{ $type }}</span>
-                </a>
-                {{-- begin::Menu --}}
-                <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
-                    {{-- begin::Header --}}
-                    <div class="px-7 py-5">
-                        <div class="fs-5 text-dark fw-bold">Filter Options</div>
-                    </div>
-                    {{-- end::Header --}}
-                    {{-- begin::Separator --}}
-                    <div class="separator border-gray-200"></div>
-                    {{-- end::Separator --}}
-                    {{-- begin::Content --}}
-                    <div class="px-7 py-5">
-                        {{-- begin::Input group --}}
-                        <div class="mb-10">
-                            <label class="form-label fw-semibold">Tipe Kategori:</label>
-                            <div>
-                                <select class="form-select form-select-solid" name="q_type_kategori" id="q_type_kategori" data-control="select2" data-placeholder="Pilih Tipe"
-                                    data-allow-clear="true">
-                                    <option @if ($type == 'Semua Data') selected @endif value="Semua Data">Semua Data</option>
-                                    @if (\count($getType) > 0)
-                                        @foreach ($getType as $item)
-                                            <option @if ($type == $item->type) selected @endif value="{{ $item->type }}">{{ $item->type }}</option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
-                        {{-- end::Input group --}}
-                        {{-- begin::Actions --}}
-                        <div class="d-flex justify-content-end">
-                            <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
-                            <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
-                        </div>
-                        {{-- end::Actions --}}
-                    </div>
-                    {{-- end::Content --}}
-                </div>
-                {{-- end::Menu --}}
-            </div>
-            {{-- end::Filter dropdown --}}
+            {{-- begin::Back button --}}
+            <a href="{{ route('prt.apps.mst.tags.index') }}" class="btn btn-sm btn-light-secondary me-3" data-bs-toggle="tooltip" title="Kembali ke Master Kategori">
+                <i class="ki-outline ki-arrow-left fs-2"></i>
+                <span class="d-none d-sm-inline">Kembali</span>
+            </a>
+            {{-- end::Back button --}}
             {{-- begin::Export button --}}
             <button type="button" class="btn btn-sm btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                 <i class="ki-outline ki-exit-down fs-2"></i>
@@ -223,9 +192,9 @@
             <div id="kt_datatable_example_buttons" class="d-none"></div>
             {{-- end::Export button --}}
             {{-- begin::Primary button --}}
-            <a href="{{ route('prt.apps.mst.tags.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
+            <a href="{{ route('prt.apps.mst.tags.sub.create', [$uuid_tags_enc]) }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
                 <i class="ki-outline ki-plus fs-2"></i>
-                <span>Tambah Kategori</span>
+                <span>Tambah Sub Kategori</span>
             </a>
             {{-- end::Primary button --}}
         </div>
@@ -243,8 +212,8 @@
             {{-- begin::Card title --}}
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
-                    <span class="card-label fw-bold fs-3 mb-1">Data Master Kategori</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan kategori: <strong id="titleType">{{ $type }}</strong></span>
+                    <span class="card-label fw-bold fs-3 mb-1">Data Master Kategori Sub</span>
+                    <span class="text-muted mt-1 fw-semibold fs-7">Kategori induk: <strong id="titleType">{{ $master_kategori->nama }}</strong></span>
                 </h4>
             </div>
             {{-- end::Card title --}}
@@ -253,7 +222,7 @@
                 {{-- begin::Search --}}
                 <div class="d-flex align-items-center position-relative my-1">
                     <i class="ki-outline ki-magnifier fs-1 position-absolute ms-6"></i>
-                    <input type="text" data-kt-category-table-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Cari kategori..." />
+                    <input type="text" data-kt-category-sub-table-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Cari sub kategori..." />
                 </div>
                 {{-- end::Search --}}
             </div>
@@ -264,21 +233,21 @@
         {{-- begin::Card body --}}
         <div class="card-body py-4">
             {{-- begin::Bulk Actions --}}
-            <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-category-table-toolbar="selected">
+            <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-category-sub-table-toolbar="selected">
                 <div class="fw-bold text-primary">
                     <i class="ki-outline ki-check-square fs-2 me-2"></i>
-                    <span data-kt-category-table-select="selected_count"></span> item dipilih
+                    <span data-kt-category-sub-table-select="selected_count"></span> item dipilih
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
                     {{-- begin::Bulk Status Actions --}}
                     <div class="btn-group me-2" role="group" aria-label="Status Actions">
-                        <button type="button" class="btn btn-sm btn-light-success" data-kt-category-table-select="activate_selected" data-bs-toggle="tooltip"
+                        <button type="button" class="btn btn-sm btn-light-success" data-kt-category-sub-table-select="activate_selected" data-bs-toggle="tooltip"
                             title="Aktifkan yang dipilih">
                             <i class="ki-outline ki-check fs-6 me-1"></i>
                             Aktifkan
                         </button>
-                        <button type="button" class="btn btn-sm btn-light-warning" data-kt-category-table-select="deactivate_selected" data-bs-toggle="tooltip"
+                        <button type="button" class="btn btn-sm btn-light-warning" data-kt-category-sub-table-select="deactivate_selected" data-bs-toggle="tooltip"
                             title="Nonaktifkan yang dipilih">
                             <i class="ki-outline ki-cross fs-6 me-1"></i>
                             Nonaktifkan
@@ -287,7 +256,7 @@
                     {{-- end::Bulk Status Actions --}}
 
                     {{-- begin::Bulk Delete Action --}}
-                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-category-table-select="delete_selected" data-bs-toggle="tooltip"
+                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-category-sub-table-select="delete_selected" data-bs-toggle="tooltip"
                         title="Hapus yang dipilih">
                         <i class="ki-outline ki-trash fs-6 me-1"></i>
                         Hapus
@@ -295,7 +264,7 @@
                     {{-- end::Bulk Delete Action --}}
 
                     {{-- begin::Cancel Selection --}}
-                    <button type="button" class="btn btn-sm btn-light" data-kt-category-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
+                    <button type="button" class="btn btn-sm btn-light" data-kt-category-sub-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
                         <i class="ki-outline ki-cross fs-6"></i>
                     </button>
                     {{-- end::Cancel Selection --}}
@@ -322,9 +291,8 @@
                                 </div>
                             </th>
                             <th width="30px">#</th>
-                            <th width="40%">Nama</th>
-                            <th width="20%">Tipe</th>
-                            <th>Sub</th>
+                            <th width="50%">Nama</th>
+                            <th width="35%">Slug</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -335,9 +303,8 @@
                         <tr>
                             <th class="w-10px pe-2"></th>
                             <th width="30px">#</th>
-                            <th width="40%">Nama</th>
-                            <th width="20%">Tipe</th>
-                            <th>Sub</th>
+                            <th width="50%">Nama</th>
+                            <th width="35%">Slug</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -358,7 +325,7 @@
         "use strict";
 
         // Class definition
-        var KTDatatablesMasterKategori = function() {
+        var KTDatatablesMasterKategoriSub = function() {
             // Shared variables
             var table;
             var datatable;
@@ -368,7 +335,7 @@
                 // Initialize DataTable
                 datatable = $('#datatable').DataTable({
                     "processing": true,
-                    "serverSide": false,
+                    "serverSide": true,
                     "responsive": true,
                     "paging": true,
                     "searching": true,
@@ -396,21 +363,20 @@
                             first: '<i class="ki-outline ki-double-arrow-left"></i>',
                             last: '<i class="ki-outline ki-double-arrow-right"></i>'
                         },
-                        "emptyTable": "Tidak ada data",
-                        "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_",
-                        "infoEmpty": "Menampilkan 0 sampai 0 dari 0",
-                        "infoFiltered": "(disaring dari _MAX_ total)",
+                        "emptyTable": "Tidak ada data sub kategori",
+                        "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ sub kategori",
+                        "infoEmpty": "Menampilkan 0 sampai 0 dari 0 sub kategori",
+                        "infoFiltered": "(disaring dari _MAX_ total sub kategori)",
                         "zeroRecords": "Tidak ditemukan data yang sesuai"
                     },
                     "ajax": {
-                        "url": "{!! route('prt.apps.mst.tags.index') !!}",
+                        "url": "{!! route('prt.apps.mst.tags.sub.index', [$uuid_tags_enc]) !!}",
                         "type": 'GET',
                         "data": function(data) {
-                            data.filter = {
-                                'type': $('[name="q_type_kategori"]').val() || 'Semua Data',
-                            };
+                            console.log('DataTable request data:', data);
                         },
                         "dataSrc": function(json) {
+                            console.log('DataTable response:', json);
                             return json.data;
                         },
                         "error": function(xhr, error, thrown) {
@@ -445,6 +411,7 @@
                         {
                             data: 'nama',
                             name: 'nama',
+                            title: 'Nama Sub Kategori',
                             render: function(data, type, row) {
                                 if (type === 'export') {
                                     return data;
@@ -453,20 +420,16 @@
                             }
                         },
                         {
-                            data: 'type',
-                            name: 'type',
-                        },
-                        {
-                            data: 'kategori_sub',
-                            name: 'kategori_sub',
-                            orderable: false,
-                            searchable: false,
+                            data: 'slug',
+                            name: 'slug',
+                            title: 'Slug'
                         },
                         {
                             data: 'status',
                             name: 'status',
                             orderable: false,
                             searchable: false,
+                            title: 'Status',
                             render: function(data, type, row) {
                                 if (type === 'export') {
                                     return row.status_raw || 'Aktif';
@@ -480,11 +443,12 @@
                             orderable: false,
                             searchable: false,
                             exportable: false,
+                            title: 'Aksi'
                         }
                     ],
                     "columnDefs": [{
                         className: "text-center",
-                        targets: [0, 1, 4, 5, 6]
+                        targets: [0, 1, 4, 5]
                     }],
                     "drawCallback": function(settings) {
                         $('#datatable_processing').hide();
@@ -494,10 +458,14 @@
                         }
 
                         handleBulkActions();
+                        console.log('DataTable draw completed, rows:', this.api().rows().count());
                     },
-                    "preDrawCallback": function(settings) {},
+                    "preDrawCallback": function(settings) {
+                        console.log('DataTable pre-draw started');
+                    },
                     "initComplete": function(settings, json) {
                         $('#datatable_processing').hide();
+                        console.log('DataTable initialization completed');
                         handleBulkActions();
                     }
                 });
@@ -505,67 +473,64 @@
 
             // Hook export buttons
             var exportButtons = function() {
-                const documentTitle = 'Master Data Kategori';
+                const documentTitle = 'Master Data Sub Kategori';
+                const kategoriInduk = '{{ $master_kategori->nama }}';
 
                 var buttons = new $.fn.dataTable.Buttons(datatable, {
                     buttons: [{
                             extend: 'copyHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_type_kategori"]').val() || 'Semua Data';
-                                return documentTitle + ' - ' + currentFilter;
+                                return documentTitle + ' - ' + kategoriInduk;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5] // Exclude checkbox and actions columns
+                                columns: [1, 2, 3, 4] // Exclude checkbox and actions columns
                             }
                         },
                         {
                             extend: 'excelHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_type_kategori"]').val() || 'Semua Data';
-                                return documentTitle + ' - ' + currentFilter;
+                                return documentTitle + ' - ' + kategoriInduk;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_type_kategori"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
-                                return `master-kategori-${filter}-${date}`;
+                                const filter = kategoriInduk.toLowerCase().replace(/\s+/g, '-');
+                                return `sub-kategori-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5]
+                                columns: [1, 2, 3, 4]
                             }
                         },
                         {
                             extend: 'csvHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_type_kategori"]').val() || 'Semua Data';
-                                return documentTitle + ' - ' + currentFilter;
+                                return documentTitle + ' - ' + kategoriInduk;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_type_kategori"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
-                                return `master-kategori-${filter}-${date}`;
+                                const filter = kategoriInduk.toLowerCase().replace(/\s+/g, '-');
+                                return `sub-kategori-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5]
+                                columns: [1, 2, 3, 4]
                             }
                         },
                         {
                             extend: 'pdfHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_type_kategori"]').val() || 'Semua Data';
-                                return documentTitle + ' - ' + currentFilter;
+                                return documentTitle + ' - ' + kategoriInduk;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_type_kategori"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
-                                return `master-kategori-${filter}-${date}`;
+                                const filter = kategoriInduk.toLowerCase().replace(/\s+/g, '-');
+                                return `sub-kategori-${filter}-${date}`;
                             },
                             orientation: 'landscape',
                             pageSize: 'A4',
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5]
+                                columns: [1, 2, 3, 4]
                             },
                             customize: function(doc) {
-                                doc.content[1].table.widths = ['10%', '40%', '20%', '15%', '15%'];
+                                doc.content[1].table.widths = ['10%', '40%', '35%', '15%'];
                                 doc.styles.tableHeader.fontSize = 9;
                                 doc.styles.tableBodyOdd.fontSize = 8;
                                 doc.styles.tableBodyEven.fontSize = 8;
@@ -626,7 +591,7 @@
 
             // Search Datatable
             var handleSearchDatatable = function() {
-                const filterSearch = document.querySelector('[data-kt-category-table-filter="search"]');
+                const filterSearch = document.querySelector('[data-kt-category-sub-table-filter="search"]');
                 if (filterSearch) {
                     filterSearch.addEventListener('keyup', function(e) {
                         datatable.search(e.target.value).draw();
@@ -637,8 +602,8 @@
             // Handle bulk actions
             var handleBulkActions = function() {
                 const checkboxes = document.querySelectorAll('#datatable .row-checkbox');
-                const bulkToolbar = document.querySelector('[data-kt-category-table-toolbar="selected"]');
-                const countElement = document.querySelector('[data-kt-category-table-select="selected_count"]');
+                const bulkToolbar = document.querySelector('[data-kt-category-sub-table-toolbar="selected"]');
+                const countElement = document.querySelector('[data-kt-category-sub-table-select="selected_count"]');
 
                 let checkedCount = 0;
                 checkboxes.forEach(checkbox => {
@@ -661,48 +626,6 @@
                 }
             }
 
-            // Filter functions
-            var handleFilter = function() {
-                // Initialize Select2
-                $('#q_type_kategori').select2();
-
-                // Global filter functions
-                window.applyFilter = function() {
-                    var selectedType = document.getElementById('q_type_kategori').value;
-                    document.getElementById('filter-text').textContent = selectedType;
-
-                    $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                        $('#titleType').html(selectedType);
-                    }, false);
-                }
-
-                window.resetFilter = function() {
-                    document.getElementById('q_type_kategori').value = 'Semua Data';
-                    document.getElementById('filter-text').textContent = 'Semua Data';
-
-                    $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                        $('#titleType').html('Semua Data');
-                    }, false);
-                }
-
-                // Handle filter change
-                $('[name="q_type_kategori"]').change(function() {
-                    var q_type_kategori = $(this).val();
-
-                    $('#datatable_processing').show();
-                    $('#datatable tbody').empty();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                    }, false);
-
-                    $('#titleType').html(q_type_kategori);
-                });
-            }
-
             // Handle events
             var handleEvents = function() {
                 // Handle checkbox events
@@ -723,26 +646,26 @@
                 });
 
                 // Handle cancel selection
-                $(document).on('click', '[data-kt-category-table-select="cancel_selection"]', function() {
+                $(document).on('click', '[data-kt-category-sub-table-select="cancel_selection"]', function() {
                     $('.row-checkbox').prop('checked', false);
                     $('[data-kt-check="true"]').prop('checked', false);
 
-                    const bulkToolbar = document.querySelector('[data-kt-category-table-toolbar="selected"]');
+                    const bulkToolbar = document.querySelector('[data-kt-category-sub-table-toolbar="selected"]');
                     bulkToolbar.classList.add('d-none');
                 });
 
                 // Handle bulk status - Activate
-                $(document).on('click', '[data-kt-category-table-select="activate_selected"]', function() {
+                $(document).on('click', '[data-kt-category-sub-table-select="activate_selected"]', function() {
                     handleBulkStatus('1', 'mengaktifkan');
                 });
 
                 // Handle bulk status - Deactivate
-                $(document).on('click', '[data-kt-category-table-select="deactivate_selected"]', function() {
+                $(document).on('click', '[data-kt-category-sub-table-select="deactivate_selected"]', function() {
                     handleBulkStatus('0', 'menonaktifkan');
                 });
 
                 // Handle bulk delete
-                $(document).on('click', '[data-kt-category-table-select="delete_selected"]', function() {
+                $(document).on('click', '[data-kt-category-sub-table-select="delete_selected"]', function() {
                     const checkedBoxes = document.querySelectorAll('#datatable .row-checkbox:checked');
                     if (checkedBoxes.length === 0) {
                         Swal.fire({
@@ -757,7 +680,7 @@
 
                     Swal.fire({
                         title: "Hapus Data Terpilih",
-                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} kategori yang dipilih?`,
+                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} sub kategori yang dipilih?`,
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#f1416c",
@@ -776,7 +699,7 @@
                             });
 
                             $.ajax({
-                                url: "{!! route('prt.apps.mst.tags.destroy.bulk') !!}",
+                                url: "{!! route('prt.apps.mst.tags.sub.destroy.bulk', [$uuid_tags_enc]) !!}",
                                 type: 'POST',
                                 data: {
                                     uuids: selectedIds,
@@ -784,7 +707,7 @@
                                 },
                                 success: function(res) {
                                     datatable.ajax.reload(null, false);
-                                    const bulkToolbar = document.querySelector('[data-kt-category-table-toolbar="selected"]');
+                                    const bulkToolbar = document.querySelector('[data-kt-category-sub-table-toolbar="selected"]');
                                     bulkToolbar.classList.add('d-none');
                                     $('[data-kt-check="true"]').prop('checked', false);
 
@@ -823,7 +746,7 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             $.ajax({
-                                url: "{!! route('prt.apps.mst.tags.destroy') !!}",
+                                url: "{!! route('prt.apps.mst.tags.sub.destroy', [$uuid_tags_enc]) !!}",
                                 type: 'POST',
                                 data: {
                                     uuid: uuid,
@@ -855,7 +778,7 @@
                     let uuid = $(this).attr("data-status");
                     let status = $(this).attr("data-status-value");
                     $.ajax({
-                        url: "{!! route('prt.apps.mst.tags.status') !!}",
+                        url: "{!! route('prt.apps.mst.tags.sub.status', [$uuid_tags_enc]) !!}",
                         type: 'POST',
                         data: {
                             uuid: uuid,
@@ -898,7 +821,7 @@
 
                 Swal.fire({
                     title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Status`,
-                    text: `Apakah Anda yakin ingin ${actionText} ${selectedIds.length} kategori yang dipilih?`,
+                    text: `Apakah Anda yakin ingin ${actionText} ${selectedIds.length} sub kategori yang dipilih?`,
                     icon: "question",
                     showCancelButton: true,
                     confirmButtonColor: status === '1' ? "#50cd89" : "#ffc700",
@@ -917,7 +840,7 @@
                         });
 
                         $.ajax({
-                            url: "{!! route('prt.apps.mst.tags.status.bulk') !!}",
+                            url: "{!! route('prt.apps.mst.tags.sub.status.bulk', [$uuid_tags_enc]) !!}",
                             type: 'POST',
                             data: {
                                 uuids: selectedIds,
@@ -926,7 +849,7 @@
                             },
                             success: function(res) {
                                 datatable.ajax.reload(null, false);
-                                const bulkToolbar = document.querySelector('[data-kt-category-table-toolbar="selected"]');
+                                const bulkToolbar = document.querySelector('[data-kt-category-sub-table-toolbar="selected"]');
                                 bulkToolbar.classList.add('d-none');
                                 $('[data-kt-check="true"]').prop('checked', false);
 
@@ -960,7 +883,6 @@
                     initDatatable();
                     exportButtons();
                     handleSearchDatatable();
-                    handleFilter();
                     handleEvents();
                 }
             };
@@ -968,7 +890,7 @@
 
         // On document ready
         $(document).ready(function() {
-            KTDatatablesMasterKategori.init();
+            KTDatatablesMasterKategoriSub.init();
         });
     </script>
 @endpush

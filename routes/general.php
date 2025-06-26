@@ -9,7 +9,6 @@
 use App\Http\Controllers\web\backend\kotak_pesan\KotakPesanController;
 use App\Http\Controllers\web\configs\AjaxController;
 use App\Http\Controllers\web\configs\AjaxDatatableController;
-use App\Http\Controllers\web\exports\ExpCmsMasterKategoriController;
 
 Route::group(['middleware' => ['Operator']], function () {
     // portal pesan
@@ -50,8 +49,4 @@ Route::group(['prefix' => 'unduh'], function () {});
 
 // export
 Route::group(['prefix' => 'export'], function () {
-    // master
-    Route::group(['prefix' => 'master'], function () {
-        Route::post('/kategori', [ExpCmsMasterKategoriController::class, 'export'])->name('export.mst.kategori');
-    });
 });

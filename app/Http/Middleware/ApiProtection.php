@@ -18,21 +18,11 @@ class ApiProtection
         // 🔹 Daftar domain frontend yang diizinkan tanpa API Key
         $allowedOrigins = [
             'http://localhost',
-            'http://localhost:3000',
-            'http://portalsma.test',
             'http://127.0.0.1',
-            'http://10.35.4.60',
-            'https://sma.kemdikbud.go.id',
-            'https://sma.dikdasmen.go.id',
-            'https://sma.kemendikdasmen.go.id',
-            'https://ditsma.codingers.id',
         ];
 
         // 🔹 Wildcard domain yang diizinkan (*.kemdikbud.go.id, *.dikdasmen.go.id, *.kemendikdasmen.go.id)
         $wildcardOrigins = [
-            'https://*.kemdikbud.go.id',
-            'https://*.dikdasmen.go.id',
-            'https://*.kemendikdasmen.go.id',
             'https://*.codingers.id',
         ];
 

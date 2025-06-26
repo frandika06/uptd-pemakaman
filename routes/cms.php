@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\web\backend\banner\BannerController;
 use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
-use App\Http\Controllers\web\backend\data_direktur\DataDirekturController;
 use App\Http\Controllers\web\backend\ebook\EbookController;
 use App\Http\Controllers\web\backend\emagazine\EmagazineController;
 use App\Http\Controllers\web\backend\esertifikat\EsertifikatController;
@@ -72,16 +71,6 @@ Route::group(['prefix' => 'cms'], function () {
     */
     // middleware: Editor
     Route::group(['middleware' => ['Editor']], function () {
-        // portal data-direktur
-        Route::group(['prefix' => 'data-direktur'], function () {
-            Route::get('/', [DataDirekturController::class, 'index'])->name('prt.apps.data.direktur.index');
-            Route::get('/create', [DataDirekturController::class, 'create'])->name('prt.apps.data.direktur.create');
-            Route::post('/create', [DataDirekturController::class, 'store'])->name('prt.apps.data.direktur.store');
-            Route::get('/edit/{uuid}', [DataDirekturController::class, 'edit'])->name('prt.apps.data.direktur.edit');
-            Route::put('/edit/{uuid}', [DataDirekturController::class, 'update'])->name('prt.apps.data.direktur.update');
-            Route::post('/delete', [DataDirekturController::class, 'destroy'])->name('prt.apps.data.direktur.destroy');
-            Route::post('/status', [DataDirekturController::class, 'status'])->name('prt.apps.data.direktur.status');
-        });
         // portal halaman
         Route::group(['prefix' => 'halaman/{tags}'], function () {
             Route::get('/', [HalamanController::class, 'index'])->name('prt.apps.page.index');

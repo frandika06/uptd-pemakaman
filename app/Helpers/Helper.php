@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\Laravel\Facades\Image;
 
 class Helper
 {
@@ -51,6 +51,7 @@ class Helper
         $encode = rtrim(strtr(base64_encode($encode), '+/', '-_'), '=');
         return $encode;
     }
+
     // Untuk Decode String
     public static function decode($string)
     {
@@ -58,29 +59,34 @@ class Helper
         $decode = substr($decode, 8);
         return $decode;
     }
+
     // Untuk Crypt String
     public static function crypt($string)
     {
         $data = Crypt::encryptString($string);
         return $data;
     }
+
     // Untuk Dcrypt String
     public static function dcrypt($string)
     {
         $data = Crypt::decryptString($string);
         return $data;
     }
+
     // Untuk Kode String
     public static function gencode($bytes)
     {
-        return bin2hex(openssl_random_pseudo_bytes($bytes));
+        return bin2hex(random_bytes($bytes));
     }
+
     // Untuk Kode String
     public static function genzero($num, $value)
     {
         $data = sprintf("%0" . $num . "d", $value);
         return $data;
     }
+
     // Untuk Jenis Kelamin
     public static function getJKL($jkl)
     {
@@ -91,26 +97,24 @@ class Helper
         }
         return $gender;
     }
+
     // Untuk URL Image
     public static function urlImg($url)
     {
         if (empty($url)) {
-            $url = $url;
+            return $url;
         } else {
             if (Storage::disk('public')->exists($url)) {
                 $url = asset('storage/' . $url);
-            } else {
-                $url = $url;
             }
         }
         return $url;
     }
+
     // Untuk URL Image Avatar
     public static function urlAvatar($user)
     {
-        // $nama_lengkap = $user->nama_lengkap;
-        // $avatar = "https://ui-avatars.com/api/?name=$nama_lengkap";
-        $avatar = \asset('custom/no-img-avatar.png');
+        $avatar = asset('custom/no-img-avatar.png');
         $foto   = $user->foto;
         if (empty($foto)) {
             $avatar = $avatar;
@@ -123,20 +127,23 @@ class Helper
         }
         return $avatar;
     }
-    // Untuk Mengubah Slug Jadi Ucwords
+
+    // Untuk Mengubah ke format Rupiah
     public static function toRP($value)
     {
-        if ($value != "" || $value !== null || $value != 0) {
-            return $data = "Rp. " . number_format($value, 0, ',', '.');
+        if ($value != "" && $value !== null && $value != 0) {
+            return "Rp. " . number_format($value, 0, ',', '.');
         }
         return "Rp. 0";
     }
-    // Untuk Mengubah Slug Jadi Ucwords
+
+    // Untuk format angka dengan titik
     public static function toDot($value)
     {
         $data = number_format($value, 0, ',', '.');
         return $data;
     }
+
     // Konvert Size Disk
     public static function SizeDisk($bytes)
     {
@@ -155,7 +162,8 @@ class Helper
         }
         return $bytes;
     }
-    // penyebut
+
+    // penyebut untuk terbilang
     public static function penyebut($nilai)
     {
         $nilai = abs($nilai);
@@ -184,6 +192,7 @@ class Helper
         }
         return $temp;
     }
+
     // terbilang
     public static function terbilang($nilai)
     {
@@ -194,31 +203,20 @@ class Helper
         }
         return $hasil;
     }
+
     // cek user online
     public static function isUserOnline($uuid)
     {
         return Cache::has('user-is-online-' . $uuid);
     }
+
     // generate bg login
     public static function getRandomBgLogin()
     {
-        $totalImages = 12;
         return "login_" . rand(1, 5) . ".png";
-        // $currentHour = date('G');
-        // if (!session()->has('login_bg')) {
-        //     $imageId = rand(1, $totalImages);
-        //     session(['login_bg' => $imageId, 'login_bg_hour' => $currentHour]);
-        // } else {
-        //     $imageId = session('login_bg');
-        //     $sessionHour = session('login_bg_hour');
-        //     if ($currentHour != $sessionHour) {
-        //         $imageId = rand(1, $totalImages);
-        //         session(['login_bg' => $imageId, 'login_bg_hour' => $currentHour]);
-        //     }
-        // }
-        // return "login_{$imageId}.jpg";
     }
-    // get profile
+
+    // get profile picture
     public static function pp($url)
     {
         if ($url != "" && $url !== null) {
@@ -236,11 +234,12 @@ class Helper
             return asset('custom/no-img-avatar.png');
         }
     }
+
     // get thumbnail
     public static function thumbnail($url)
     {
         if ($url != "" && $url !== null) {
-            // cek avatar
+            // cek thumbnail
             $thumbnailPath = str_replace('.', '_thumbnail.', $url);
             if (Storage::disk('public')->exists($thumbnailPath)) {
                 $url = asset('storage/' . $thumbnailPath);
@@ -259,7 +258,6 @@ class Helper
     public static function thumbnailUnduhan($url, $extension)
     {
         if ($url != "" && $url !== null) {
-            // cek avatar
             $thumbnailPath = str_replace('.', '_thumbnail.', $url);
             if (Storage::disk('public')->exists($thumbnailPath)) {
                 $url = asset('storage/' . $thumbnailPath);
@@ -273,12 +271,14 @@ class Helper
         }
         return $url;
     }
+
     // get DataPP
     public static function DataPP()
     {
         $auth = Auth::user();
         return $auth->RelPortalActor;
     }
+
     // get file icons
     public static function getFileIcons($extension)
     {
@@ -295,33 +295,27 @@ class Helper
             return asset("assets-admin/dist/icons/files/eksternal.png");
         }
     }
+
     public static function getFileUnduhanKategori($tipe)
     {
         // Konversi tipe menjadi huruf kecil
         $fileExtension = strtolower($tipe);
         // Kategori file berdasarkan tipe ekstensi
         $categories = [
-            // Gambar
             'gambar'   => ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'tiff', 'webp'],
-            // Dokumen Office dan lainnya
             'dokumen'  => ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'pdf', 'txt', 'csv', 'xml', 'json', 'md'],
-            // File suara
             'suara'    => ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'],
-            // File video
             'video'    => ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'mpeg'],
-            // File kompresi
             'kompresi' => ['zip', 'rar', 'tar', 'gz', '7z', 'bz2', 'xz'],
-            // File lainnya
             'lainnya'  => ['iso'],
         ];
-        // Loop untuk mencari kategori file berdasarkan ekstensi
+
         foreach ($categories as $category => $extensions) {
             if (in_array($fileExtension, $extensions)) {
-                return ucfirst($category); // Mengembalikan kategori dengan huruf besar pertama
+                return ucfirst($category);
             }
         }
 
-        // Jika tidak ada kategori yang cocok
         return 'Tidak diketahui';
     }
 
@@ -334,7 +328,6 @@ class Helper
             }
         }
 
-        // Default image logic
         return ($model === "Versi 2")
         ? asset('custom/hero/hero-versi-2.png')
         : asset('custom/hero/hero-default.jpg');
@@ -349,7 +342,6 @@ class Helper
             }
         }
 
-        // Default video
         return asset('custom/hero/videoplayback.mp4');
     }
 
@@ -362,7 +354,6 @@ class Helper
             }
         }
 
-        // Default illustration logic
         return ($model === "Versi 4")
         ? asset('custom/illustration/illustration-tilt.png')
         : asset('custom/illustration/illustration-default-min.jpg');
@@ -373,7 +364,7 @@ class Helper
     | FUNCTION DATE
     |--------------------------------------------------------------------------
      */
-    // Hari, Tgl/
+    // Tanggal Simple
     public static function TglSimple($tgl)
     {
         $tgll       = "$tgl";
@@ -390,91 +381,58 @@ class Helper
         ];
         $blnn        = date('m', strtotime($tgll));
         $array_bulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05'   => 'Mei', '06'      => 'Juni',
+            '07' => 'Juli', '08'    => 'Agustus', '09'  => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
         $thnn = date('y', strtotime($tgll));
-        $Jam  = date('H:i:s', strtotime($tgll));
         return $dayOne . "/" . $blnn . "/" . $thnn;
     }
-    // Hari, Tgl/
+
+    // Hari, Tanggal
     public static function hariTgl($tgl)
     {
         $tgll       = "$tgl";
         $day        = date('D', strtotime($tgll));
         $dayOne     = date('d', strtotime($tgll));
         $array_hari = [
-            'Sun' => 'Minggu',
-            'Mon' => 'Senin',
-            'Tue' => 'Selasa',
-            'Wed' => 'Rabu',
-            'Thu' => 'Kamis',
-            'Fri' => 'Jum\'at',
-            'Sat' => 'Sabtu',
+            'Sun' => 'Minggu', 'Mon' => 'Senin', 'Tue' => 'Selasa',
+            'Wed' => 'Rabu', 'Thu'   => 'Kamis', 'Fri' => 'Jum\'at', 'Sat' => 'Sabtu',
         ];
         $blnn        = date('m', strtotime($tgll));
         $array_bulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05'   => 'Mei', '06'      => 'Juni',
+            '07' => 'Juli', '08'    => 'Agustus', '09'  => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
         $thnn = date('Y', strtotime($tgll));
-        $Jam  = date('H:i:s', strtotime($tgll));
         return $array_hari[$day] . ", " . $dayOne . " " . $array_bulan[$blnn] . " " . $thnn;
     }
-    // Hari, Tgl - Jam
+
+    // Hari, Tanggal dengan Jam
     public static function hariTglJam($tgl)
     {
         $tgll       = "$tgl";
         $day        = date('D', strtotime($tgll));
         $dayOne     = date('d', strtotime($tgll));
         $array_hari = [
-            'Sun' => 'Minggu',
-            'Mon' => 'Senin',
-            'Tue' => 'Selasa',
-            'Wed' => 'Rabu',
-            'Thu' => 'Kamis',
-            'Fri' => 'Jum\'at',
-            'Sat' => 'Sabtu',
+            'Sun' => 'Minggu', 'Mon' => 'Senin', 'Tue' => 'Selasa',
+            'Wed' => 'Rabu', 'Thu'   => 'Kamis', 'Fri' => 'Jum\'at', 'Sat' => 'Sabtu',
         ];
         $blnn        = date('m', strtotime($tgll));
         $array_bulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05'   => 'Mei', '06'      => 'Juni',
+            '07' => 'Juli', '08'    => 'Agustus', '09'  => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
         $thnn = date('Y', strtotime($tgll));
         $Jam  = date('H:i:s', strtotime($tgll));
         return $array_hari[$day] . ", " . $dayOne . " " . $array_bulan[$blnn] . " " . $thnn . " - " . $Jam;
     }
+
     // Tanggal Bulan Tahun (TTD)
     public static function tglBlnThn($tgl)
     {
@@ -482,22 +440,15 @@ class Helper
         $dayOne      = date('d', strtotime($tgll));
         $blnn        = date('m', strtotime($tgll));
         $array_bulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05'   => 'Mei', '06'      => 'Juni',
+            '07' => 'Juli', '08'    => 'Agustus', '09'  => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
         $thnn = date('Y', strtotime($tgll));
         return $dayOne . " " . $array_bulan[$blnn] . " " . $thnn;
     }
+
     // tanggal jam
     public static function TglJam($tgl)
     {
@@ -505,127 +456,93 @@ class Helper
         $dayOne      = date('d', strtotime($tgll));
         $blnn        = date('m', strtotime($tgll));
         $array_bulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05'   => 'Mei', '06'      => 'Juni',
+            '07' => 'Juli', '08'    => 'Agustus', '09'  => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
         $thnn = date('Y', strtotime($tgll));
         $jam  = date('H:i', strtotime($tgll));
         return $dayOne . " " . $array_bulan[$blnn] . " " . $thnn . ", " . $jam;
     }
+
     // Bulan
     public static function intToMonth($int)
     {
         $array_bulan = [
-            '1'  => 'Januari',
-            '2'  => 'Februari',
-            '3'  => 'Maret',
-            '4'  => 'April',
-            '5'  => 'Mei',
-            '6'  => 'Juni',
-            '7'  => 'Juli',
-            '8'  => 'Agustus',
-            '9'  => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '1'  => 'Januari', '2'  => 'Februari', '3'  => 'Maret',
+            '4'  => 'April', '5'    => 'Mei', '6'       => 'Juni',
+            '7'  => 'Juli', '8'     => 'Agustus', '9'   => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
 
         return $array_bulan[$int];
     }
+
     // Array Bulan
     public static function arMonth()
     {
         $array_bulan = [
-            '1'  => 'Januari',
-            '2'  => 'Februari',
-            '3'  => 'Maret',
-            '4'  => 'April',
-            '5'  => 'Mei',
-            '6'  => 'Juni',
-            '7'  => 'Juli',
-            '8'  => 'Agustus',
-            '9'  => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
+            '1'  => 'Januari', '2'  => 'Februari', '3'  => 'Maret',
+            '4'  => 'April', '5'    => 'Mei', '6'       => 'Juni',
+            '7'  => 'Juli', '8'     => 'Agustus', '9'   => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
         ];
 
         return $array_bulan;
     }
-    // Array Bulan
+
+    // Array Bulan Short
     public static function arMonth2($bln)
     {
         $array_bulan = [
-            '1'  => 'Jan',
-            '2'  => 'Feb',
-            '3'  => 'Mar',
-            '4'  => 'Apr',
-            '5'  => 'Mei',
-            '6'  => 'Jun',
-            '7'  => 'Jul',
-            '8'  => 'Aug',
-            '9'  => 'Sep',
-            '10' => 'Oct',
-            '11' => 'Nov',
-            '12' => 'Dec',
+            '1'  => 'Jan', '2'  => 'Feb', '3'  => 'Mar',
+            '4'  => 'Apr', '5'  => 'Mei', '6'  => 'Jun',
+            '7'  => 'Jul', '8'  => 'Aug', '9'  => 'Sep',
+            '10' => 'Oct', '11' => 'Nov', '12' => 'Dec',
         ];
 
         return $array_bulan[$bln];
     }
+
     // Bulan to romawi
     public static function bln2Romawi($bln)
     {
         $array_bulan = [
-            '1'  => 'I',
-            '2'  => 'II',
-            '3'  => 'III',
-            '4'  => 'IV',
-            '5'  => 'V',
-            '6'  => 'VI',
-            '7'  => 'VII',
-            '8'  => 'VIII',
-            '9'  => 'IX',
-            '10' => 'X',
-            '11' => 'XI',
-            '12' => 'XII',
+            '1'  => 'I', '2'   => 'II', '3'   => 'III',
+            '4'  => 'IV', '5'  => 'V', '6'    => 'VI',
+            '7'  => 'VII', '8' => 'VIII', '9' => 'IX',
+            '10' => 'X', '11'  => 'XI', '12'  => 'XII',
         ];
 
         return $array_bulan[$bln];
     }
+
     // Jam dan Menit
     public static function jamMenit($timestamp)
     {
         $jamMenit = date('H:i', strtotime($timestamp));
         return $jamMenit;
     }
+
     // Hitung Berapa Hari Ke Sekarang
     public static function hitungHariSekarang($tgl)
     {
-        $date   = Carbon::parse($tgl);
-        $now    = Carbon::now('Asia/Jakarta');
-        $diff   = $date->diffInDays($now);
-        $result = (int) $diff;
-        return $result;
+        $date = Carbon::parse($tgl);
+        $now  = Carbon::now('Asia/Jakarta');
+        $diff = $date->diffInDays($now);
+        return (int) $diff;
     }
+
     // Hitung Berapa Jam Ke Sekarang
     public static function hitungJamSekarang($tgl)
     {
-        $date   = Carbon::parse($tgl);
-        $now    = Carbon::now('Asia/Jakarta');
-        $diff   = $date->diffInHours($now);
-        $result = (int) $diff;
-        return $result;
+        $date = Carbon::parse($tgl);
+        $now  = Carbon::now('Asia/Jakarta');
+        $diff = $date->diffInHours($now);
+        return (int) $diff;
     }
+
     // add time carbon
     public static function addTimeCarbon($startDate, $amount, $type)
     {
@@ -638,11 +555,12 @@ class Helper
         } elseif ($type == 'minutes') {
             $date->addMinutes($amount);
         } else {
-            throw new InvalidArgumentException('Invalid type provided. Use "days", "hours", or "minutes".');
+            throw new \InvalidArgumentException('Invalid type provided. Use "days", "hours", or "minutes".');
         }
 
         return $date->format('Y-m-d H:i:s');
     }
+
     // Ucapan Waktu
     public static function Greeting()
     {
@@ -651,26 +569,26 @@ class Helper
         $jam   = $t[0];
         $menit = $t[1];
 
-        if ($jam >= 00 and $jam < 10) {
-            if ($menit > 00 and $menit < 60) {
+        if ($jam >= 00 && $jam < 10) {
+            if ($menit > 00 && $menit < 60) {
                 $ucapan = "Selamat Pagi";
             } else {
                 $ucapan = "";
             }
-        } elseif ($jam >= 10 and $jam < 15) {
-            if ($menit > 00 and $menit < 60) {
+        } elseif ($jam >= 10 && $jam < 15) {
+            if ($menit > 00 && $menit < 60) {
                 $ucapan = "Selamat Siang";
             } else {
                 $ucapan = "";
             }
-        } elseif ($jam >= 15 and $jam < 18) {
-            if ($menit > 00 and $menit < 60) {
+        } elseif ($jam >= 15 && $jam < 18) {
+            if ($menit > 00 && $menit < 60) {
                 $ucapan = "Selamat Sore";
             } else {
                 $ucapan = "";
             }
-        } elseif ($jam >= 18 and $jam <= 24) {
-            if ($menit > 00 and $menit < 60) {
+        } elseif ($jam >= 18 && $jam <= 24) {
+            if ($menit > 00 && $menit < 60) {
                 $ucapan = "Selamat Malam";
             } else {
                 $ucapan = "";
@@ -680,6 +598,7 @@ class Helper
         }
         return $ucapan;
     }
+
     // Panggilan
     public static function Panggilan($jkl)
     {
@@ -692,7 +611,8 @@ class Helper
         }
         return $panggilan;
     }
-    // wellcomeBack
+
+    // welcomeBack
     public static function welcomeBack()
     {
         $auth         = Auth::user();
@@ -702,145 +622,42 @@ class Helper
 
         return $welcome;
     }
+
     // getBulanLetterFromParameter
     public static function getBulanLetterFromParameter($bulan)
     {
         switch ($bulan) {
-            case '01':
-                return "Januari";
-                break;
-            case '02':
-                return "Februari";
-                break;
-            case '03':
-                return "Maret";
-                break;
-            case '04':
-                return "April";
-                break;
-            case '05':
-                return "Mei";
-                break;
-            case '06':
-                return "Juni";
-                break;
-            case '07':
-                return "Juli";
-                break;
-            case '08':
-                return "Agustus";
-                break;
-            case '09':
-                return "September";
-                break;
-            case '10':
-                return "Oktober";
-                break;
-            case '11':
-                return "November";
-                break;
-            case '12':
-                return "Desember";
-                break;
-            default:
-                return "NONE";
-                break;
+            case '01':return "Januari";
+            case '02':return "Februari";
+            case '03':return "Maret";
+            case '04':return "April";
+            case '05':return "Mei";
+            case '06':return "Juni";
+            case '07':return "Juli";
+            case '08':return "Agustus";
+            case '09':return "September";
+            case '10':return "Oktober";
+            case '11':return "November";
+            case '12':return "Desember";
+            default: return "NONE";
         }
     }
+
     // getBulanLetter
     public static function getBulanLetter()
     {
-        switch (date('m')) {
-            case '01':
-                return "Januari";
-                break;
-            case '02':
-                return "Februari";
-                break;
-            case '03':
-                return "Maret";
-                break;
-            case '04':
-                return "April";
-                break;
-            case '05':
-                return "Mei";
-                break;
-            case '06':
-                return "Juni";
-                break;
-            case '07':
-                return "Juli";
-                break;
-            case '08':
-                return "Agustus";
-                break;
-            case '09':
-                return "September";
-                break;
-            case '10':
-                return "Oktober";
-                break;
-            case '11':
-                return "November";
-                break;
-            case '12':
-                return "Desember";
-                break;
-            default:
-                return "NONE";
-                break;
-        }
+        return self::getBulanLetterFromParameter(date('m'));
     }
+
     // getRomawi
     public static function getRomawi()
     {
-        switch (date('m')) {
-            case '01':
-                return "I";
-                break;
-            case '02':
-                return "II";
-                break;
-            case '03':
-                return "III";
-                break;
-            case '04':
-                return "IV";
-                break;
-            case '05':
-                return "V";
-                break;
-            case '06':
-                return "VI";
-                break;
-            case '07':
-                return "VII";
-                break;
-            case '08':
-                return "VIII";
-                break;
-            case '09':
-                return "IX";
-                break;
-            case '10':
-                return "X";
-                break;
-            case '11':
-                return "XI";
-                break;
-            case '12':
-                return "XII";
-                break;
-            default:
-                return "NONE";
-                break;
-        }
+        return self::bln2Romawi(date('m'));
     }
+
     // getFilterTahun
     public static function getFilterTahun()
     {
-        // cek filter tahun
         if (Session::exists('filter_tahun')) {
             $tahun = Session::get('filter_tahun');
         } else {
@@ -852,7 +669,7 @@ class Helper
 
     /*
     |--------------------------------------------------------------------------
-    | FUNCTION API
+    | FUNCTION API - Indonesia Region API
     |--------------------------------------------------------------------------
      */
     // KWID PROVINSI LIST
@@ -866,6 +683,7 @@ class Helper
 
         return null;
     }
+
     // KWID KABUPATEN LIST
     public static function getKabupatenList($province_id)
     {
@@ -877,6 +695,7 @@ class Helper
 
         return null;
     }
+
     // KWID KECAMATAN LIST
     public static function getKecamatanList($regency_id)
     {
@@ -888,6 +707,7 @@ class Helper
 
         return null;
     }
+
     // KWID DESA LIST
     public static function getDesaList($district_id)
     {
@@ -899,6 +719,7 @@ class Helper
 
         return null;
     }
+
     // KWID PROVINSI DETAIL
     public static function getProvinsiDetail($id)
     {
@@ -910,6 +731,7 @@ class Helper
 
         return null;
     }
+
     // KWID KABUPATEN DETAIL
     public static function getKabupatenDetail($id)
     {
@@ -921,6 +743,7 @@ class Helper
 
         return null;
     }
+
     // KWID KECAMATAN DETAIL
     public static function getKecamatanDetail($id)
     {
@@ -932,6 +755,7 @@ class Helper
 
         return null;
     }
+
     // KWID DESA DETAIL
     public static function getDesaDetail($id)
     {
@@ -946,9 +770,10 @@ class Helper
 
     /*
     |--------------------------------------------------------------------------
-    | FUNCTION UPLOAD
+    | FUNCTION UPLOAD - Updated for Laravel 12 & Intervention Image v3
     |--------------------------------------------------------------------------
      */
+
     // Untuk Upload Gambar
     public static function UpImg($request, $field, $path)
     {
@@ -978,11 +803,11 @@ class Helper
             }
 
             // Buka dan kompres gambar original maksimal 500KB
-            $image   = Image::make($file);
+            $image   = Image::read($file);
             $quality = 90;
 
             do {
-                $encoded = $image->encode($fileExtension, $quality);
+                $encoded = $image->toJpeg($quality);
                 $size    = strlen((string) $encoded);
                 $quality -= 5;
             } while ($size > 500 * 1024 && $quality > 10);
@@ -1149,7 +974,7 @@ class Helper
         return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
-    // Untuk Update Gambar Post
+    // Untuk Update Gambar Post dengan Indexing
     public static function UpdateImgIndexing($field, $paths)
     {
         $detail = $field;
@@ -1208,7 +1033,7 @@ class Helper
                     $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
                     $path      = storage_path("app/public/" . $imageName);
 
-                    $image = \Image::make($rawData);
+                    $image = Image::read($rawData);
 
                     if ($image->width() > 1024) {
                         $image->resize(1024, null, function ($constraint) {
@@ -1217,8 +1042,7 @@ class Helper
                         });
                     }
 
-                    $image->encode('webp', 85);
-                    file_put_contents($path, $image);
+                    $image->toWebp(85)->save($path);
 
                     $url_img = "/storage/" . $imageName;
 
@@ -1296,7 +1120,7 @@ class Helper
                     $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
                     $path      = storage_path("app/public/" . $imageName);
 
-                    $image = \Image::make($rawData);
+                    $image = Image::read($rawData);
                     if ($image->width() > 1024) {
                         $image->resize(1024, null, function ($constraint) {
                             $constraint->aspectRatio();
@@ -1304,8 +1128,7 @@ class Helper
                         });
                     }
 
-                    $image->encode('webp', 85);
-                    file_put_contents($path, $image);
+                    $image->toWebp(85)->save($path);
 
                     $img->removeAttribute('src');
                     $img->removeAttribute('data-filename');
@@ -1329,6 +1152,7 @@ class Helper
         return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
+    // Update Gambar Post dengan Kompresi
     public static function UpdateImgPostWithCompress($request, $field, $paths)
     {
         $detail = $request->input($field);
@@ -1386,7 +1210,7 @@ class Helper
                     $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
                     $path      = storage_path("app/public/" . $imageName);
 
-                    $image = \Image::make($rawData);
+                    $image = Image::read($rawData);
                     if ($image->width() > 1024) {
                         $image->resize(1024, null, function ($constraint) {
                             $constraint->aspectRatio();
@@ -1394,8 +1218,7 @@ class Helper
                         });
                     }
 
-                    $image->encode('webp', 85);
-                    file_put_contents($path, $image);
+                    $image->toWebp(85)->save($path);
 
                     $url_img = "/storage/" . $imageName;
                     $imgCount++;
@@ -1424,6 +1247,449 @@ class Helper
             $img->setAttribute('loading', 'lazy');
             $img->setAttribute('onload', "this.classList.add('loaded')");
             $img->setAttribute('onerror', "this.src='/images/banner/no-img-post.png'; this.classList.add('loaded')");
+        }
+
+        return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Upload dan proses gambar dari TinyMCE (untuk Create)
+     */
+    public static function UpImgPostTinyMCE($request, $field, $paths)
+    {
+        $detail = $request->input($field);
+        if (empty($detail)) {
+            return $detail;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DomDocument('1.0', 'UTF-8');
+
+        // Load HTML dengan encoding yang proper untuk TinyMCE
+        $dom->loadHTML(mb_convert_encoding($detail, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new \DOMXPath($dom);
+
+        // 🛡️ Security: Hapus semua <script> tags
+        foreach ($dom->getElementsByTagName('script') as $script) {
+            $script->parentNode->removeChild($script);
+        }
+
+        // 🛡️ Security: Hapus atribut berbahaya (onX events, javascript:href)
+        foreach ($xpath->query('//*') as $node) {
+            if ($node->hasAttributes()) {
+                $attrsToRemove = [];
+                foreach ($node->attributes as $attr) {
+                    // Remove onX attributes (onerror, onclick, etc)
+                    if (preg_match('/^on/i', $attr->name)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                    // Remove javascript: href
+                    if (strtolower($attr->name) === 'href' && preg_match('/^javascript:/i', $attr->value)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                }
+                foreach ($attrsToRemove as $attrName) {
+                    $node->removeAttribute($attrName);
+                }
+            }
+        }
+
+        // 🔧 Process Images from TinyMCE
+        $images    = $dom->getElementsByTagName('img');
+        $maxImages = 10;
+        $imgCount  = 0;
+
+        foreach ($images as $k => $img) {
+            $src = $img->getAttribute('src');
+
+            // Handle TinyMCE blob URLs and base64 images
+            if ((strpos($src, 'blob:') === 0) || (strpos($src, 'data:image') === 0)) {
+                if ($imgCount >= $maxImages) {
+                    continue;
+                }
+
+                try {
+                    if (strpos($src, 'data:image') === 0) {
+                        // Handle base64 images
+                        list($typeInfo, $base64Data) = explode(';', $src);
+                        list(, $base64Data)          = explode(',', $base64Data);
+
+                        if (! base64_decode($base64Data, true)) {
+                            continue;
+                        }
+
+                        $rawData = base64_decode($base64Data);
+                    } else {
+                        // Handle blob URLs (skip for now as they're temporary)
+                        continue;
+                    }
+
+                    $folder = trim($paths, '/');
+                    Storage::disk('public')->makeDirectory($folder);
+
+                    $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
+                    $path      = storage_path("app/public/" . $imageName);
+
+                    // Compress and resize image
+                    $image = Image::read($rawData);
+                    if ($image->width() > 1024) {
+                        $image->resize(1024, null, function ($constraint) {
+                            $constraint->aspectRatio();
+                            $constraint->upsize();
+                        });
+                    }
+
+                    $image->toWebp(85)->save($path);
+
+                    // Clean old attributes
+                    $img->removeAttribute('src');
+                    $img->removeAttribute('data-mce-src');      // TinyMCE specific
+                    $img->removeAttribute('data-mce-selected'); // TinyMCE specific
+                    $img->removeAttribute('style');
+
+                    // Set new attributes
+                    $img->setAttribute('src', "/storage/" . $imageName);
+                    $img->setAttribute('class', 'img-fluid lazy-image');
+                    $img->setAttribute('draggable', 'false');
+                    $img->setAttribute('loading', 'lazy');
+                    $img->setAttribute('alt', 'Gambar konten');
+
+                    $imgCount++;
+                } catch (\Exception $e) {
+                    \Log::error("TinyMCE Image Upload Error (Create): " . $e->getMessage());
+                    continue;
+                }
+            }
+        }
+
+        return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Update dan proses gambar dari TinyMCE (untuk Update)
+     */
+    public static function UpdateImgPostTinyMCE($request, $field, $paths)
+    {
+        $detail = $request->input($field);
+        if (empty($detail)) {
+            return $detail;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DomDocument('1.0', 'UTF-8');
+        $dom->loadHTML(mb_convert_encoding($detail, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new \DOMXPath($dom);
+
+        // 🛡️ Security filtering
+        foreach ($dom->getElementsByTagName('script') as $script) {
+            $script->parentNode->removeChild($script);
+        }
+
+        foreach ($xpath->query('//*') as $node) {
+            if ($node->hasAttributes()) {
+                $attrsToRemove = [];
+                foreach ($node->attributes as $attr) {
+                    if (preg_match('/^on/i', $attr->name)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                    if (strtolower($attr->name) === 'href' && preg_match('/^javascript:/i', $attr->value)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                }
+                foreach ($attrsToRemove as $attrName) {
+                    $node->removeAttribute($attrName);
+                }
+            }
+        }
+
+        // 🔧 Process Images
+        $images    = $dom->getElementsByTagName('img');
+        $maxImages = 10;
+        $imgCount  = 0;
+
+        foreach ($images as $k => $img) {
+            $src    = $img->getAttribute('src');
+            $newSrc = $src;
+
+            // Handle new base64 images from TinyMCE
+            if (strpos($src, 'data:image') === 0 && $imgCount < $maxImages) {
+                try {
+                    list($typeInfo, $base64Data) = explode(';', $src);
+                    list(, $base64Data)          = explode(',', $base64Data);
+
+                    if (! base64_decode($base64Data, true)) {
+                        continue;
+                    }
+
+                    $rawData = base64_decode($base64Data);
+                    $folder  = trim($paths, '/');
+                    Storage::disk('public')->makeDirectory($folder);
+
+                    $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
+                    $path      = storage_path("app/public/" . $imageName);
+
+                    // Compress and resize
+                    $image = Image::read($rawData);
+                    if ($image->width() > 1024) {
+                        $image->resize(1024, null, function ($constraint) {
+                            $constraint->aspectRatio();
+                            $constraint->upsize();
+                        });
+                    }
+
+                    $image->toWebp(85)->save($path);
+
+                    $newSrc = "/storage/" . $imageName;
+                    $imgCount++;
+                } catch (\Exception $e) {
+                    \Log::error("TinyMCE Image Update Error: " . $e->getMessage());
+                    continue;
+                }
+            } else {
+                // Handle existing images (clean domain if present)
+                $backendUrl = url('/');
+                if (strpos($newSrc, $backendUrl) !== false) {
+                    $newSrc = str_replace($backendUrl, '', $newSrc);
+                }
+            }
+
+            // Clean TinyMCE specific attributes
+            $img->removeAttribute('data-mce-src');
+            $img->removeAttribute('data-mce-selected');
+            $img->removeAttribute('data-mce-style');
+            $img->removeAttribute('style');
+
+            // Set clean attributes
+            $img->setAttribute('src', $newSrc);
+            $img->setAttribute('class', 'img-fluid lazy-image');
+            $img->setAttribute('draggable', 'false');
+            $img->setAttribute('loading', 'lazy');
+
+            // Set alt if not exists
+            if (! $img->hasAttribute('alt') || empty($img->getAttribute('alt'))) {
+                $img->setAttribute('alt', 'Gambar konten');
+            }
+        }
+
+        return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Process TinyMCE content dan convert base64 images ke uploaded files
+     * Seperti approach Summernote
+     */
+    public static function processTinyMCEBase64Images($request, $field, $paths)
+    {
+        $detail = $request->input($field);
+        if (empty($detail)) {
+            return $detail;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DomDocument('1.0', 'UTF-8');
+        $dom->loadHTML(mb_convert_encoding($detail, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new \DOMXPath($dom);
+
+        // 🛡️ Security: Hapus semua <script> tags
+        foreach ($dom->getElementsByTagName('script') as $script) {
+            $script->parentNode->removeChild($script);
+        }
+
+        // 🛡️ Security: Hapus atribut berbahaya
+        foreach ($xpath->query('//*') as $node) {
+            if ($node->hasAttributes()) {
+                $attrsToRemove = [];
+                foreach ($node->attributes as $attr) {
+                    // Remove onX attributes (onerror, onclick, etc)
+                    if (preg_match('/^on/i', $attr->name)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                    // Remove javascript: href
+                    if (strtolower($attr->name) === 'href' && preg_match('/^javascript:/i', $attr->value)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                }
+                foreach ($attrsToRemove as $attrName) {
+                    $node->removeAttribute($attrName);
+                }
+            }
+        }
+
+        // 🔧 Process Base64 Images (seperti approach Summernote)
+        $images    = $dom->getElementsByTagName('img');
+        $maxImages = 10;
+        $imgCount  = 0;
+
+        foreach ($images as $k => $img) {
+            $src = $img->getAttribute('src');
+
+            // Process base64 images
+            if (strpos($src, 'data:image') === 0 && $imgCount < $maxImages) {
+                try {
+                    // Extract base64 data
+                    list($typeInfo, $base64Data) = explode(';', $src);
+                    list(, $base64Data)          = explode(',', $base64Data);
+
+                    if (! base64_decode($base64Data, true)) {
+                        continue;
+                    }
+
+                    $rawData = base64_decode($base64Data);
+                    $folder  = trim($paths, '/');
+                    Storage::disk('public')->makeDirectory($folder);
+
+                    $imageName = $folder . "/" . self::gencode(3) . "-" . date('dmy') . "-" . rand(1000, 9999999) . "-" . $k . '.webp';
+                    $path      = storage_path("app/public/" . $imageName);
+
+                    // Process dengan Intervention Image
+                    $image = Image::read($rawData);
+
+                    // Auto resize jika terlalu besar
+                    if ($image->width() > 1920) {
+                        $image->resize(1920, null, function ($constraint) {
+                            $constraint->aspectRatio();
+                            $constraint->upsize();
+                        });
+                    }
+
+                    // Compress ke WebP untuk efisiensi
+                    $image->toWebp(85)->save($path);
+
+                    // Update img src dengan URL yang benar
+                    $img->setAttribute('src', "/storage/" . $imageName);
+
+                    // Ensure proper styling
+                    $img->setAttribute('style', 'width: 100%; height: auto; max-width: 100%; display: block; margin: 15px auto;');
+                    $img->setAttribute('width', '100%');
+                    $img->setAttribute('height', 'auto');
+                    $img->setAttribute('loading', 'lazy');
+
+                    if (! $img->hasAttribute('alt') || empty($img->getAttribute('alt'))) {
+                        $img->setAttribute('alt', 'Gambar konten');
+                    }
+
+                    $imgCount++;
+                } catch (\Exception $e) {
+                    \Log::error("Gagal proses base64 image TinyMCE: " . $e->getMessage());
+                    continue;
+                }
+            } else {
+                // Untuk gambar yang sudah ada (edit mode), pastikan styling konsisten
+                $currentSrc = $img->getAttribute('src');
+
+                // Clean backend URL jika ada
+                $backendUrl = url('/');
+                if (strpos($currentSrc, $backendUrl) !== false) {
+                    $currentSrc = str_replace($backendUrl, '', $currentSrc);
+                    $img->setAttribute('src', $currentSrc);
+                }
+
+                // Apply consistent styling
+                $img->setAttribute('style', 'width: 100%; height: auto; max-width: 100%; display: block; margin: 15px auto;');
+                $img->setAttribute('width', '100%');
+                $img->setAttribute('height', 'auto');
+
+                if (! $img->hasAttribute('loading')) {
+                    $img->setAttribute('loading', 'lazy');
+                }
+
+                if (! $img->hasAttribute('alt') || empty($img->getAttribute('alt'))) {
+                    $img->setAttribute('alt', 'Gambar konten');
+                }
+            }
+        }
+
+        return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Update image URLs untuk display di frontend dari TinyMCE content
+     */
+    public static function updateImageUrlsTinyMCE($content)
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DomDocument('1.0', 'UTF-8');
+        $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        $images = $dom->getElementsByTagName('img');
+
+        foreach ($images as $img) {
+            $src = $img->getAttribute('src');
+
+            // Convert relative paths to full URLs
+            if (strpos($src, '/storage/') === 0) {
+                $fullUrl = url($src);
+                $img->setAttribute('src', $fullUrl);
+            }
+
+            // Ensure proper attributes for frontend display
+            $currentClass = $img->getAttribute('class');
+            $newClass     = trim($currentClass . ' img-fluid');
+            $img->setAttribute('class', $newClass);
+
+            // Consistent styling
+            $img->setAttribute('style', 'width: 100%; height: auto; max-width: 100%; display: block; margin: 15px auto;');
+
+            if (! $img->hasAttribute('loading')) {
+                $img->setAttribute('loading', 'lazy');
+            }
+
+            if (! $img->hasAttribute('alt') || empty($img->getAttribute('alt'))) {
+                $img->setAttribute('alt', 'Gambar konten');
+            }
+        }
+
+        return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Clean TinyMCE content untuk security
+     */
+    public static function cleanTinyMCEContent($content)
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DomDocument('1.0', 'UTF-8');
+        $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $xpath = new \DOMXPath($dom);
+
+        // Remove dangerous elements
+        $dangerousElements = ['script', 'object', 'embed', 'iframe', 'form', 'input', 'button'];
+        foreach ($dangerousElements as $tagName) {
+            foreach ($dom->getElementsByTagName($tagName) as $element) {
+                $element->parentNode->removeChild($element);
+            }
+        }
+
+        // Remove dangerous attributes
+        foreach ($xpath->query('//*') as $node) {
+            if ($node->hasAttributes()) {
+                $attrsToRemove = [];
+                foreach ($node->attributes as $attr) {
+                    // Remove event handlers
+                    if (preg_match('/^on/i', $attr->name)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                    // Remove javascript: URLs
+                    if (strtolower($attr->name) === 'href' && preg_match('/^javascript:/i', $attr->value)) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                    // Remove TinyMCE specific attributes for clean output
+                    if (strpos($attr->name, 'data-mce-') === 0) {
+                        $attrsToRemove[] = $attr->name;
+                    }
+                }
+                foreach ($attrsToRemove as $attrName) {
+                    $node->removeAttribute($attrName);
+                }
+            }
         }
 
         return html_entity_decode($dom->saveHTML(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -1459,27 +1725,39 @@ class Helper
     private static function resizeImageIfNeeded($filePath, $maxFileSizeInMB = 1)
     {
         $targetFileSize = $maxFileSizeInMB * 1024 * 1024; // Konversi ukuran file ke byte
-        $image          = Image::make($filePath);
+
+        if (! file_exists($filePath)) {
+            return;
+        }
 
         // Cek ukuran file, jika lebih besar dari target file size maka lakukan resize dan kompresi
         if (filesize($filePath) > $targetFileSize) {
-            // Resize gambar dengan lebar maksimum 1920px untuk mengurangi ukuran file
-            $image->resize(1920, null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            try {
+                $image = Image::read($filePath);
 
-            // Kompres gambar dengan kualitas yang sesuai agar di bawah target file size
-            $quality = 90;
-            while ($image->filesize() > $targetFileSize && $quality > 10) {
-                $quality -= 5; // Kurangi kualitas jika ukuran masih di atas target file size
-                $image->encode($image->mime(), $quality);
+                // Resize gambar dengan lebar maksimum 1920px untuk mengurangi ukuran file
+                if ($image->width() > 1920) {
+                    $image->resize(1920, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                // Kompres gambar dengan kualitas yang sesuai agar di bawah target file size
+                $quality = 90;
+                do {
+                    $encoded = $image->toJpeg($quality);
+                    $quality -= 5; // Kurangi kualitas jika ukuran masih di atas target file size
+                } while (strlen($encoded) > $targetFileSize && $quality > 10);
+
+                // Simpan gambar yang telah dikompresi
+                file_put_contents($filePath, $encoded);
+            } catch (\Exception $e) {
+                \Log::error("Error resizing image: " . $e->getMessage());
             }
-
-            // Simpan gambar yang telah dikompresi
-            $image->save($filePath, $quality);
         }
     }
+
     // Untuk Upload Pdf
     public static function UpPdf($request, $field, $path)
     {
@@ -1519,7 +1797,9 @@ class Helper
         } else {
             return "0"; // File tidak valid
         }
-    } // Untuk Upload File & Gambar
+    }
+
+    // Untuk Upload File & Gambar
     public static function UpFileUnduhan($request, $field, $path)
     {
         $file = $request->file($field);
@@ -1533,57 +1813,17 @@ class Helper
             // Ekstensi yang diizinkan (Office, suara, gambar, video, dokumen, kompresi)
             $allowedExtensions = [
                 // Ekstensi gambar
-                'jpg',
-                'jpeg',
-                'png',
-                'gif',
-                'bmp',
-                'svg',
-                'tiff',
-                'webp',
+                'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'tiff', 'webp',
                 // Ekstensi dokumen Office
-                'doc',
-                'docx',
-                'xls',
-                'xlsx',
-                'ppt',
-                'pptx',
-                'odt',
-                'ods',
-                'odp',
-                'rtf',
+                'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf',
                 // Ekstensi dokumen lainnya
-                'pdf',
-                'txt',
-                'csv',
-                'xml',
-                'json',
-                'md',
+                'pdf', 'txt', 'csv', 'xml', 'json', 'md',
                 // Ekstensi file suara
-                'mp3',
-                'wav',
-                'ogg',
-                'm4a',
-                'flac',
-                'aac',
+                'mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac',
                 // Ekstensi file video
-                'mp4',
-                'mkv',
-                'avi',
-                'mov',
-                'wmv',
-                'flv',
-                'webm',
-                '3gp',
-                'mpeg',
+                'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'mpeg',
                 // Ekstensi file kompresi
-                'zip',
-                'rar',
-                'tar',
-                'gz',
-                '7z',
-                'bz2',
-                'xz',
+                'zip', 'rar', 'tar', 'gz', '7z', 'bz2', 'xz',
                 // Ekstensi lainnya yang mungkin diizinkan
                 'iso',
             ];
@@ -1632,6 +1872,7 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     // Untuk Upload File & Gambar
     public static function UpImgPdf($request, $field, $path)
     {
@@ -1678,6 +1919,7 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     // Untuk Upload File PDF
     public static function UpFilePdf($request, $field, $path)
     {
@@ -1695,13 +1937,6 @@ class Helper
                 return "0"; // File tidak diizinkan
             }
 
-            // Jika file adalah gambar, lakukan pemeriksaan tambahan
-            if (in_array($fileExtension, ['jpg', 'jpeg', 'png'])) {
-                if (! self::isValidImage($file)) {
-                    return "0"; // File bukan gambar yang valid
-                }
-            }
-
             // Generate nama file yang aman
             $fileName  = Str::uuid() . "-" . rand(1000, 9999999999) . "." . $fileExtension;
             $file_save = $path . "/" . $fileName;
@@ -1724,6 +1959,7 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     // Untuk Upload File Video
     public static function UpVideo($request, $field, $path)
     {
@@ -1741,13 +1977,6 @@ class Helper
                 return "0"; // File tidak diizinkan
             }
 
-            // Jika file adalah gambar, lakukan pemeriksaan tambahan
-            if (in_array($fileExtension, ['jpg', 'jpeg', 'png'])) {
-                if (! self::isValidImage($file)) {
-                    return "0"; // File bukan gambar yang valid
-                }
-            }
-
             // Generate nama file yang aman
             $fileName  = Str::uuid() . "-" . rand(1000, 9999999999) . "." . $fileExtension;
             $file_save = $path . "/" . $fileName;
@@ -1770,6 +1999,7 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     // Upload file thumbnails
     public static function UpThumbnails($request, $field, $path)
     {
@@ -1799,15 +2029,13 @@ class Helper
             }
 
             // Resize gambar asli menjadi 1200 x 628 px menggunakan fit untuk menyesuaikan gambar
-            $img = Image::make($file)
-                ->fit(1200, 628)
-                ->encode($fileExtension);
+            $image = Image::read($file)->cover(1200, 628);
 
             // Simpan gambar yang di-resize
-            $img->save(storage_path('app/public/' . $fileSavePath));
+            $image->save(storage_path('app/public/' . $fileSavePath));
 
             // Membuat thumbnail dari gambar yang diunggah
-            self::createThumbnail($img, $path, $fileName, $fileExtension);
+            self::createThumbnail($image, $path, $fileName, $fileExtension);
 
             // Return data file yang berhasil diunggah
             return $fileSavePath;
@@ -1815,77 +2043,44 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     // Upload file thumbnails untuk Ebook
     public static function UpThumbnailsEbook($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 800, 1000);
     }
+
     // Upload file thumbnails untuk Emagazine
     public static function UpThumbnailsEmagazine($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 600, 800);
     }
+
     // Upload file foto untuk Data Direktur
     public static function UpFotoDirektur($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 317, 448);
     }
+
     // Upload File Background Hero
     public static function UpBackgoundHero($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 1920, 935);
     }
+
     // Upload File Illustration Hero Versi 1
     public static function UpIllustrationHeroVersi1($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 1080, 1080);
     }
+
     // Upload File Illustration Hero Versi 4
     public static function UpIllustrationHeroVersi4($request, $field, $path)
     {
         return self::handleThumbnailUpload($request, $field, $path, 400, 600);
     }
+
     // Fungsi umum untuk menangani upload dan resize gambar
-    private static function handleThumbnailUploadX($request, $field, $path, $width, $height)
-    {
-        $file = $request->file($field);
-
-        if ($file && $file->isValid()) {
-            $filename          = $file->getClientOriginalName();
-            $name              = ucwords(pathinfo($filename, PATHINFO_FILENAME));
-            $allowedExtensions = ['jpg', 'jpeg', 'png'];
-            $fileExtension     = strtolower($file->getClientOriginalExtension());
-
-            if (! in_array($fileExtension, $allowedExtensions)) {
-                return "0"; // File tidak diizinkan
-            }
-
-            if (! self::isValidImage($file)) {
-                return "0"; // File bukan gambar yang valid
-            }
-
-            $fileName     = Str::uuid() . "-" . rand(1000, 9999999999) . "." . $fileExtension;
-            $fileSavePath = $path . "/" . $fileName;
-
-            if (! is_dir(storage_path('app/public/' . $path))) {
-                Storage::disk('public')->makeDirectory($path);
-            }
-
-            // Resize gambar sesuai ukuran yang diberikan
-            $img = Image::make($file)
-                ->fit($width, $height)
-                ->encode($fileExtension);
-
-            $img->save(storage_path('app/public/' . $fileSavePath));
-
-            // Buat thumbnail untuk gambar yang diunggah
-            self::createThumbnail($img, $path, $fileName, $fileExtension);
-
-            return $fileSavePath;
-        } else {
-            return "0"; // File tidak valid
-        }
-    }
     private static function handleThumbnailUpload($request, $field, $path, $width, $height)
     {
         $file = $request->file($field);
@@ -1911,50 +2106,27 @@ class Helper
             }
 
             // ✅ Kompres gambar original (tanpa resize) hingga ukuran <= 500KB
-            $originalImage     = Image::make($file);
-            $compressedImage   = clone $originalImage;
+            $originalImage     = Image::read($file);
             $compressedQuality = 90;
 
             do {
-                $encoded = $compressedImage->encode($fileExtension, $compressedQuality);
+                $encoded = $originalImage->toJpeg($compressedQuality);
                 $compressedQuality -= 5;
-            } while ($encoded->filesize() > 500 * 1024 && $compressedQuality > 10);
+            } while (strlen($encoded) > 500 * 1024 && $compressedQuality > 10);
 
             // Simpan file original yang telah dikompres
-            $encoded->save(storage_path('app/public/' . $fileSavePath));
+            file_put_contents(storage_path('app/public/' . $fileSavePath), $encoded);
 
             // ✅ Buat thumbnail dari hasil kompresi (bukan file asli mentah)
-            $thumbnailImage = $originalImage->fit($width, $height);
+            $thumbnailImage = $originalImage->cover($width, $height);
             self::createThumbnail($thumbnailImage, $path, $fileName, $fileExtension);
 
             return $fileSavePath;
         }
         return "0"; // File tidak valid
     }
+
     // Buat thumbnails versi 300 untuk SEO
-    private static function createThumbnailX($image, $path, $originalFileName, $fileExtension)
-    {
-        // Set nama file untuk thumbnail
-        $thumbnailFileName = str_replace('.' . $fileExtension, '_thumbnail.' . $fileExtension, $originalFileName);
-        $thumbnailPath     = $path . '/' . $thumbnailFileName;
-
-        // Fit gambar menjadi ukuran yang lebih kecil untuk thumbnail
-        // $thumbnail = $image->fit(300, 157)
-        //     ->encode($fileExtension);
-        $thumbnail = $image->encode($fileExtension);
-
-                                 // Kompres gambar hingga ukurannya di bawah 300KB
-        $compressedQuality = 90; // Kualitas awal
-        while ($thumbnail->filesize() > 300 * 1024 && $compressedQuality > 10) {
-            $compressedQuality -= 5; // Kurangi kualitas jika ukuran masih di atas 300KB
-                                     // $thumbnail = $image->fit(300, 157)
-                                     //     ->encode($fileExtension, $compressedQuality);
-            $thumbnail = $image->encode($fileExtension, $compressedQuality);
-        }
-
-        // Simpan thumbnail dengan ukuran yang telah dikompresi
-        $thumbnail->save(storage_path('app/public/' . $thumbnailPath), $compressedQuality);
-    }
     private static function createThumbnail($image, $path, $originalFileName, $fileExtension)
     {
         $thumbnailFileName = str_replace('.' . $fileExtension, '_thumbnail.' . $fileExtension, $originalFileName);
@@ -1964,7 +2136,7 @@ class Helper
         try {
             // Optional resize jika gambar terlalu besar (misal lebar > 600px)
             if ($image->width() > 600) {
-                $image->resize(600, null, function ($constraint) {
+                $image = $image->resize(600, null, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize(); // cegah upscale
                 });
@@ -1975,12 +2147,12 @@ class Helper
 
             // Kompresi hingga ukuran di bawah 100KB atau kualitas minimum
             do {
-                $encoded = $image->encode($fileExtension, $compressedQuality);
+                $encoded = $image->toJpeg($compressedQuality);
                 $compressedQuality -= 5;
-            } while (strlen((string) $encoded) > 100 * 1024 && $compressedQuality > 10);
+            } while (strlen($encoded) > 100 * 1024 && $compressedQuality > 10);
 
             // Simpan hasil encode ke file
-            file_put_contents($fullPath, (string) $encoded);
+            file_put_contents($fullPath, $encoded);
         } catch (\Exception $e) {
             \Log::error("Gagal membuat thumbnail: " . $e->getMessage());
         }
@@ -2013,7 +2185,7 @@ class Helper
             }
 
             // Buka gambar
-            $img    = Image::make($file);
+            $img    = Image::read($file);
             $width  = $img->width();
             $height = $img->height();
 
@@ -2025,10 +2197,10 @@ class Helper
             $y = intval(($height - $squareSize) / 2);
 
             // Crop gambar menjadi persegi
-            $img->crop($squareSize, $squareSize, $x, $y);
+            $img = $img->crop($squareSize, $squareSize, $x, $y);
 
             // Encode dan simpan (tanpa resize)
-            $img->encode($fileExtension)->save(storage_path('app/public/' . $fileSavePath));
+            $img->save(storage_path('app/public/' . $fileSavePath));
 
             // Buat avatar dari gambar yang sudah di-crop
             self::createAvatar($img, $path, $fileName, $fileExtension);
@@ -2038,6 +2210,7 @@ class Helper
             return "0"; // File tidak valid
         }
     }
+
     private static function createAvatar($image, $path, $originalFileName, $fileExtension)
     {
         // Set nama file untuk avatar
@@ -2046,19 +2219,19 @@ class Helper
         $fullPath          = storage_path('app/public/' . $thumbnailPath);
 
         // Fit 64x64 sekali saja
-        $resized = $image->fit(64, 64);
+        $resized = $image->cover(64, 64);
 
         $compressedQuality = 90;
         $encoded           = null;
 
         // Kompresi bertahap hingga di bawah 300KB
         do {
-            $encoded = $resized->encode($fileExtension, $compressedQuality);
+            $encoded = $resized->toJpeg($compressedQuality);
             $compressedQuality -= 5;
-        } while (strlen((string) $encoded) > 300 * 1024 && $compressedQuality > 10);
+        } while (strlen($encoded) > 300 * 1024 && $compressedQuality > 10);
 
         // Simpan avatar ke file
-        file_put_contents($fullPath, (string) $encoded);
+        file_put_contents($fullPath, $encoded);
     }
 
     // Upload file infografis
@@ -2091,8 +2264,7 @@ class Helper
             }
 
             // Simpan gambar asli tanpa resize
-            $img = Image::make($file)
-                ->encode($fileExtension);
+            $img = Image::read($file);
 
             // Simpan gambar asli
             $img->save(storage_path('app/public/' . $fileSavePath));
@@ -2112,28 +2284,6 @@ class Helper
     }
 
     // Membuat thumbnail dengan ukuran < 300KB
-    private static function createThumnailInfografisX($file, $path, $originalFileName, $fileExtension)
-    {
-        // Set nama file untuk thumbnail
-        $thumbnailFileName = str_replace('.' . $fileExtension, '_thumbnail.' . $fileExtension, $originalFileName);
-        $thumbnailPath     = $path . '/' . $thumbnailFileName;
-
-        // Baca gambar asli
-        $image = Image::make($file);
-
-        // Fit gambar menjadi ukuran yang lebih kecil untuk thumbnail (contoh 300x300 px)
-        $thumbnail = $image->encode($fileExtension);
-
-                                 // Kompres gambar hingga ukurannya di bawah 300KB
-        $compressedQuality = 90; // Kualitas awal
-        while ($thumbnail->filesize() > 300 * 1024 && $compressedQuality > 10) {
-            $compressedQuality -= 5; // Kurangi kualitas jika ukuran masih di atas 300KB
-            $thumbnail = $image->encode($fileExtension, $compressedQuality);
-        }
-
-        // Simpan thumbnail dengan ukuran yang telah dikompresi
-        $thumbnail->save(storage_path('app/public/' . $thumbnailPath), $compressedQuality);
-    }
     private static function createThumnailInfografis($file, $path, $originalFileName, $fileExtension)
     {
         $thumbnailFileName = str_replace('.' . $fileExtension, '_thumbnail.' . $fileExtension, $originalFileName);
@@ -2141,25 +2291,24 @@ class Helper
         $fullPath          = storage_path('app/public/' . $thumbnailPath);
 
         // Baca gambar asli
-        $image = Image::make($file);
+        $image = Image::read($file);
 
         $compressedQuality = 90;
         $encoded           = null;
 
         // Kompresi bertahap sampai ukuran di bawah 300KB atau kualitas minimum
         do {
-            $encoded = $image->encode($fileExtension, $compressedQuality);
+            $encoded = $image->toJpeg($compressedQuality);
             $compressedQuality -= 5;
-        } while (strlen((string) $encoded) > 300 * 1024 && $compressedQuality > 10);
+        } while (strlen($encoded) > 300 * 1024 && $compressedQuality > 10);
 
         // Simpan thumbnail ke file
-        file_put_contents($fullPath, (string) $encoded);
+        file_put_contents($fullPath, $encoded);
     }
 
     // Upload file FotoGaleri
     public static function UpFotoGaleri($request, $field, $path)
     {
-        // $file = $request->file($field);
         $file = $field;
 
         // Validasi apakah file ada dan valid
@@ -2187,8 +2336,7 @@ class Helper
             }
 
             // Simpan gambar asli tanpa resize
-            $img = Image::make($file)
-                ->encode($fileExtension);
+            $img = Image::read($file);
 
             // Simpan gambar asli
             $img->save(storage_path('app/public/' . $fileSavePath));
@@ -2216,6 +2364,7 @@ class Helper
 
         return $imageInfo !== false && in_array($imageInfo[2], $validImageTypes);
     }
+
     // mengatasi path traversal
     public static function sanitize_input($input)
     {
@@ -2225,6 +2374,7 @@ class Helper
         $input = str_replace('|', '', $input);  // hapus tanda | pada input
         return $input;
     }
+
     // untuk drop folder dengan storage
     public static function deleteFolderIfExists(string $tags, string $path): bool
     {
@@ -2332,6 +2482,7 @@ class Helper
         }
         SysLogAktifitas::create($log);
     }
+
     // Cek tanggal saat ini berada dalam range atau tidak
     // Untuk cek tanggal saat ini masa pendaftaran atau bukan
     public static function isCurrentDateInRange($startDate, $endDate)
@@ -2341,6 +2492,7 @@ class Helper
         $endDate     = Carbon::parse($endDate);
         return $currentDate->between($startDate, $endDate);
     }
+
     // Cek apakah hari ini sebelum tanggal yang ditentukan
     public static function isCurrentDateBefore($date)
     {
@@ -2348,6 +2500,7 @@ class Helper
         $date        = Carbon::parse($date);
         return $currentDate->lessThan($date);
     }
+
     // Cek apakah hari ini setelah tanggal yang ditentukan
     public static function isCurrentDateAfter($date)
     {
@@ -2355,6 +2508,7 @@ class Helper
         $date        = Carbon::parse($date);
         return $currentDate->greaterThan($date);
     }
+
     // Cek apakah tanggal saat ini sama atau lebih dari tanggal yang ditentukan
     public static function isCurrentDateSameOrAfter($date)
     {
@@ -2362,6 +2516,7 @@ class Helper
         $date        = Carbon::parse($date);
         return $currentDate->greaterThanOrEqualTo($date);
     }
+
     // get inisial nama
     public static function getInitials($nama)
     {
@@ -2374,6 +2529,7 @@ class Helper
             return strtoupper(substr($words[0], 0, 1) . substr($words[0], -1));
         }
     }
+
     // validasi status post berdasarkan role
     public static function validateStatus($role, $status)
     {
@@ -2482,7 +2638,7 @@ class Helper
     // GetNoUrutHalaman
     public static function GetNoUrutHalaman($tags)
     {
-        $kategori   = Self::decode($tags);
+        $kategori   = self::decode($tags);
         $lastNoUrut = PortalPage::whereKategori($kategori)->max('no_urut');
         $no_urut    = $lastNoUrut ? $lastNoUrut + 1 : 1;
 
@@ -2492,7 +2648,7 @@ class Helper
     // GetNoUrutLinks
     public static function GetNoUrutLinks($tags)
     {
-        $kategori   = Self::decode($tags);
+        $kategori   = self::decode($tags);
         $lastNoUrut = PortalLinks::whereKategori($kategori)->max('no_urut');
         $no_urut    = $lastNoUrut ? $lastNoUrut + 1 : 1;
 

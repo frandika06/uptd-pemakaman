@@ -246,7 +246,7 @@
                 {{-- begin::Button --}}
                 <button type="submit" id="kt_kategori_submit" class="btn btn-primary">
                     <span class="indicator-label">
-                        <i class="ki-outline ki-check fs-2"></i>{{ $submit }}
+                        <i class="fa-solid fa-save me-2"></i>{{ $submit }}
                     </span>
                     <span class="indicator-progress">
                         Please wait...

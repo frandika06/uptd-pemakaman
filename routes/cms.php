@@ -66,7 +66,7 @@ Route::group(['prefix' => 'cms'], function () {
 
     /*
     |--------------------------------------------------------------------------
-    | MENU KONTEN DIREKTORAT
+    | MENU KONTEN INTERNAL
     |--------------------------------------------------------------------------
     */
     // middleware: Editor
@@ -79,6 +79,8 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [HalamanController::class, 'edit'])->name('prt.apps.page.edit');
             Route::put('/edit/{uuid}', [HalamanController::class, 'update'])->name('prt.apps.page.update');
             Route::post('/delete', [HalamanController::class, 'destroy'])->name('prt.apps.page.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [HalamanController::class, 'bulkDestroy'])->name('prt.apps.page.destroy.bulk');
         });
         // portal links
         Route::group(['prefix' => 'links/{tags}'], function () {
@@ -89,6 +91,9 @@ Route::group(['prefix' => 'cms'], function () {
             Route::put('/edit/{uuid}', [LinksController::class, 'update'])->name('prt.apps.links.update');
             Route::post('/status', [LinksController::class, 'status'])->name('prt.apps.links.status');
             Route::post('/delete', [LinksController::class, 'destroy'])->name('prt.apps.links.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [LinksController::class, 'bulkDestroy'])->name('prt.apps.links.destroy.bulk');
+            Route::post('/bulk-status', [LinksController::class, 'bulkStatus'])->name('prt.apps.links.status.bulk');
         });
     });
 

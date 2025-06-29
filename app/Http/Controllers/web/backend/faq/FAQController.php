@@ -21,125 +21,185 @@ class FAQController extends Controller
     {
         // auth
         $auth = Auth::user();
+        $role = $auth->role;
 
         if ($request->ajax()) {
-            $data = PortalFAQ::orderBy("created_at", "DESC")->get();
+            // cek role
+            if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
+                $data = PortalFAQ::orderBy("created_at", "DESC")->get();
+            } else {
+                $data = PortalFAQ::whereUuidCreated($auth->uuid)
+                    ->orderBy("created_at", "DESC")
+                    ->get();
+            }
+
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->setRowId('uuid')
+                ->addColumn('checkbox', function ($data) {
+                    return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' . $data->uuid . '" /></div>';
+                })
                 ->addColumn('judul', function ($data) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.faq.edit', $uuid_enc);
-                    if ($data->judul == "") {
-                        $judul = '<a class="text-underline" href="' . $edit . '">[draft] - lanjutkan atau hapus</a>';
-                    } else {
-                        $judul = '<a class="text-underline" href="' . $edit . '">' . Str::limit($data->judul, 30, "...") . '</a>';
+                    $edit_url = route('prt.apps.faq.edit', $uuid_enc);
+
+                                                                                   // Thumbnail processing
+                    $thumbnail_url = asset('assets/media/misc/question-mark.jpg'); // default image
+                    if (! empty($data->thumbnails)) {
+                        $thumbnail_url = Helper::urlImg($data->thumbnails);
                     }
-                    return $judul;
+
+                    // Title processing
+                    if (empty($data->judul)) {
+                        $judul_display = '[Draft] - Lanjutkan atau hapus';
+                        $class         = 'text-muted fst-italic';
+                    } else {
+                        $judul_display = Str::limit($data->judul, 50, "...");
+                        $class         = 'text-gray-800 text-hover-primary fw-bold';
+                    }
+
+                    // Description processing
+                    $deskripsi_display = ! empty($data->deskripsi)
+                    ? Str::limit($data->deskripsi, 80, "...")
+                    : 'Tidak ada deskripsi';
+
+                    return '
+                    <div class="d-flex align-items-center">
+                        <div class="symbol symbol-50px me-3">
+                            <img src="' . $thumbnail_url . '" class="h-50px w-50px" alt="FAQ Thumbnail" style="object-fit: cover; border-radius: 8px;" />
+                        </div>
+                        <div class="d-flex flex-column">
+                            <a href="' . $edit_url . '" class="' . $class . ' mb-1 fs-6">' . $judul_display . '</a>
+                            <span class="text-muted fw-semibold d-block fs-7">' . $deskripsi_display . '</span>
+                        </div>
+                    </div>
+                ';
                 })
                 ->addColumn('jumlah', function ($data) {
-                    if (count($data->RelFAQList) > 0) {
-                        $jumlah = Helper::toDot($data->GetJumlahFAQ());
+                    $jumlah = $data->GetJumlahFAQ();
+                    if ($jumlah > 0) {
+                        $color = "primary";
                     } else {
-                        $jumlah = 0;
+                        $color = "secondary";
                     }
-                    return $jumlah;
+                    return '
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span class="badge badge-circle badge-' . $color . ' w-15px h-15px me-2 fs-8 fw-bold">' . $jumlah . '</span>
+                        </div>
+                    ';
                 })
                 ->addColumn('penulis', function ($data) {
                     $penulis = isset($data->Penulis->nama_lengkap) ? $data->Penulis->nama_lengkap : '-';
-                    return $penulis;
+                    return '<span class="text-gray-600 fw-semibold">' . $penulis . '</span>';
                 })
                 ->addColumn('publisher', function ($data) {
                     if ($data->status == "1") {
                         $publisher = isset($data->Publisher->nama_lengkap) ? $data->Publisher->nama_lengkap : '-';
+                        return '<span class="text-success fw-semibold">' . $publisher . '</span>';
                     } else {
-                        $publisher = '';
+                        return '<span class="text-muted">-</span>';
                     }
-                    return $publisher;
-                })
-                ->addColumn('tanggal', function ($data) {
-                    $tanggal = Helper::TglSimple($data->created_at);
-                    return $tanggal;
                 })
                 ->addColumn('status', function ($data) use ($auth) {
-                    $uuid   = Helper::encode($data->uuid);
-                    $status = $data->status;
-                    if ($status == "1") {
-                        $toogle = "checked";
-                        $text   = "Aktif";
+                    $uuid = Helper::encode($data->uuid);
+                    if ($data->status == "1") {
+                        $checked = "checked";
+                        $text    = "Aktif";
+                        $color   = "success";
                     } else {
-                        $toogle = "";
-                        $text   = "Tidak Aktif";
+                        $checked = "";
+                        $text    = "Tidak Aktif";
+                        $color   = "danger";
                     }
+
                     // role
                     $role = $auth->role;
                     if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
                         $status = '
-                            <div class="form-check form-switch form-switch-custom form-switch-primary mb-3">
-                                <input class="form-check-input" type="checkbox" role="switch" id="status_' . $data->uuid . '" data-onclick="ubah-status" data-status="' . $uuid . '" data-status-value="' . $status . '" ' . $toogle . '>
-                                <label class="form-check-label" for="status_' . $data->uuid . '">' . $text . '</label>
-                            </div>
-                        ';
+                        <div class="form-check form-switch form-check-custom form-check-success">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                id="status_' . $data->uuid . '"
+                                data-status="' . $uuid . '"
+                                data-status-value="' . $data->status . '" ' . $checked . '>
+                            <label class="form-check-label fw-semibold text-' . $color . ' ms-3"
+                                for="status_' . $data->uuid . '">' . $text . '</label>
+                        </div>
+                    ';
                     } else {
-                        $status = '<label class="form-check-label" for="status">' . $text . '</label>';
+                        $status = '<span class="badge badge-light-' . $color . ' fw-bold">' . $text . '</span>';
                     }
                     return $status;
                 })
-                ->addColumn('aksi', function ($data) {
+                ->addColumn('tanggal', function ($data) {
+                    $tanggal = Helper::TglSimple($data->created_at);
+                    return '<span class="text-gray-600 fw-semibold">' . $tanggal . '</span>';
+                })
+                ->addColumn('aksi', function ($data) use ($auth) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.faq.edit', [$uuid_enc]);
-                    $aksi     = '
-                        <div class="d-flex">
-                            <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-                            <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
+                    $edit_url = route('prt.apps.faq.edit', $uuid_enc);
+
+                    // role
+                    $role = $auth->role;
+                    if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
+                        $aksi = '
+                        <div class="d-flex justify-content-center">
+                            <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit FAQ">
+                                <i class="ki-outline ki-pencil fs-2"></i>
+                            </a>
+                            <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus FAQ">
+                                <i class="ki-outline ki-trash fs-2"></i>
+                            </a>
                         </div>
                     ';
+                    } else {
+                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
+                            $aksi = '
+                            <div class="d-flex justify-content-center">
+                                <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit FAQ">
+                                    <i class="ki-outline ki-pencil fs-2"></i>
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus FAQ">
+                                    <i class="ki-outline ki-trash fs-2"></i>
+                                </a>
+                            </div>
+                        ';
+                        } else {
+                            $aksi = '
+                            <div class="d-flex justify-content-center">
+                                <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                    <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                                </span>
+                                <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                    <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                                </span>
+                            </div>
+                        ';
+                        }
+                    }
                     return $aksi;
                 })
                 ->escapeColumns([''])
                 ->make(true);
         }
-        return view('pages.admin.portal_apps.faq.index');
+
+        return view('admin.cms.konten.text.faq.index');
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
         // auth
-        $auth = Auth::user();
-        // buat draft faq
-        $uuid_faq     = Str::uuid();
-        $uuid_faq_enc = Helper::encode($uuid_faq);
-        $value        = [
-            "uuid"   => $uuid_faq,
-            "judul"  => "",
-            "status" => "0",
-        ];
-        // save
-        try {
-            $save = PortalFAQ::create($value);
-            if ($save) {
-                // create log
-                $aktifitas = [
-                    "tabel" => ["portal_faq"],
-                    "uuid"  => [$uuid_faq],
-                    "value" => [$value],
-                ];
-                $log = [
-                    "apps"      => "Portal Apps",
-                    "subjek"    => "Menambahkan Data Draft FAQ" . $uuid_faq,
-                    "aktifitas" => $aktifitas,
-                    "device"    => "web",
-                ];
-                Helper::addToLogAktifitas($request, $log);
-                return redirect()->route('prt.apps.faq.edit', [$uuid_faq_enc]);
-            }
-            return abort(500, 'Gagal Membuat FAQ, Silahkan Coba Lagi!.');
-        } catch (Exception $e) {
-            return abort(500, 'Gagal Membuat FAQ, Silahkan Coba Lagi!.');
-        }
+        $auth   = Auth::user();
+        $title  = "Tambah Data FAQ";
+        $submit = "Simpan";
+
+        return view('admin.cms.konten.text.faq.create_edit', compact(
+            'auth',
+            'title',
+            'submit'
+        ));
     }
 
     /**
@@ -147,7 +207,106 @@ class FAQController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // auth
+        $auth = Auth::user();
+
+        // Validasi input
+        $request->validate([
+            "judul"         => "required|string|max:300",
+            "deskripsi"     => "required|string|max:160",
+            "thumbnails"    => "required|image|mimes:png,jpg,jpeg|max:2048",
+            "tanggal"       => "required|date",
+            'status'        => 'required|in:0,1',
+            'pertanyaan.*'  => 'required|string|max:150',
+            'status_list.*' => 'required|in:0,1',
+            "jawaban.*"     => "required|string",
+        ], [
+            'judul.required'        => 'Judul FAQ wajib diisi',
+            'judul.max'             => 'Judul FAQ maksimal 300 karakter',
+            'deskripsi.required'    => 'Deskripsi wajib diisi',
+            'deskripsi.max'         => 'Deskripsi maksimal 160 karakter',
+            'thumbnails.required'   => 'Thumbnail wajib diupload',
+            'thumbnails.image'      => 'Thumbnail harus berupa gambar',
+            'thumbnails.mimes'      => 'Format thumbnail harus PNG, JPG, atau JPEG',
+            'thumbnails.max'        => 'Ukuran thumbnail maksimal 2MB',
+            'pertanyaan.*.required' => 'Pertanyaan FAQ wajib diisi',
+            'pertanyaan.*.max'      => 'Pertanyaan FAQ maksimal 150 karakter',
+            'jawaban.*.required'    => 'Jawaban FAQ wajib diisi',
+        ]);
+
+        // Generate UUID dan slug
+        $uuid = Str::uuid();
+        $slug = Str::slug($request->judul);
+
+        // Cek slug duplikat
+        $cekslug   = PortalFAQ::whereSlug($slug)->count();
+        $inputslug = $cekslug > 0 ? $slug . "-" . Helper::gencode(4) : $slug;
+
+        // Path untuk file
+        $tahun = date("Y");
+        $path  = "faq/" . $tahun . "/" . $uuid;
+
+        // Upload thumbnail
+        $thumbnails = null;
+        if ($request->hasFile('thumbnails')) {
+            $thumbnails = Helper::UpThumbnails($request, "thumbnails", $path);
+            if ($thumbnails == "0") {
+                alert()->error('Error!', 'Gagal menyimpan thumbnail, format tidak sesuai!');
+                return back()->withInput();
+            }
+        }
+
+        // Prepare main FAQ data
+        $tanggal = Carbon::parse($request->tanggal);
+        $value_1 = [
+            "uuid"       => $uuid,
+            "judul"      => $request->judul,
+            "slug"       => $inputslug,
+            "deskripsi"  => $request->deskripsi,
+            "thumbnails" => $thumbnails,
+            "tanggal"    => $tanggal,
+            "status"     => $request->status,
+        ];
+
+        // Save main FAQ
+        $save_1 = PortalFAQ::create($value_1);
+
+        if ($save_1) {
+            // Save FAQ List items
+            if ($request->has('pertanyaan')) {
+                foreach ($request->pertanyaan as $index => $pertanyaan) {
+                    if (! empty($pertanyaan) && ! empty($request->jawaban[$index])) {
+                        PortalFAQList::create([
+                            'uuid'            => Str::uuid(),
+                            'uuid_portal_faq' => $uuid,
+                            'pertanyaan'      => $pertanyaan,
+                            'jawaban'         => Helper::UpdateImgIndexing($request->jawaban[$index], $path),
+                            'status'          => $request->status_list[$index] ?? '1',
+                        ]);
+                    }
+                }
+            }
+
+            // Create activity log
+            $aktifitas = [
+                "tabel" => ["portal_faq"],
+                "uuid"  => [$uuid],
+                "value" => [$value_1],
+            ];
+            $log = [
+                "apps"      => "Portal Apps",
+                "subjek"    => "Menambahkan Data FAQ: " . $request->judul . " - " . $uuid,
+                "aktifitas" => $aktifitas,
+                "device"    => "web",
+            ];
+            Helper::addToLogAktifitas($request, $log);
+
+            alert()->success('Success', "Berhasil menambahkan FAQ!");
+            return redirect()->route('prt.apps.faq.index');
+        } else {
+            alert()->error('Error', "Gagal menambahkan FAQ!");
+            return back()->withInput();
+        }
     }
 
     /**
@@ -163,13 +322,19 @@ class FAQController extends Controller
      */
     public function edit($uuid_enc)
     {
-        // uuid
+        // auth
+        $auth = Auth::user();
+
+        // Decode UUID dan ambil data
         $uuid     = Helper::decode($uuid_enc);
         $data     = PortalFAQ::findOrFail($uuid);
         $list_faq = $data->RelFAQList;
-        $title    = "Edit Data FAQ";
-        $submit   = "Simpan";
-        return view('pages.admin.portal_apps.faq.create_edit', compact(
+
+        $title  = "Edit Data FAQ";
+        $submit = "Simpan Perubahan";
+
+        return view('admin.cms.konten.text.faq.create_edit', compact(
+            'auth',
             'uuid_enc',
             'title',
             'submit',
@@ -186,32 +351,36 @@ class FAQController extends Controller
         // auth
         $auth = Auth::user();
 
-        // Validasi input sesuai kolom form
+        // Decode UUID dan ambil data existing
+        $uuid_faq = Helper::decode($uuid_enc);
+        $data     = PortalFAQ::findOrFail($uuid_faq);
+
+        // Validasi input
+        $thumbnailsRules = empty($data->thumbnails) ? 'required|' : 'sometimes|';
         $request->validate([
             "judul"         => "required|string|max:300",
             "deskripsi"     => "required|string|max:160",
-            "thumbnails"    => "sometimes|image|mimes:png,jpg,jpeg|max:2048",
-            "tanggal"       => "required",
-            'status'        => 'required|string|max:1',
+            "thumbnails"    => $thumbnailsRules . "image|mimes:png,jpg,jpeg|max:2048",
+            "tanggal"       => "required|date",
+            'status'        => 'required|in:0,1',
             'pertanyaan.*'  => 'required|string|max:150',
-            'status_list.*' => 'required|string|max:1',
-            "jawaban.*"     => "required",
+            'status_list.*' => 'required|in:0,1',
+            "jawaban.*"     => "required|string",
+        ], [
+            'judul.required'        => 'Judul FAQ wajib diisi',
+            'judul.max'             => 'Judul FAQ maksimal 300 karakter',
+            'deskripsi.required'    => 'Deskripsi wajib diisi',
+            'deskripsi.max'         => 'Deskripsi maksimal 160 karakter',
+            'thumbnails.required'   => 'Thumbnail wajib diupload',
+            'thumbnails.image'      => 'Thumbnail harus berupa gambar',
+            'thumbnails.mimes'      => 'Format thumbnail harus PNG, JPG, atau JPEG',
+            'thumbnails.max'        => 'Ukuran thumbnail maksimal 2MB',
+            'pertanyaan.*.required' => 'Pertanyaan FAQ wajib diisi',
+            'pertanyaan.*.max'      => 'Pertanyaan FAQ maksimal 150 karakter',
+            'jawaban.*.required'    => 'Jawaban FAQ wajib diisi',
         ]);
 
-        // Decode UUID dan dapatkan data yang akan diupdate
-        $uuid_faq = Helper::decode($uuid_enc);
-        $data     = PortalFAQ::findOrFail($uuid_faq);
-        if ($data->thumbnails === null) {
-            $request->validate([
-                "thumbnails" => "required|image|mimes:png,jpg,jpeg|max:2048",
-            ]);
-        } else {
-            $request->validate([
-                "thumbnails" => "sometimes|image|mimes:png,jpg,jpeg|max:2048",
-            ]);
-        }
-
-        // slug
+        // Generate slug jika judul berubah
         if ($data->judul !== $request->judul) {
             $slug      = Str::slug($request->judul);
             $cekslug   = PortalFAQ::where('uuid', '!=', $uuid_faq)->whereSlug($slug)->count();
@@ -220,10 +389,12 @@ class FAQController extends Controller
             $inputslug = $data->slug;
         }
 
-        // value untuk update PortalFAQ
-        $thn     = date("Y", \strtotime($data->created_at));
-        $path    = "faq/" . $thn . "/" . $uuid_faq;
-        $tanggal = date('Y-m-d H:i:s', strtotime($request->tanggal));
+        // Path untuk file
+        $tahun = date("Y", strtotime($data->created_at));
+        $path  = "faq/" . $tahun . "/" . $uuid_faq;
+
+        // Prepare update data
+        $tanggal = Carbon::parse($request->tanggal);
         $value_1 = [
             'judul'     => $request->judul,
             'slug'      => $inputslug,
@@ -232,48 +403,51 @@ class FAQController extends Controller
             'status'    => $request->status,
         ];
 
-        // thumbnails
+        // Handle thumbnail upload
         if ($request->hasFile('thumbnails')) {
+            // Delete old thumbnail if exists
             if (! empty($data->thumbnails) && Storage::disk('public')->exists($data->thumbnails)) {
                 Storage::disk('public')->delete($data->thumbnails);
+
+                // Delete thumbnail version too
                 $thumbnailPath = str_replace('.', '_thumbnail.', $data->thumbnails);
                 if (Storage::disk('public')->exists($thumbnailPath)) {
                     Storage::disk('public')->delete($thumbnailPath);
                 }
             }
 
-            $img = Helper::UpThumbnails($request, "thumbnails", $path);
-            if ($img == "0") {
-                alert()->error('Error!', 'Gagal Menyimpan Data, Thumbnails Tidak Sesuai Format!');
-                return back();
+            // Upload new thumbnail
+            $thumbnails = Helper::UpThumbnails($request, "thumbnails", $path);
+            if ($thumbnails == "0") {
+                alert()->error('Error!', 'Gagal menyimpan thumbnail, format tidak sesuai!');
+                return back()->withInput();
             }
-            $value_1['thumbnails'] = $img;
+            $value_1['thumbnails'] = $thumbnails;
         }
 
-        // Save update ke database
+        // Update main FAQ data
         $save_1 = $data->update($value_1);
+
         if ($save_1) {
-            // add faq_list
-            $thn  = date("Y", \strtotime($data->created_at));
-            $path = "faq/" . $thn . "/" . $uuid_faq;
+            // Delete existing FAQ list items and recreate
+            PortalFAQList::where("uuid_portal_faq", $uuid_faq)->forceDelete();
+
+            // Save new FAQ List items
             if ($request->has('pertanyaan')) {
-                // trucnate all faq before create
-                PortalFAQList::where("uuid_portal_faq", $uuid_faq)->forceDelete();
                 foreach ($request->pertanyaan as $index => $pertanyaan) {
-                    if (! empty($pertanyaan)) {
-                        PortalFAQList::create(
-                            [
-                                'uuid'            => Str::uuid(),
-                                'uuid_portal_faq' => $uuid_faq,
-                                'pertanyaan'      => $pertanyaan,
-                                'jawaban'         => Helper::UpdateImgIndexing($request->jawaban[$index], $path),
-                                'status'          => $request->status_list[$index],
-                            ]
-                        );
+                    if (! empty($pertanyaan) && ! empty($request->jawaban[$index])) {
+                        PortalFAQList::create([
+                            'uuid'            => Str::uuid(),
+                            'uuid_portal_faq' => $uuid_faq,
+                            'pertanyaan'      => $pertanyaan,
+                            'jawaban'         => Helper::UpdateImgIndexing($request->jawaban[$index], $path),
+                            'status'          => $request->status_list[$index] ?? '1',
+                        ]);
                     }
                 }
             }
-            // create log
+
+            // Create activity log
             $aktifitas = [
                 "tabel" => ["portal_faq"],
                 "uuid"  => [$uuid_faq],
@@ -286,11 +460,12 @@ class FAQController extends Controller
                 "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
-            alert()->success('Success', "Berhasil Mengubah Data!");
+
+            alert()->success('Success', "Berhasil mengubah FAQ!");
             return redirect()->route('prt.apps.faq.index');
         } else {
-            alert()->error('Error', "Gagal Mengubah Data!");
-            return back()->withInput($request->all());
+            alert()->error('Error', "Gagal mengubah FAQ!");
+            return back()->withInput();
         }
     }
 
@@ -402,6 +577,232 @@ class FAQController extends Controller
                 "message" => $msg,
             ];
             return response()->json($response, 422);
+        }
+    }
+
+    /**
+     * Bulk delete FAQ
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            // auth
+            $auth = Auth::user();
+
+            // Validate request
+            $request->validate([
+                'uuids'   => 'required|array|min:1',
+                'uuids.*' => 'required|string',
+            ]);
+
+            $uuids        = $request->uuids;
+            $deletedCount = 0;
+            $failedItems  = [];
+
+            // Loop through each UUID and delete
+            foreach ($uuids as $uuid_enc) {
+                try {
+                    // Find data
+                    $data = PortalFAQ::find($uuid_enc);
+
+                    if (! $data) {
+                        $failedItems[] = "Data dengan ID {$uuid_enc} tidak ditemukan";
+                        continue;
+                    }
+
+                    // Check permission (if needed)
+                    $role      = $auth->role;
+                    $canDelete = ($role == "Super Admin" || $role == "Admin" || $role == "Editor");
+
+                    // If not admin, check ownership
+                    if (! $canDelete && isset($data->uuid_created)) {
+                        $canDelete = ($data->uuid_created == $auth->uuid);
+                    }
+
+                    if (! $canDelete) {
+                        $judul         = $data->judul ?: '[Draft FAQ]';
+                        $failedItems[] = "Tidak memiliki izin untuk menghapus: {$judul}";
+                        continue;
+                    }
+
+                    // Delete the data
+                    // drop path
+                    $tahun = Carbon::parse($data->tanggal)->year;
+                    $path  = "faq/{$tahun}/{$data->uuid}";
+                    Helper::deleteFolderIfExists("directory", $path);
+                    $save_1 = $data->forceDelete();
+                    if ($save_1) {
+                        $deletedCount++;
+
+                        // Create log for each deleted item
+                        $aktifitas = [
+                            "tabel" => ["portal_faq"],
+                            "uuid"  => [$uuid_enc],
+                            "value" => [$data->toArray()],
+                        ];
+                        $log = [
+                            "apps"      => "Portal Apps",
+                            "subjek"    => "Menghapus Data FAQ (Bulk): " . ($data->judul ?: '[Draft FAQ]') . " - " . $uuid_enc,
+                            "aktifitas" => $aktifitas,
+                            "device"    => "web",
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $judul         = $data->judul ?: '[Draft FAQ]';
+                        $failedItems[] = "Gagal menghapus: {$judul}";
+                    }
+
+                } catch (\Exception $e) {
+                    $failedItems[] = "Error pada ID {$uuid_enc}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            // Prepare response message
+            $message = "Berhasil menghapus {$deletedCount} FAQ";
+
+            if (! empty($failedItems)) {
+                $message .= ". Gagal menghapus " . count($failedItems) . " item";
+                if (count($failedItems) <= 3) {
+                    $message .= ": " . implode(", ", $failedItems);
+                }
+            }
+
+            // Create summary log
+            $summaryLog = [
+                "apps"      => "Portal Apps",
+                "subjek"    => "Bulk Delete FAQ - Berhasil: {$deletedCount}, Gagal: " . count($failedItems),
+                "aktifitas" => [
+                    "tabel"         => ["portal_faq"],
+                    "total_request" => count($uuids),
+                    "total_deleted" => $deletedCount,
+                    "total_failed"  => count($failedItems),
+                    "failed_items"  => $failedItems,
+                ],
+                "device"    => "web",
+            ];
+            Helper::addToLogAktifitas($request, $summaryLog);
+
+            $response = [
+                "status"        => true,
+                "message"       => $message,
+                "deleted_count" => $deletedCount,
+                "failed_count"  => count($failedItems),
+                "failed_items"  => $failedItems,
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk Delete Error', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            $response = [
+                "status"  => false,
+                "message" => "Terjadi kesalahan saat menghapus data: " . $e->getMessage(),
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+    /**
+     * Bulk status update
+     */
+    public function bulkStatus(Request $request)
+    {
+        try {
+            // auth
+            $auth = Auth::user();
+
+            // Validate request
+            $request->validate([
+                'uuids'   => 'required|array|min:1',
+                'uuids.*' => 'required|string',
+                'status'  => 'required|in:0,1',
+            ]);
+
+            $uuids        = $request->uuids;
+            $newStatus    = $request->status;
+            $updatedCount = 0;
+            $failedItems  = [];
+
+            // Loop through each UUID and update status
+            foreach ($uuids as $uuid_enc) {
+                try {
+                    // Find data
+                    $data = PortalFAQ::find($uuid_enc);
+
+                    if (! $data) {
+                        $failedItems[] = "Data dengan ID {$uuid_enc} tidak ditemukan";
+                        continue;
+                    }
+
+                    // Check permission
+                    $role      = $auth->role;
+                    $canUpdate = ($role == "Super Admin" || $role == "Admin" || $role == "Editor");
+
+                    if (! $canUpdate && isset($data->uuid_created)) {
+                        $canUpdate = ($data->uuid_created == $auth->uuid);
+                    }
+
+                    if (! $canUpdate) {
+                        $judul         = $data->judul ?: '[Draft FAQ]';
+                        $failedItems[] = "Tidak memiliki izin untuk mengubah: {$judul}";
+                        continue;
+                    }
+
+                    // Update status
+                    if ($data->update(['status' => $newStatus])) {
+                        $updatedCount++;
+
+                        // Create log
+                        $aktifitas = [
+                            "tabel" => ["portal_faq"],
+                            "uuid"  => [$uuid_enc],
+                            "value" => [['status' => $newStatus]],
+                        ];
+                        $log = [
+                            "apps"      => "Portal Apps",
+                            "subjek"    => "Mengubah Status FAQ: " . ($data->judul ?: '[Draft FAQ]') . " - " . $uuid_enc,
+                            "aktifitas" => $aktifitas,
+                            "device"    => "web",
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $judul         = $data->judul ?: '[Draft FAQ]';
+                        $failedItems[] = "Gagal mengubah status: {$judul}";
+                    }
+
+                } catch (\Exception $e) {
+                    $failedItems[] = "Error pada ID {$uuid_enc}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            $statusText = $newStatus == '1' ? 'mengaktifkan' : 'menonaktifkan';
+            $message    = "Berhasil {$statusText} {$updatedCount} FAQ";
+
+            if (! empty($failedItems)) {
+                $message .= ". Gagal {$statusText} " . count($failedItems) . " item";
+            }
+
+            $response = [
+                "status"        => true,
+                "message"       => $message,
+                "updated_count" => $updatedCount,
+                "failed_count"  => count($failedItems),
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            $response = [
+                "status"  => false,
+                "message" => "Terjadi kesalahan saat mengubah status: " . $e->getMessage(),
+            ];
+            return response()->json($response, 500);
         }
     }
 }

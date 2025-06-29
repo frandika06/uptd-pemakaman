@@ -2,19 +2,13 @@
 
 use App\Http\Controllers\web\backend\banner\BannerController;
 use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
-use App\Http\Controllers\web\backend\ebook\EbookController;
-use App\Http\Controllers\web\backend\emagazine\EmagazineController;
-use App\Http\Controllers\web\backend\esertifikat\EsertifikatController;
 use App\Http\Controllers\web\backend\faq\FAQController;
 use App\Http\Controllers\web\backend\galeri\GaleriController;
-use App\Http\Controllers\web\backend\greeting\GreetingController;
-use App\Http\Controllers\web\backend\infografis\InfografisController;
 use App\Http\Controllers\web\backend\links\LinksController;
 use App\Http\Controllers\web\backend\master\KategoriController;
 use App\Http\Controllers\web\backend\master\KategoriSubController;
 use App\Http\Controllers\web\backend\pages\HalamanController;
 use App\Http\Controllers\web\backend\posts\PostinganController;
-use App\Http\Controllers\web\backend\running_text\RunningTextController;
 use App\Http\Controllers\web\backend\unduhan\UnduhanController;
 use App\Http\Controllers\web\backend\video\VideoController;
 
@@ -118,26 +112,6 @@ Route::group(['prefix' => 'cms'], function () {
     });
     // middleware: Editor
     Route::group(['middleware' => ['Editor']], function () {
-        // portal running-text
-        Route::group(['prefix' => 'running-text'], function () {
-            Route::get('/', [RunningTextController::class, 'index'])->name('prt.apps.runningtext.index');
-            Route::get('/create', [RunningTextController::class, 'create'])->name('prt.apps.runningtext.create');
-            Route::post('/create', [RunningTextController::class, 'store'])->name('prt.apps.runningtext.store');
-            Route::get('/edit/{uuid}', [RunningTextController::class, 'edit'])->name('prt.apps.runningtext.edit');
-            Route::put('/edit/{uuid}', [RunningTextController::class, 'update'])->name('prt.apps.runningtext.update');
-            Route::post('/delete', [RunningTextController::class, 'destroy'])->name('prt.apps.runningtext.destroy');
-            Route::post('/status', [RunningTextController::class, 'status'])->name('prt.apps.runningtext.status');
-        });
-        // portal greeting
-        Route::group(['prefix' => 'greeting'], function () {
-            Route::get('/', [GreetingController::class, 'index'])->name('prt.apps.greeting.index');
-            Route::get('/create', [GreetingController::class, 'create'])->name('prt.apps.greeting.create');
-            Route::post('/create', [GreetingController::class, 'store'])->name('prt.apps.greeting.store');
-            Route::get('/edit/{uuid}', [GreetingController::class, 'edit'])->name('prt.apps.greeting.edit');
-            Route::put('/edit/{uuid}', [GreetingController::class, 'update'])->name('prt.apps.greeting.update');
-            Route::post('/delete', [GreetingController::class, 'destroy'])->name('prt.apps.greeting.destroy');
-            Route::post('/status', [GreetingController::class, 'status'])->name('prt.apps.greeting.status');
-        });
         // portal faq
         Route::group(['prefix' => 'faq'], function () {
             Route::get('/', [FAQController::class, 'index'])->name('prt.apps.faq.index');
@@ -147,6 +121,9 @@ Route::group(['prefix' => 'cms'], function () {
             Route::put('/edit/{uuid}', [FAQController::class, 'update'])->name('prt.apps.faq.update');
             Route::post('/delete', [FAQController::class, 'destroy'])->name('prt.apps.faq.destroy');
             Route::post('/status', [FAQController::class, 'status'])->name('prt.apps.faq.status');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [FAQController::class, 'bulkDestroy'])->name('prt.apps.faq.destroy.bulk');
+            Route::post('/bulk-status', [FAQController::class, 'bulkStatus'])->name('prt.apps.faq.status.bulk');
         });
     });
 
@@ -170,16 +147,6 @@ Route::group(['prefix' => 'cms'], function () {
     });
     // middleware: Penulis
     Route::group(['middleware' => ['Penulis']], function () {
-        // portal infografis
-        Route::group(['prefix' => 'infografis'], function () {
-            Route::get('/', [InfografisController::class, 'index'])->name('prt.apps.infografis.index');
-            Route::get('/create', [InfografisController::class, 'create'])->name('prt.apps.infografis.create');
-            Route::post('/create', [InfografisController::class, 'store'])->name('prt.apps.infografis.store');
-            Route::get('/edit/{uuid}', [InfografisController::class, 'edit'])->name('prt.apps.infografis.edit');
-            Route::put('/edit/{uuid}', [InfografisController::class, 'update'])->name('prt.apps.infografis.update');
-            Route::post('/delete', [InfografisController::class, 'destroy'])->name('prt.apps.infografis.destroy');
-            Route::post('/status', [InfografisController::class, 'status'])->name('prt.apps.infografis.status');
-        });
         // portal galeri
         Route::group(['prefix' => 'galeri'], function () {
             Route::get('/', [GaleriController::class, 'index'])->name('prt.apps.galeri.index');
@@ -206,42 +173,6 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [UnduhanController::class, 'edit'])->name('prt.apps.unduhan.edit');
             Route::put('/edit/{uuid}', [UnduhanController::class, 'update'])->name('prt.apps.unduhan.update');
             Route::post('/delete', [UnduhanController::class, 'destroy'])->name('prt.apps.unduhan.destroy');
-        });
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | MENU KONTEN DIGITAL
-    |--------------------------------------------------------------------------
-    */
-    // middleware: Penulis
-    Route::group(['middleware' => ['Penulis']], function () {
-        // portal ebook
-        Route::group(['prefix' => 'ebook'], function () {
-            Route::get('/', [EbookController::class, 'index'])->name('prt.apps.ebook.index');
-            Route::get('/create', [EbookController::class, 'create'])->name('prt.apps.ebook.create');
-            Route::post('/create', [EbookController::class, 'store'])->name('prt.apps.ebook.store');
-            Route::get('/edit/{uuid}', [EbookController::class, 'edit'])->name('prt.apps.ebook.edit');
-            Route::put('/edit/{uuid}', [EbookController::class, 'update'])->name('prt.apps.ebook.update');
-            Route::post('/delete', [EbookController::class, 'destroy'])->name('prt.apps.ebook.destroy');
-        });
-        // portal emagazine
-        Route::group(['prefix' => 'emagazine'], function () {
-            Route::get('/', [EmagazineController::class, 'index'])->name('prt.apps.emagazine.index');
-            Route::get('/create', [EmagazineController::class, 'create'])->name('prt.apps.emagazine.create');
-            Route::post('/create', [EmagazineController::class, 'store'])->name('prt.apps.emagazine.store');
-            Route::get('/edit/{uuid}', [EmagazineController::class, 'edit'])->name('prt.apps.emagazine.edit');
-            Route::put('/edit/{uuid}', [EmagazineController::class, 'update'])->name('prt.apps.emagazine.update');
-            Route::post('/delete', [EmagazineController::class, 'destroy'])->name('prt.apps.emagazine.destroy');
-        });
-        // portal esertifikat
-        Route::group(['prefix' => 'esertifikat'], function () {
-            Route::get('/', [EsertifikatController::class, 'index'])->name('prt.apps.esertifikat.index');
-            Route::get('/create', [EsertifikatController::class, 'create'])->name('prt.apps.esertifikat.create');
-            Route::get('/edit/{uuid}', [EsertifikatController::class, 'edit'])->name('prt.apps.esertifikat.edit');
-            Route::put('/edit/{uuid}', [EsertifikatController::class, 'update'])->name('prt.apps.esertifikat.update');
-            Route::post('/delete', [EsertifikatController::class, 'destroy'])->name('prt.apps.esertifikat.destroy');
-            Route::post('/upload', [EsertifikatController::class, 'upload'])->name('prt.apps.esertifikat.upload');
         });
     });
 

@@ -39,24 +39,28 @@ class DummyFaqSeeder extends Seeder
         PortalFAQList::truncate();
         PortalFAQ::truncate();
         for ($i = 0; $i < 10; $i++) {
-            $faqUuid   = Str::uuid();
-            $deskripsi = "Deskripsi FAQ ke-$i yang mencakup.";
-            $path      = "faq/" . date('Y') . "/" . $faqUuid;
+            $faqUuid       = Str::uuid();
+            $deskripsi     = "Deskripsi FAQ ke-$i yang mencakup.";
+            $judul         = $faker->sentence(6);
+            $filename      = Str::slug($judul) . ".png";
+            $path          = "faq/" . date('Y') . "/" . $faqUuid . "/" . $filename;
+            $dummyImageUrl = "https://dummyimage.com/600x400/000/fff&text=" . urlencode($judul);
 
-            // Fetch random thumbnail
-            $thumbnailUrl  = $this->fetchRandomImage();
-            $thumbnailPath = "$path/thumbnails.png";
-
-            // Save thumbnail to local storage
-            if ($thumbnailUrl) {
-                $this->saveImageToLocal($thumbnailUrl, $thumbnailPath);
+            // Download and save image to storage
+            try {
+                $imageContent = Http::get($dummyImageUrl)->body();
+                Storage::disk('public')->put($path, $imageContent);
+            } catch (\Exception $e) {
+                $this->command->error("Failed to download image for {$judul}: " . $e->getMessage());
+                continue;
             }
+
             $faq = PortalFAQ::create([
                 'uuid'         => $faqUuid,
-                'judul'        => $faker->sentence(6),
-                'slug'         => Str::slug($faker->sentence(6)),
+                'judul'        => $judul,
+                'slug'         => Str::slug($judul),
                 'deskripsi'    => $deskripsi,
-                'thumbnails'   => $thumbnailPath,
+                'thumbnails'   => $path,
                 'tanggal'      => Carbon::now(),
                 'status'       => "1",
                 'created_at'   => now(),

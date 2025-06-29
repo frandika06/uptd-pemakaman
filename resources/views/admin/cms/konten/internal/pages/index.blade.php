@@ -79,6 +79,45 @@
         .dt-buttons {
             display: none !important;
         }
+
+        /* Statistics cards styling */
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stats-draft {
+            background: linear-gradient(135deg, #FFA726, #FB8C00);
+        }
+
+        .stats-pending {
+            background: linear-gradient(135deg, #42A5F5, #1E88E5);
+        }
+
+        .stats-published {
+            background: linear-gradient(135deg, #66BB6A, #43A047);
+        }
+
+        .stats-scheduled {
+            background: linear-gradient(135deg, #AB47BC, #8E24AA);
+        }
+
+        .stats-archived {
+            background: linear-gradient(135deg, #78909C, #546E7A);
+        }
     </style>
 @endpush
 
@@ -243,6 +282,101 @@
 
 {{-- CONTENT::BEGIN --}}
 @section('content')
+    {{-- begin::Statistics cards --}}
+    <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_draft">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Draft', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Draft</div>
+                    <div class="stats-icon stats-draft position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="ki-outline ki-document fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_pending">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Pending Review', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Pending Review</div>
+                    <div class="stats-icon stats-pending position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="fa-solid fa-history fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_published">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Published', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Published</div>
+                    <div class="stats-icon stats-published position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="ki-outline ki-verify fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_scheduled">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Scheduled', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Scheduled</div>
+                    <div class="stats-icon stats-scheduled position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="ki-outline ki-calendar fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_archived">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Archived', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Archived</div>
+                    <div class="stats-icon stats-archived position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="ki-outline ki-archive fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+        {{-- begin::Col --}}
+        <div class="col-xxl-2 col-lg-4 col-sm-6">
+            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                <div class="card-body">
+                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_deleted">
+                        {{ \Helper::GetStatistikByModel('Halaman', 'Deleted', $tags) }}
+                    </div>
+                    <div class="fw-semibold text-gray-400">Deleted</div>
+                    <div class="stats-icon stats-archived position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="ki-outline ki-trash fs-2 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- end::Col --}}
+    </div>
+    {{-- end::Statistics cards --}}
+
     {{-- begin::Card --}}
     <div class="card">
         {{-- begin::Card header --}}
@@ -378,7 +512,7 @@
                         [10, 25, 50, 100, "All"]
                     ],
                     "order": [
-                        [1, 'desc']
+                        [1, 'asc']
                     ], // Order by index (kolom ke-2, index 1)
                     "language": {
                         "searchPlaceholder": 'Search...',

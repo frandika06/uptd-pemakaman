@@ -112,6 +112,8 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [PostinganController::class, 'edit'])->name('prt.apps.post.edit');
             Route::put('/edit/{uuid}', [PostinganController::class, 'update'])->name('prt.apps.post.update');
             Route::post('/delete', [PostinganController::class, 'destroy'])->name('prt.apps.post.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [PostinganController::class, 'bulkDestroy'])->name('prt.apps.post.destroy.bulk');
         });
     });
     // middleware: Editor

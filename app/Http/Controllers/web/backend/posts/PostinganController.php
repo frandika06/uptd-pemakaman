@@ -5,10 +5,11 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\PortalKategori;
 use App\Models\PortalPost;
+use Carbon\Carbon;
 use DataTables;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -36,11 +37,11 @@ class PostinganController extends Controller
                 $status = $_GET['filter']['status'];
                 $request->session()->put('filter_status_postingan', $status);
             }
+
             // cek role
             if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
                 if ($status == "Draft") {
                     $data = PortalPost::whereStatus($status)
-                        ->whereUuidCreated($auth->uuid)
                         ->orderBy("tanggal", "DESC")
                         ->get();
                 } else {
@@ -54,50 +55,124 @@ class PostinganController extends Controller
                     ->orderBy("tanggal", "DESC")
                     ->get();
             }
+
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->setRowId('uuid')
+                ->addColumn('checkbox', function ($data) {
+                    return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' . $data->uuid . '" /></div>';
+                })
                 ->addColumn('judul', function ($data) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.post.edit', $uuid_enc);
-                    $judul    = '<a class="text-underline" href="' . $edit . '">' . Str::limit($data->judul, 50, "...") . '</a>';
-                    return $judul;
+                    $edit_url = route('prt.apps.post.edit', $uuid_enc);
+
+                                                                                   // Generate thumbnail URL
+                    $thumbnail_url = asset('be/media/misc/image-placeholder.svg'); // Default placeholder
+                    if (! empty($data->thumbnails)) {
+                        $thumbnail_url = Helper::urlImg($data->thumbnails);
+                    }
+
+                    return '
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-50px me-5">
+                                <img src="' . $thumbnail_url . '" class="h-75 align-self-end" alt="Thumbnail" style="object-fit: cover; border-radius: 8px;" />
+                            </div>
+                            <div class="d-flex flex-column">
+                                <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . Str::limit($data->judul, 60, "...") . '</a>
+                                <span class="text-muted fw-semibold d-block fs-7">' . Str::slug($data->judul) . '</span>
+                            </div>
+                        </div>
+                    ';
+                })
+                ->addColumn('kategori', function ($data) {
+                    $categories = explode(',', $data->kategori);
+                    $badges     = '';
+                    foreach ($categories as $category) {
+                        $badges .= '<span class="badge badge-light-primary fw-bold fs-7 px-3 py-2 me-1">' . trim($category) . '</span>';
+                    }
+                    return $badges;
                 })
                 ->addColumn('views', function ($data) {
                     $views = Helper::toDot($data->views);
-                    return $views;
+                    return '<div class="text-center"><span class="fw-bold text-gray-800">' . $views . '</span></div>';
                 })
                 ->addColumn('penulis', function ($data) {
                     $penulis = isset($data->Penulis->nama_lengkap) ? $data->Penulis->nama_lengkap : '-';
-                    return $penulis;
+                    return '<span class="text-gray-600 fw-semibold">' . $penulis . '</span>';
                 })
                 ->addColumn('publisher', function ($data) {
                     if ($data->status == "Published") {
                         $publisher = isset($data->Publisher->nama_lengkap) ? $data->Publisher->nama_lengkap : '-';
+                        return '<span class="text-success fw-semibold">' . $publisher . '</span>';
                     } else {
-                        $publisher = '';
+                        return '<span class="text-muted">-</span>';
                     }
-                    return $publisher;
+                })
+                ->addColumn('status', function ($data) {
+                    $colors = [
+                        'Draft'          => 'warning',
+                        'Pending Review' => 'info',
+                        'Published'      => 'success',
+                        'Scheduled'      => 'primary',
+                        'Archived'       => 'dark',
+                    ];
+
+                    $color = $colors[$data->status] ?? 'secondary';
+                    return '<span class="badge badge-light-' . $color . ' fw-bold fs-7 px-3 py-2">' . $data->status . '</span>';
                 })
                 ->addColumn('tanggal', function ($data) {
                     $tanggal = Helper::TglSimple($data->tanggal);
-                    return $tanggal;
+                    return '<span class="text-gray-600 fw-semibold">' . $tanggal . '</span>';
                 })
-                ->addColumn('aksi', function ($data) use ($role) {
+                ->addColumn('aksi', function ($data) use ($auth) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.post.edit', $uuid_enc);
-                    $aksi     = '
-                        <div class="d-flex">
-                        <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-                        <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
-                        </div>
-                    ';
-                    return $aksi;
+                    $edit_url = route('prt.apps.post.edit', $uuid_enc);
+
+                    // role
+                    $role = $auth->role;
+                    if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
+                        $actions = '
+                            <div class="d-flex justify-content-center">
+                                <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                    <i class="ki-outline ki-pencil fs-2"></i>
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                    <i class="ki-outline ki-trash fs-2"></i>
+                                </a>
+                            </div>
+                        ';
+                    } else {
+                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
+                            $actions = '
+                                <div class="d-flex justify-content-center">
+                                    <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="ki-outline ki-pencil fs-2"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                        <i class="ki-outline ki-trash fs-2"></i>
+                                    </a>
+                                </div>
+                            ';
+                        } else {
+                            $actions = '
+                                <div class="d-flex justify-content-center">
+                                    <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                        <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                                    </span>
+                                    <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                        <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                                    </span>
+                                </div>
+                            ';
+                        }
+                    }
+                    return $actions;
                 })
                 ->escapeColumns([''])
                 ->make(true);
         }
-        return view('pages.admin.portal_apps.postingan.index', compact(
+
+        return view('admin.cms.konten.text.posts.index', compact(
             'status'
         ));
     }
@@ -108,13 +183,12 @@ class PostinganController extends Controller
     public function create()
     {
         // auth
-        $auth = Auth::user();
-        // variable
+        $auth   = Auth::user();
         $title  = "Tambah Data Postingan";
         $submit = "Simpan";
-        // ketegori
+        // kategori
         $kategori = PortalKategori::whereType("Post")->whereStatus("1")->orderBy("nama")->get();
-        return view('pages.admin.portal_apps.postingan.create_edit', compact(
+        return view('admin.cms.konten.text.posts.create_edit', compact(
             'auth',
             'title',
             'submit',
@@ -156,12 +230,13 @@ class PostinganController extends Controller
         $path    = "post/" . date('Y') . "/" . $uuid;
         $tanggal = date('Y-m-d H:i:s', strtotime($request->tanggal));
         $value_1 = [
-            "uuid"     => $uuid,
-            "judul"    => $request->judul,
-            "slug"     => $inputslug,
-            "tanggal"  => $tanggal,
-            "kategori" => implode(",", $request->kategori),
-            "status"   => $request->status,
+            "uuid"      => $uuid,
+            "judul"     => $request->judul,
+            "slug"      => $inputslug,
+            "deskripsi" => $request->deskripsi,
+            "tanggal"   => $tanggal,
+            "kategori"  => implode(",", $request->kategori),
+            "status"    => $request->status,
         ];
 
         // thumbnails
@@ -175,11 +250,8 @@ class PostinganController extends Controller
         }
 
         // post
-        $imgpost         = Helper::UpImgPostWithCompress($request, "post", $path);
+        $imgpost         = Helper::processTinyMCEBase64Images($request, "post", $path);
         $value_1['post'] = $imgpost;
-
-        // deskripsi
-        $value_1['deskripsi'] = $request->filled('deskripsi') ? $request->deskripsi : Helper::generateDescription($imgpost);
 
         // save
         $save_1 = PortalPost::create($value_1);
@@ -188,20 +260,21 @@ class PostinganController extends Controller
             $aktifitas = [
                 "tabel" => ["portal_post"],
                 "uuid"  => [$uuid],
-                "value" => [$request->judul],
+                "value" => [$value_1],
             ];
             $log = [
                 "apps"      => "Portal Apps",
-                "subjek"    => "Menambahkan Data Postingan UUID= " . $uuid,
+                "subjek"    => "Menambahkan Data Postingan: " . $request->judul . " - " . $uuid,
                 "aktifitas" => $aktifitas,
                 "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
+            // alert success
             alert()->success('Success', "Berhasil Menambahkan Data!");
-            return redirect()->route('prt.apps.post.index');
+            return \redirect()->route('prt.apps.post.index');
         } else {
             alert()->error('Error', "Gagal Menambahkan Data!");
-            return back()->withInput($request->all());
+            return \back()->withInput($request->all());
         }
     }
 
@@ -226,9 +299,9 @@ class PostinganController extends Controller
         $title  = "Edit Data Postingan";
         $submit = "Simpan";
 
-        // ketegori
+        // kategori
         $kategori = PortalKategori::whereType("Post")->whereStatus("1")->orderBy("nama")->get();
-        return view('pages.admin.portal_apps.postingan.create_edit', compact(
+        return view('admin.cms.konten.text.posts.create_edit', compact(
             'auth',
             'uuid_enc',
             'title',
@@ -247,19 +320,18 @@ class PostinganController extends Controller
         $auth = Auth::user();
         $role = $auth->role;
 
-        // Validasi input tanpa memvalidasi status
-        $request->validate([
-            "judul"      => "required|string|max:300",
-            "deskripsi"  => "required|string|max:160",
-            "post"       => "required",
-            "kategori"   => "required",
-            "thumbnails" => "sometimes|image|mimes:png,jpg,jpeg|max:2048",
-            "tanggal"    => "required",
-        ]);
-
-        // $uuid
+        // uuid
         $uuid = Helper::decode($uuid_enc);
         $data = PortalPost::findOrFail($uuid);
+
+        // Validasi input
+        $request->validate([
+            "judul"     => "required|string|max:300",
+            "deskripsi" => "required|string|max:160",
+            "post"      => "required",
+            "kategori"  => "required",
+            "tanggal"   => "required",
+        ]);
 
         // Validasi status menggunakan helper
         if (! Helper::validateStatus($role, $request->status)) {
@@ -316,7 +388,7 @@ class PostinganController extends Controller
         }
 
         // post
-        $imgpost         = Helper::UpdateImgPostWithCompress($request, "post", $path);
+        $imgpost         = Helper::processTinyMCEBase64Images($request, "post", $path);
         $value_1['post'] = $imgpost;
 
         // save
@@ -330,16 +402,16 @@ class PostinganController extends Controller
             ];
             $log = [
                 "apps"      => "Portal Apps",
-                "subjek"    => "Mengubah Data Postingan UUID= " . $uuid,
+                "subjek"    => "Mengubah Data Postingan: " . $request->judul . " - " . $uuid,
                 "aktifitas" => $aktifitas,
                 "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             alert()->success('Success', "Berhasil Mengubah Data!");
-            return redirect()->route('prt.apps.post.index');
+            return \redirect()->route('prt.apps.post.index');
         } else {
             alert()->error('Error', "Gagal Mengubah Data!");
-            return back()->withInput($request->all());
+            return \back()->withInput($request->all());
         }
     }
 
@@ -348,15 +420,14 @@ class PostinganController extends Controller
      */
     public function destroy(Request $request)
     {
-        // Auth user
+        // auth
         $auth = Auth::user();
 
-        // Decode UUID dari request
+        // uuid
         $uuid = Helper::decode($request->uuid);
 
-        // Dapatkan data dari database
-        $data  = PortalPost::findOrFail($uuid);
-        $judul = $data->judul;
+        // data
+        $data = PortalPost::findOrFail($uuid);
 
         // Lakukan soft delete
         if ($data->status == "Draft" || $data->status == "Pending Review") {
@@ -373,23 +444,21 @@ class PostinganController extends Controller
             ]);
             $save_1 = $data->delete();
         }
-
         if ($save_1) {
-            // Log aktivitas penghapusan
+            // create log
             $aktifitas = [
                 "tabel" => ["portal_post"],
                 "uuid"  => [$uuid],
-                "value" => [$judul],
+                "value" => [$data],
             ];
             $log = [
                 "apps"      => "Portal Apps",
-                "subjek"    => "Menghapus Data Postingan UUID= " . $uuid,
+                "subjek"    => "Menghapus Data Postingan: " . $data->judul . " - " . $uuid,
                 "aktifitas" => $aktifitas,
                 "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
-
-            // Return response success
+            // alert success
             $msg      = "Data Berhasil Dihapus!";
             $response = [
                 "status"  => true,
@@ -397,13 +466,149 @@ class PostinganController extends Controller
             ];
             return response()->json($response, 200);
         } else {
-            // Return response gagal
+            // success
             $msg      = "Data Gagal Dihapus!";
             $response = [
                 "status"  => false,
                 "message" => $msg,
             ];
             return response()->json($response, 422);
+        }
+    }
+
+    /**
+     * Bulk delete posts
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            // auth
+            $auth = Auth::user();
+
+            // Validate request
+            $request->validate([
+                'uuids'   => 'required|array|min:1',
+                'uuids.*' => 'required|string',
+            ]);
+
+            $uuids        = $request->uuids;
+            $deletedCount = 0;
+            $failedItems  = [];
+
+            // Loop through each UUID and delete
+            foreach ($uuids as $uuid) {
+                try {
+                    // Find data
+                    $data = PortalPost::find($uuid);
+
+                    if (! $data) {
+                        $failedItems[] = "Data dengan ID {$uuid} tidak ditemukan";
+                        continue;
+                    }
+
+                    // Check permission (if needed)
+                    $role      = $auth->role;
+                    $canDelete = ($role == "Super Admin" || $role == "Admin" || $role == "Editor");
+
+                    // If not admin, check ownership
+                    if (! $canDelete && isset($data->uuid_created)) {
+                        $canDelete = ($data->uuid_created == $auth->uuid);
+                    }
+
+                    if (! $canDelete) {
+                        $failedItems[] = "Tidak memiliki izin untuk menghapus: {$data->judul}";
+                        continue;
+                    }
+
+                    // Delete the data
+                    // Lakukan soft delete
+                    if ($data->status == "Draft" || $data->status == "Pending Review") {
+                        // drop path
+                        $tahun = Carbon::parse($data->tanggal)->year;
+                        $path  = "post/{$tahun}/{$data->uuid}";
+                        Helper::deleteFolderIfExists("directory", $path);
+                        $save_1 = $data->forceDelete();
+                    } else {
+                        // Update uuid_deleted dan status sebelum melakukan soft delete
+                        $data->update([
+                            'uuid_deleted' => $auth->uuid,
+                            'status'       => 'Deleted',
+                        ]);
+                        $save_1 = $data->delete();
+                    }
+
+                    if ($save_1) {
+                        $deletedCount++;
+
+                        // Create log for each deleted item
+                        $aktifitas = [
+                            "tabel" => ["portal_post"],
+                            "uuid"  => [$uuid],
+                            "value" => [$data->toArray()],
+                        ];
+                        $log = [
+                            "apps"      => "Portal Apps",
+                            "subjek"    => "Menghapus Data Postingan (Bulk): " . $data->judul . " - " . $uuid,
+                            "aktifitas" => $aktifitas,
+                            "device"    => "web",
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $failedItems[] = "Gagal menghapus: {$data->judul}";
+                    }
+
+                } catch (\Exception $e) {
+                    $failedItems[] = "Error pada ID {$uuid}: " . $e->getMessage();
+                    continue;
+                }
+            }
+
+            // Prepare response message
+            $message = "Berhasil menghapus {$deletedCount} postingan";
+
+            if (! empty($failedItems)) {
+                $message .= ". Gagal menghapus " . count($failedItems) . " item";
+                if (count($failedItems) <= 3) {
+                    $message .= ": " . implode(", ", $failedItems);
+                }
+            }
+
+            // Create summary log
+            $summaryLog = [
+                "apps"      => "Portal Apps",
+                "subjek"    => "Bulk Delete Postingan - Berhasil: {$deletedCount}, Gagal: " . count($failedItems),
+                "aktifitas" => [
+                    "tabel"         => ["portal_post"],
+                    "total_request" => count($uuids),
+                    "total_deleted" => $deletedCount,
+                    "total_failed"  => count($failedItems),
+                    "failed_items"  => $failedItems,
+                ],
+                "device"    => "web",
+            ];
+            Helper::addToLogAktifitas($request, $summaryLog);
+
+            $response = [
+                "status"        => true,
+                "message"       => $message,
+                "deleted_count" => $deletedCount,
+                "failed_count"  => count($failedItems),
+                "failed_items"  => $failedItems,
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk Delete Error', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            $response = [
+                "status"  => false,
+                "message" => "Terjadi kesalahan saat menghapus data: " . $e->getMessage(),
+            ];
+            return response()->json($response, 500);
         }
     }
 }

@@ -435,6 +435,10 @@ class HalamanController extends Controller
             $save_1 = $data->forceDelete();
         } else {
             // Update uuid_deleted dan status sebelum melakukan soft delete
+            $data->update([
+                'uuid_deleted' => $auth->uuid,
+                'status'       => 'Deleted',
+            ]);
             $save_1 = $data->delete();
         }
         if ($save_1) {
@@ -524,6 +528,10 @@ class HalamanController extends Controller
                         $save_1 = $data->forceDelete();
                     } else {
                         // Update uuid_deleted dan status sebelum melakukan soft delete
+                        $data->update([
+                            'uuid_deleted' => $auth->uuid,
+                            'status'       => 'Deleted',
+                        ]);
                         $save_1 = $data->delete();
                     }
 

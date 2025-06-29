@@ -349,7 +349,7 @@
                         [10, 25, 50, 100, "All"]
                     ],
                     "order": [
-                        [2, 'asc']
+                        [1, 'asc']
                     ], // Order by nama (kolom ke-3, index 2)
                     "language": {
                         "searchPlaceholder": 'Search...',

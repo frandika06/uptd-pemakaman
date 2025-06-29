@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DummyPesanSeeder::class);
         $this->call(DummyGaleriSeeder::class);
         $this->call(DummyPageSeeder::class);
+        $this->call(DummyPostSeeder::class);
         $this->call(DummyFaqSeeder::class);
         $this->call(DummySosmedSeeder::class);
         $this->call(DummySurveySeeder::class);

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\web\backend\banner;
 
 use App\Helpers\Helper;
@@ -48,9 +47,9 @@ class BannerController extends Controller
                 ->setRowId('uuid')
                 ->addColumn('judul', function ($data) {
                     $thumbnails = Helper::thumbnail($data->thumbnails);
-                    $uuid_enc = Helper::encode($data->uuid);
-                    $edit = route('prt.apps.banner.edit', $uuid_enc);
-                    $judul = '
+                    $uuid_enc   = Helper::encode($data->uuid);
+                    $edit       = route('prt.apps.banner.edit', $uuid_enc);
+                    $judul      = '
                     <div class="trans-list">
                         <img src="' . $thumbnails . '" alt="" class="rounded avatar avatar-xl me-3" draggable="false">
                         <h4><a class="text-underline" href="' . $edit . '">' . Str::limit($data->judul, 30, "...") . '</a></h4>
@@ -78,14 +77,14 @@ class BannerController extends Controller
                     return $tanggal;
                 })
                 ->addColumn('status', function ($data) use ($auth) {
-                    $uuid = Helper::encode($data->uuid);
+                    $uuid   = Helper::encode($data->uuid);
                     $status = $data->status;
                     if ($status == "1") {
                         $toogle = "checked";
-                        $text = "Aktif";
+                        $text   = "Aktif";
                     } else {
                         $toogle = "";
-                        $text = "Tidak Aktif";
+                        $text   = "Tidak Aktif";
                     }
                     // role
                     $role = $auth->role;
@@ -103,8 +102,8 @@ class BannerController extends Controller
                 })
                 ->addColumn('aksi', function ($data) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit = route('prt.apps.banner.edit', [$uuid_enc]);
-                    $aksi = '
+                    $edit     = route('prt.apps.banner.edit', [$uuid_enc]);
+                    $aksi     = '
                         <div class="d-flex">
                             <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
                             <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
@@ -115,7 +114,7 @@ class BannerController extends Controller
                 ->escapeColumns([''])
                 ->make(true);
         }
-        return view('pages.admin.portal_apps.banner.index', compact(
+        return view('admin.cms.konten.media.banner.index', compact(
             'kategori',
             'kategoriList'
         ));
@@ -128,9 +127,9 @@ class BannerController extends Controller
     {
         // get kategori
         $kategoriList = PortalKategori::whereType("Banner")->whereStatus("1")->orderBy("nama")->get();
-        $title = "Tambah Data Banner";
-        $submit = "Simpan";
-        return view('pages.admin.portal_apps.banner.create_edit', compact(
+        $title        = "Tambah Data Banner";
+        $submit       = "Simpan";
+        return view('admin.cms.konten.media.banner.create_edit', compact(
             'title',
             'submit',
             'kategoriList'
@@ -147,26 +146,26 @@ class BannerController extends Controller
 
         //validate
         $request->validate([
-            "judul" => "required|string|max:300",
+            "judul"      => "required|string|max:300",
             "thumbnails" => "required|image|mimes:png,jpg,jpeg|max:2048",
-            "url" => "sometimes|nullable|url",
-            "deskripsi" => "sometimes|nullable|string|max:500",
+            "url"        => "sometimes|nullable|url",
+            "deskripsi"  => "sometimes|nullable|string|max:500",
             "warna_text" => "required",
-            "kategori" => "required|string|max:100",
+            "kategori"   => "required|string|max:100",
         ]);
 
         // value
-        $uuid = Str::uuid();
-        $path = "banner/" . date('Y') . "/" . $uuid;
+        $uuid    = Str::uuid();
+        $path    = "banner/" . date('Y') . "/" . $uuid;
         $value_1 = [
-            "uuid" => $uuid,
-            "judul" => $request->judul,
-            "url" => $request->url,
-            "deskripsi" => $request->deskripsi,
-            "tanggal" => Carbon::now(),
+            "uuid"       => $uuid,
+            "judul"      => $request->judul,
+            "url"        => $request->url,
+            "deskripsi"  => $request->deskripsi,
+            "tanggal"    => Carbon::now(),
             "warna_text" => $request->warna_text,
-            "kategori" => $request->kategori,
-            'status' => "0",
+            "kategori"   => $request->kategori,
+            'status'     => "0",
         ];
 
         // thumbnails
@@ -184,15 +183,15 @@ class BannerController extends Controller
         if ($save_1) {
             // create log
             $aktifitas = [
-                "tabel" => array("portal_banner"),
-                "uuid" => array($uuid),
-                "value" => array($value_1),
+                "tabel" => ["portal_banner"],
+                "uuid"  => [$uuid],
+                "value" => [$value_1],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Menambahkan Data Banner UUID= " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Menambahkan Data Banner UUID= " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
@@ -222,9 +221,9 @@ class BannerController extends Controller
         $data = PortalBanner::findOrFail($uuid);
         // get kategori
         $kategoriList = PortalKategori::whereType("Banner")->whereStatus("1")->orderBy("nama")->get();
-        $title = "Edit Data Banner";
-        $submit = "Simpan";
-        return view('pages.admin.portal_apps.banner.create_edit', compact(
+        $title        = "Edit Data Banner";
+        $submit       = "Simpan";
+        return view('admin.cms.konten.media.banner.create_edit', compact(
             'uuid_enc',
             'title',
             'submit',
@@ -243,12 +242,12 @@ class BannerController extends Controller
 
         //validate
         $request->validate([
-            "judul" => "required|string|max:300",
+            "judul"      => "required|string|max:300",
             "thumbnails" => "sometimes|image|mimes:png,jpg,jpeg|max:2048",
-            "url" => "sometimes|nullable|url",
-            "deskripsi" => "sometimes|nullable|string|max:500",
+            "url"        => "sometimes|nullable|url",
+            "deskripsi"  => "sometimes|nullable|string|max:500",
             "warna_text" => "required",
-            "kategori" => "required|string|max:100",
+            "kategori"   => "required|string|max:100",
         ]);
 
         // $uuid
@@ -256,14 +255,14 @@ class BannerController extends Controller
         $data = PortalBanner::findOrFail($uuid);
 
         // value
-        $thn = date("Y", \strtotime($data->created_at));
-        $path = "banner/" . $thn . "/" . $uuid;
+        $thn     = date("Y", \strtotime($data->created_at));
+        $path    = "banner/" . $thn . "/" . $uuid;
         $value_1 = [
-            "judul" => $request->judul,
-            "deskripsi" => $request->deskripsi,
+            "judul"      => $request->judul,
+            "deskripsi"  => $request->deskripsi,
             "warna_text" => $request->warna_text,
-            "url" => $request->url,
-            "kategori" => $request->kategori,
+            "url"        => $request->url,
+            "kategori"   => $request->kategori,
         ];
 
         // thumbnails
@@ -281,15 +280,15 @@ class BannerController extends Controller
         if ($save_1) {
             // create log
             $aktifitas = [
-                "tabel" => array("portal_banner"),
-                "uuid" => array($uuid),
-                "value" => array($value_1),
+                "tabel" => ["portal_banner"],
+                "uuid"  => [$uuid],
+                "value" => [$value_1],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Mengubah Data Banner UUID= " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Mengubah Data Banner UUID= " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
@@ -317,29 +316,29 @@ class BannerController extends Controller
         if ($save_1) {
             // create log
             $aktifitas = [
-                "tabel" => array("portal_banner"),
-                "uuid" => array($uuid),
-                "value" => array($data),
+                "tabel" => ["portal_banner"],
+                "uuid"  => [$uuid],
+                "value" => [$data],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Menghapus Data Banner UUID= " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Menghapus Data Banner UUID= " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
-            $msg = "Data Berhasil Dihapus!";
+            $msg      = "Data Berhasil Dihapus!";
             $response = [
-                "status" => true,
+                "status"  => true,
                 "message" => $msg,
             ];
             return response()->json($response, 200);
         } else {
             // success
-            $msg = "Data Gagal Dihapus!";
+            $msg      = "Data Gagal Dihapus!";
             $response = [
-                "status" => false,
+                "status"  => false,
                 "message" => $msg,
             ];
             return response()->json($response, 422);
@@ -355,7 +354,7 @@ class BannerController extends Controller
         $auth = Auth::user();
 
         // uuid
-        $uuid = Helper::decode($request->uuid);
+        $uuid   = Helper::decode($request->uuid);
         $status = $request->status;
         if ($status == "0") {
             $status_update = "1";
@@ -377,28 +376,28 @@ class BannerController extends Controller
             // create log
             $aktifitas = [
                 "tabel" => ["portal_banner"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$data],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Mengubah Status Banner: " . $data->judul . " - " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Mengubah Status Banner: " . $data->judul . " - " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
             // alert success
-            $msg = "Status Berhasil Diubah!";
+            $msg      = "Status Berhasil Diubah!";
             $response = [
-                "status" => true,
+                "status"  => true,
                 "message" => $msg,
             ];
             return response()->json($response, 200);
         } else {
             // success
-            $msg = "Status Gagal Diubah!";
+            $msg      = "Status Gagal Diubah!";
             $response = [
-                "status" => false,
+                "status"  => false,
                 "message" => $msg,
             ];
             return response()->json($response, 422);

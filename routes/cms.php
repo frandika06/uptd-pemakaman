@@ -143,6 +143,9 @@ Route::group(['prefix' => 'cms'], function () {
             Route::put('/edit/{uuid}', [BannerController::class, 'update'])->name('prt.apps.banner.update');
             Route::post('/delete', [BannerController::class, 'destroy'])->name('prt.apps.banner.destroy');
             Route::post('/status', [BannerController::class, 'status'])->name('prt.apps.banner.status');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [BannerController::class, 'bulkDestroy'])->name('prt.apps.banner.destroy.bulk');
+            Route::post('/bulk-status', [BannerController::class, 'bulkStatus'])->name('prt.apps.banner.status.bulk');
         });
     });
     // middleware: Penulis
@@ -154,7 +157,6 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [GaleriController::class, 'edit'])->name('prt.apps.galeri.edit');
             Route::put('/edit/{uuid}', [GaleriController::class, 'update'])->name('prt.apps.galeri.update');
             Route::post('/delete', [GaleriController::class, 'destroy'])->name('prt.apps.galeri.destroy');
-            Route::post('/status', [GaleriController::class, 'status'])->name('prt.apps.galeri.status');
         });
         // portal video
         Route::group(['prefix' => 'video'], function () {

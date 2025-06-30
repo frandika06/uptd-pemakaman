@@ -1,13 +1,13 @@
 @push('styles')
     <style>
         /* Bulk actions toolbar animation */
-        [data-kt-page-table-toolbar="selected"] {
+        [data-kt-banner-table-toolbar="selected"] {
             transition: all 0.3s ease;
             opacity: 0;
             transform: translateY(-10px);
         }
 
-        [data-kt-page-table-toolbar="selected"]:not(.d-none) {
+        [data-kt-banner-table-toolbar="selected"]:not(.d-none) {
             opacity: 1;
             transform: translateY(0);
         }
@@ -28,7 +28,7 @@
         }
 
         /* Bulk toolbar background */
-        [data-kt-page-table-toolbar="selected"] {
+        [data-kt-banner-table-toolbar="selected"] {
             border: 1px solid rgba(33, 150, 243, 0.25);
         }
 
@@ -80,47 +80,16 @@
             display: none !important;
         }
 
-        /* Statistics cards styling */
-        .stats-card {
-            transition: all 0.3s ease;
-        }
-
-        .stats-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .stats-icon {
-            width: 50px;
-            height: 50px;
+        /* Banner Counter badge styling */
+        .banner-counter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            font-weight: 600;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stats-draft {
-            background: linear-gradient(135deg, #FFA726, #FB8C00);
-        }
-
-        .stats-pending-review {
-            background: linear-gradient(135deg, #42A5F5, #1E88E5);
-        }
-
-        .stats-published {
-            background: linear-gradient(135deg, #66BB6A, #43A047);
-        }
-
-        .stats-scheduled {
-            background: linear-gradient(135deg, #AB47BC, #8E24AA);
-        }
-
-        .stats-archived {
-            background: linear-gradient(135deg, #78909C, #546E7A);
-        }
-
-        .stats-deleted {
-            background: linear-gradient(135deg, #EF5350, #D32F2F);
+            padding: 4px 8px;
+            font-size: 11px;
+            min-width: 20px;
+            text-align: center;
         }
     </style>
 @endpush
@@ -128,7 +97,7 @@
 @extends('layouts.admin')
 
 {{-- SEO::BEGIN --}}
-@section('title', 'Halaman ' . $kategori)
+@section('title', 'Banner Management')
 {{-- SEO::END --}}
 
 {{-- TOOLBAR::BEGIN --}}
@@ -141,44 +110,30 @@
             <div class="page-title d-flex align-items-center me-3">
                 {{-- begin::Title --}}
                 <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
-                    <span>Halaman {{ $kategori }}</span>
+                    <span>Banner Management</span>
                 </h1>
                 {{-- end::Title --}}
             </div>
             {{-- end::Page title --}}
             {{-- begin::Breadcrumb --}}
             <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-3 fs-7">
-                {{-- begin::Item --}}
                 <li class="breadcrumb-item text-gray-700 fw-bold lh-1">
-                    <a href="{{ route('prt.apps.index') }}" class="text-gray-700 text-hover-primary">
+                    <a href="{{ route('auth.home') }}" class="text-gray-700 text-hover-primary">
                         <i class="ki-outline ki-home fs-6"></i>
                     </a>
                 </li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
                 <li class="breadcrumb-item text-gray-700">Konten</li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
-                <li class="breadcrumb-item text-gray-700">Konten Internal</li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
+                <li class="breadcrumb-item text-gray-700">Konten Media</li>
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                {{-- end::Item --}}
-                {{-- begin::Item --}}
-                <li class="breadcrumb-item text-gray-700">{{ $kategori }}</li>
-                {{-- end::Item --}}
+                <li class="breadcrumb-item text-gray-700">Banner</li>
             </ul>
             {{-- end::Breadcrumb --}}
         </div>
@@ -190,45 +145,34 @@
                 <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
                     data-kt-menu-placement="bottom-end">
                     <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
-                    Filter: <span id="filter-text" class="ms-1">{{ $status }}</span>
+                    Filter: <span id="filter-text" class="ms-1">{{ isset($kategori) ? $kategori : 'Semua Data' }}</span>
                 </a>
-                {{-- begin::Menu --}}
                 <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
-                    {{-- begin::Header --}}
                     <div class="px-7 py-5">
                         <div class="fs-5 text-dark fw-bold">Filter Options</div>
                     </div>
-                    {{-- end::Header --}}
-                    {{-- begin::Separator --}}
                     <div class="separator border-gray-200"></div>
-                    {{-- end::Separator --}}
-                    {{-- begin::Content --}}
                     <div class="px-7 py-5">
-                        {{-- begin::Input group --}}
                         <div class="mb-10">
-                            <label class="form-label fw-semibold">Status Halaman:</label>
+                            <label class="form-label fw-semibold">Tipe Kategori Banner:</label>
                             <div>
-                                <select class="form-select form-select-solid" name="q_status_page" id="q_status_page" data-control="select2" data-placeholder="Pilih Status"
+                                <select class="form-select form-select-solid" name="q_kategori_banner" id="q_kategori_banner" data-control="select2" data-placeholder="Pilih Kategori"
                                     data-allow-clear="true">
-                                    <option @if ($status == 'Draft') selected @endif value="Draft">Draft</option>
-                                    <option @if ($status == 'Pending Review') selected @endif value="Pending Review">Pending Review</option>
-                                    <option @if ($status == 'Published') selected @endif value="Published">Published</option>
-                                    <option @if ($status == 'Scheduled') selected @endif value="Scheduled">Scheduled</option>
-                                    <option @if ($status == 'Archived') selected @endif value="Archived">Archived</option>
+                                    <option @if (!isset($kategori) || $kategori == 'Semua Data') selected @endif value="Semua Data">Semua Data</option>
+                                    @if (isset($kategoriList) && \count($kategoriList) > 0)
+                                        @foreach ($kategoriList as $item)
+                                            <option @if (isset($kategori) && $kategori == $item->nama) selected @endif value="{{ $item->nama }}">{{ $item->nama }}</option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
                         </div>
-                        {{-- end::Input group --}}
-                        {{-- begin::Actions --}}
                         <div class="d-flex justify-content-end">
                             <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
                             <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
                         </div>
-                        {{-- end::Actions --}}
                     </div>
-                    {{-- end::Content --}}
                 </div>
-                {{-- end::Menu --}}
             </div>
             {{-- end::Filter dropdown --}}
             {{-- begin::Export button --}}
@@ -236,48 +180,34 @@
                 <i class="ki-outline ki-exit-down fs-2"></i>
                 Export Report
             </button>
-            {{-- begin::Export Menu --}}
             <div id="kt_datatable_example_export_menu"
                 class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
-                {{-- begin::Menu item --}}
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-kt-export="copy">
                         Copy to clipboard
                     </a>
                 </div>
-                {{-- end::Menu item --}}
-                {{-- begin::Menu item --}}
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-kt-export="excel">
                         Export as Excel
                     </a>
                 </div>
-                {{-- end::Menu item --}}
-                {{-- begin::Menu item --}}
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-kt-export="csv">
                         Export as CSV
                     </a>
                 </div>
-                {{-- end::Menu item --}}
-                {{-- begin::Menu item --}}
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-kt-export="pdf">
                         Export as PDF
                     </a>
                 </div>
-                {{-- end::Menu item --}}
             </div>
-            {{-- end::Export Menu --}}
-            {{-- Hidden export buttons container --}}
             <div id="kt_datatable_example_buttons" class="d-none"></div>
-            {{-- end::Export button --}}
-            {{-- begin::Primary button --}}
-            <a href="{{ route('prt.apps.page.create', [$tags]) }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
+            <a href="{{ route('prt.apps.banner.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
                 <i class="ki-outline ki-plus fs-2"></i>
-                <span>Tambah Konten</span>
+                <span>Tambah Banner</span>
             </a>
-            {{-- end::Primary button --}}
         </div>
         {{-- end::Actions --}}
     </div>
@@ -286,87 +216,57 @@
 
 {{-- CONTENT::BEGIN --}}
 @section('content')
-    {{-- begin::Statistics cards --}}
-    <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-        @foreach (['Draft' => 'warning', 'Pending Review' => 'info', 'Published' => 'success', 'Scheduled' => 'primary', 'Archived' => 'dark', 'Deleted' => 'danger'] as $label => $color)
-            <div class="col-xxl-2 col-lg-4 col-sm-6">
-                <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                    <div class="card-body">
-                        <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_{{ Str::slug($label) }}">{{ Helper::GetStatistikByModel('Halaman', $label, $tags) }}</div>
-                        <div class="fw-semibold text-gray-400">{{ $label }}</div>
-                        <div class="stats-icon stats-{{ Str::slug($label) }} position-absolute top-0 end-0 mt-3 me-3">
-                            <i
-                                class="ki-outline ki-{{ $label == 'Draft' ? 'document' : ($label == 'Pending Review' ? 'toggle-off-circle' : ($label == 'Published' ? 'verify' : ($label == 'Scheduled' ? 'calendar' : ($label == 'Archived' ? 'archive' : 'trash')))) }} fs-2 text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-    {{-- end::Statistics cards --}}
-
-    {{-- begin::Card --}}
     <div class="card">
-        {{-- begin::Card header --}}
         <div class="card-header border-0 pt-6">
-            {{-- begin::Card title --}}
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
-                    <span class="card-label fw-bold fs-3 mb-1">Data Halaman {{ $kategori }}</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan status: <strong id="titleStatus">{{ $status }}</strong></span>
+                    <span class="card-label fw-bold fs-3 mb-1">Data Banner</span>
+                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan kategori: <strong id="titleKategori">{{ isset($kategori) ? $kategori : 'Semua Data' }}</strong></span>
                 </h4>
             </div>
-            {{-- end::Card title --}}
-            {{-- begin::Card toolbar --}}
             <div class="card-toolbar">
-                {{-- begin::Search --}}
                 <div class="d-flex align-items-center position-relative my-1">
                     <i class="ki-outline ki-magnifier fs-1 position-absolute ms-6"></i>
-                    <input type="text" data-kt-page-table-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Cari halaman..." />
+                    <input type="text" data-kt-banner-table-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Cari Banner..." />
                 </div>
-                {{-- end::Search --}}
             </div>
-            {{-- end::Card toolbar --}}
         </div>
-        {{-- end::Card header --}}
-
-        {{-- begin::Card body --}}
         <div class="card-body py-4">
-            {{-- begin::Bulk Actions --}}
-            <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-page-table-toolbar="selected">
+            <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-banner-table-toolbar="selected">
                 <div class="fw-bold text-primary">
                     <i class="ki-outline ki-check-square fs-2 me-2"></i>
-                    <span data-kt-page-table-select="selected_count"></span> item dipilih
+                    <span data-kt-banner-table-select="selected_count"></span> item dipilih
                 </div>
-
                 <div class="d-flex align-items-center gap-2">
-                    {{-- begin::Bulk Delete Action --}}
-                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-page-table-select="delete_selected" data-bs-toggle="tooltip"
+                    <div class="btn-group me-2" role="group" aria-label="Status Actions">
+                        <button type="button" class="btn btn-sm btn-light-success" data-kt-banner-table-select="activate_selected" data-bs-toggle="tooltip"
+                            title="Aktifkan yang dipilih">
+                            <i class="ki-outline ki-check fs-6 me-1"></i>
+                            Aktifkan
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light-warning" data-kt-banner-table-select="deactivate_selected" data-bs-toggle="tooltip"
+                            title="Nonaktifkan yang dipilih">
+                            <i class="ki-outline ki-cross fs-6 me-1"></i>
+                            Nonaktifkan
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-banner-table-select="delete_selected" data-bs-toggle="tooltip"
                         title="Hapus yang dipilih">
                         <i class="ki-outline ki-trash fs-6 me-1"></i>
                         Hapus
                     </button>
-                    {{-- end::Bulk Delete Action --}}
-
-                    {{-- begin::Cancel Selection --}}
-                    <button type="button" class="btn btn-sm btn-light" data-kt-page-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
+                    <button type="button" class="btn btn-sm btn-light" data-kt-banner-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
                         <i class="ki-outline ki-cross fs-6"></i>
                     </button>
-                    {{-- end::Cancel Selection --}}
                 </div>
             </div>
-            {{-- end::Bulk Actions --}}
-
-            {{-- begin::Table --}}
             <div class="table-responsive position-relative">
-                {{-- Custom Processing Indicator --}}
                 <div id="datatable_processing" style="display: none;">
                     <div class="d-flex align-items-center">
                         <div class="custom-spinner me-2"></div>
                         <span>Loading data...</span>
                     </div>
                 </div>
-
                 <table class="table align-middle table-row-dashed fs-6 gy-5" id="datatable">
                     <thead>
                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
@@ -377,11 +277,10 @@
                             </th>
                             <th width="30px">#</th>
                             <th>Judul</th>
-                            <th width="10%">Kategori</th>
-                            <th width="10%">Views</th>
                             <th width="10%">Author</th>
                             <th width="10%">Publisher</th>
                             <th width="10%">Tanggal</th>
+                            <th width="10%">Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -392,242 +291,224 @@
                             <th class="w-10px pe-2"></th>
                             <th width="30px">#</th>
                             <th>Judul</th>
-                            <th width="10%">Kategori</th>
-                            <th width="10%">Views</th>
                             <th width="10%">Author</th>
                             <th width="10%">Publisher</th>
                             <th width="10%">Tanggal</th>
+                            <th width="10%">Status</th>
                             <th>Aksi</th>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            {{-- end::Table --}}
         </div>
-        {{-- end::Card body --}}
     </div>
-    {{-- end::Card --}}
 @endsection
 {{-- CONTENT::END --}}
 
-{{-- SCRIPTS::BEGIN --}}
 @push('scripts')
     <script>
         "use strict";
 
-        // Class definition
-        var KTDatatablesHalaman = function() {
-            // Shared variables
+        var KTDatatablesBanner = function() {
             var table;
             var datatable;
 
-            // Private functions
             var initDatatable = function() {
-                // Initialize DataTable
                 datatable = $('#datatable').DataTable({
-                    "processing": true,
-                    "serverSide": true,
-                    "responsive": true,
-                    "paging": true,
-                    "searching": true,
-                    "ordering": true,
-                    "info": true,
-                    "autoWidth": false,
-                    "stateSave": false,
-                    "pageLength": 10,
-                    "lengthMenu": [
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    stateSave: false,
+                    pageLength: 10,
+                    lengthMenu: [
                         [10, 25, 50, 100, -1],
-                        [10, 25, 50, 100, "All"]
+                        [10, 25, 50, 100, "Semua"]
                     ],
-                    "order": [
+                    order: [
                         [1, 'asc']
-                    ], // Order by index (kolom ke-2, index 1)
-                    "language": {
-                        "searchPlaceholder": 'Search...',
-                        "sSearch": '',
-                        "lengthMenu": '_MENU_ entries per page',
-                        "processing": '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
-                        "loadingRecords": '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
-                        "paginate": {
+                    ],
+                    language: {
+                        searchPlaceholder: 'Cari...',
+                        sSearch: '',
+                        lengthMenu: '_MENU_ entri per halaman',
+                        processing: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
+                        loadingRecords: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
+                        paginate: {
                             next: '<i class="ki-outline ki-arrow-right"></i>',
                             previous: '<i class="ki-outline ki-arrow-left"></i>',
                             first: '<i class="ki-outline ki-double-arrow-left"></i>',
                             last: '<i class="ki-outline ki-double-arrow-right"></i>'
                         },
-                        "emptyTable": "Tidak ada data halaman",
-                        "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ halaman",
-                        "infoEmpty": "Menampilkan 0 sampai 0 dari 0 halaman",
-                        "infoFiltered": "(disaring dari _MAX_ total halaman)",
-                        "zeroRecords": "Tidak ditemukan data yang sesuai"
+                        emptyTable: "Tidak ada data Banner",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                        infoFiltered: "(disaring dari total _MAX_ data)",
+                        zeroRecords: "Data tidak ditemukan"
                     },
-                    "ajax": {
-                        "url": "{!! route('prt.apps.page.index', [$tags]) !!}",
-                        "type": 'GET',
-                        "data": function(data) {
+                    ajax: {
+                        url: "{{ route('prt.apps.banner.index') }}",
+                        type: 'GET',
+                        data: function(data) {
                             data.filter = {
-                                'status': $('[name="q_status_page"]').val() || 'Published',
+                                kategori: $('[name="q_kategori_banner"]').val() || 'Hero'
                             };
                         },
-                        "dataSrc": function(json) {
-                            return json.data;
-                        },
-                        "error": function(xhr, error, thrown) {
+                        dataSrc: 'data',
+                        error: function(xhr, error, thrown) {
                             console.error('DataTable AJAX Error:', xhr.responseText);
                             $('#datatable_processing').hide();
-
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error!',
-                                text: 'Gagal memuat data. Silakan refresh halaman.',
+                                title: 'Gagal!',
+                                text: 'Tidak dapat memuat data banner. Silakan refresh halaman.',
                                 confirmButtonText: 'OK'
                             });
                         }
                     },
-                    "columns": [{
+                    columns: [{
                             data: null,
                             orderable: false,
                             searchable: false,
-                            exportable: false,
                             render: function(data, type, row) {
-                                return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' +
-                                    row.uuid + '" /></div>';
+                                return `<div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input row-checkbox" type="checkbox" value="${row.uuid}" />
+                    </div>`;
                             }
                         },
                         {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
+                            title: '#',
                             orderable: false,
-                            searchable: false,
-                            title: '#'
+                            searchable: false
                         },
                         {
                             data: 'judul',
                             name: 'judul',
-                            render: function(data, type, row) {
-                                if (type === 'export') {
-                                    return data;
-                                }
-                                return data;
-                            }
-                        },
-                        {
-                            data: 'kategori',
-                            name: 'kategori',
-                        },
-                        {
-                            data: 'views',
-                            name: 'views',
-                            render: function(data, type, row) {
-                                if (type === 'export') {
-                                    return data;
-                                }
-                                return data;
-                            }
+                            title: 'Judul'
                         },
                         {
                             data: 'penulis',
                             name: 'penulis',
+                            title: 'Penulis'
                         },
                         {
                             data: 'publisher',
                             name: 'publisher',
+                            title: 'Publisher'
                         },
                         {
                             data: 'tanggal',
                             name: 'tanggal',
+                            title: 'Tanggal'
+                        },
+                        {
+                            data: 'status',
+                            name: 'status',
+                            orderable: false,
+                            searchable: false,
+                            title: 'Status',
+                            render: function(data, type, row) {
+                                if (type === 'export') {
+                                    return row.status == 1 ? 'Aktif' : 'Tidak Aktif';
+                                }
+                                return data;
+                            }
                         },
                         {
                             data: 'aksi',
                             name: 'aksi',
                             orderable: false,
                             searchable: false,
-                            exportable: false,
+                            title: 'Aksi'
                         }
                     ],
-                    "columnDefs": [{
+                    columnDefs: [{
                         className: "text-center",
-                        targets: [0, 1, 4, 8]
+                        targets: [0, 1, 3, 4, 5, 6, 7]
                     }],
-                    "drawCallback": function(settings) {
+                    drawCallback: function() {
                         $('#datatable_processing').hide();
-
                         if (typeof KTApp !== 'undefined' && KTApp.initBootstrapTooltips) {
                             KTApp.initBootstrapTooltips();
                         }
-
                         handleBulkActions();
                     },
-                    "preDrawCallback": function(settings) {},
-                    "initComplete": function(settings, json) {
+                    initComplete: function() {
                         $('#datatable_processing').hide();
                         handleBulkActions();
                     }
                 });
-            }
+            };
 
-            // Hook export buttons
+
             var exportButtons = function() {
-                const documentTitle = 'Data Halaman {{ $kategori }}';
+                const documentTitle = 'Data Banner';
 
                 var buttons = new $.fn.dataTable.Buttons(datatable, {
                     buttons: [{
                             extend: 'copyHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_status_page"]').val() || 'Published';
+                                const currentFilter = $('[name="q_kategori_banner"]').val() || 'Semua Data';
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6, 7] // Exclude checkbox and actions columns
+                                columns: [1, 2, 3, 4, 5, 6]
                             }
                         },
                         {
                             extend: 'excelHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_status_page"]').val() || 'Published';
+                                const currentFilter = $('[name="q_kategori_banner"]').val() || 'Semua Data';
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_status_page"]').val() || 'Published').toLowerCase().replace(/\s+/g, '-');
-                                return `halaman-{{ \Str::slug($kategori) }}-${filter}-${date}`;
+                                const filter = ($('[name="q_kategori_banner"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
+                                return `banner-data-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6, 7]
+                                columns: [1, 2, 3, 4, 5, 6]
                             }
                         },
                         {
                             extend: 'csvHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_status_page"]').val() || 'Published';
+                                const currentFilter = $('[name="q_kategori_banner"]').val() || 'Semua Data';
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_status_page"]').val() || 'Published').toLowerCase().replace(/\s+/g, '-');
-                                return `halaman-{{ \Str::slug($kategori) }}-${filter}-${date}`;
+                                const filter = ($('[name="q_kategori_banner"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
+                                return `banner-data-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6, 7]
+                                columns: [1, 2, 3, 4, 5, 6]
                             }
                         },
                         {
                             extend: 'pdfHtml5',
                             title: function() {
-                                const currentFilter = $('[name="q_status_page"]').val() || 'Published';
+                                const currentFilter = $('[name="q_kategori_banner"]').val() || 'Semua Data';
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_status_page"]').val() || 'Published').toLowerCase().replace(/\s+/g, '-');
-                                return `halaman-{{ \Str::slug($kategori) }}-${filter}-${date}`;
+                                const filter = ($('[name="q_kategori_banner"]').val() || 'Semua Data').toLowerCase().replace(/\s+/g, '-');
+                                return `banner-data-${filter}-${date}`;
                             },
                             orientation: 'landscape',
                             pageSize: 'A4',
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6, 7]
+                                columns: [1, 2, 3, 4, 5, 6]
                             },
                             customize: function(doc) {
-                                doc.content[1].table.widths = ['8%', '25%', '12%', '8%', '12%', '12%', '12%', '11%'];
+                                doc.content[1].table.widths = ['8%', '35%', '12%', '12%', '12%', '12%'];
                                 doc.styles.tableHeader.fontSize = 9;
                                 doc.styles.tableBodyOdd.fontSize = 8;
                                 doc.styles.tableBodyEven.fontSize = 8;
@@ -637,18 +518,14 @@
                     ]
                 }).container().appendTo($('#kt_datatable_example_buttons'));
 
-                // Hook dropdown menu click event to datatable export buttons
                 const exportButtons = document.querySelectorAll('#kt_datatable_example_export_menu [data-kt-export]');
                 exportButtons.forEach(exportButton => {
                     exportButton.addEventListener('click', e => {
                         e.preventDefault();
-
-                        // Get clicked export value
                         const exportValue = e.target.getAttribute('data-kt-export');
                         const target = document.querySelector('.dt-buttons .buttons-' + exportValue);
 
                         if (target) {
-                            // Show loading indicator
                             Swal.fire({
                                 title: `Exporting ${exportValue.toUpperCase()}...`,
                                 text: 'Mohon tunggu',
@@ -658,12 +535,8 @@
                                     Swal.showLoading();
                                 }
                             });
-
-                            // Trigger click event on hidden datatable export buttons
                             setTimeout(() => {
                                 target.click();
-
-                                // Show success message
                                 setTimeout(() => {
                                     Swal.fire({
                                         icon: 'success',
@@ -684,112 +557,101 @@
                         }
                     });
                 });
-            }
+            };
 
-            // Search Datatable
             var handleSearchDatatable = function() {
-                const filterSearch = document.querySelector('[data-kt-page-table-filter="search"]');
+                const filterSearch = document.querySelector('[data-kt-banner-table-filter="search"]');
                 if (filterSearch) {
                     filterSearch.addEventListener('keyup', function(e) {
-                        datatable.search(e.target.value).draw();
+                        datatable.ajax.reload();
                     });
                 }
-            }
+            };
 
-            // Handle bulk actions
             var handleBulkActions = function() {
                 const checkboxes = document.querySelectorAll('#datatable .row-checkbox');
-                const bulkToolbar = document.querySelector('[data-kt-page-table-toolbar="selected"]');
-                const countElement = document.querySelector('[data-kt-page-table-select="selected_count"]');
+                const bulkToolbar = document.querySelector('[data-kt-banner-table-toolbar="selected"]');
+                const countElement = document.querySelector('[data-kt-banner-table-select="selected_count"]');
 
                 let checkedCount = 0;
                 checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        checkedCount++;
-                    }
+                    if (checkbox.checked) checkedCount++;
                 });
 
                 if (checkedCount > 0) {
                     countElement.textContent = checkedCount;
                     bulkToolbar.classList.remove('d-none');
-
-                    setTimeout(() => {
-                        if (typeof KTApp !== 'undefined' && KTApp.initBootstrapTooltips) {
-                            KTApp.initBootstrapTooltips();
-                        }
-                    }, 100);
+                    if (typeof KTApp !== 'undefined' && KTApp.initBootstrapTooltips) {
+                        KTApp.initBootstrapTooltips();
+                    }
                 } else {
                     bulkToolbar.classList.add('d-none');
                 }
-            }
+            };
 
-            // Filter functions
             var handleFilter = function() {
-                // Initialize Select2
-                $('#q_status_page').select2();
+                $('#q_kategori_banner').select2();
 
-                // Global filter functions
                 window.applyFilter = function() {
-                    var selectedStatus = document.getElementById('q_status_page').value;
-                    document.getElementById('filter-text').textContent = selectedStatus;
+                    var selectedKategori = document.getElementById('q_kategori_banner').value;
+                    document.getElementById('filter-text').textContent = selectedKategori;
+                    $('#titleKategori').html(selectedKategori);
 
                     $('#datatable_processing').show();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
-                        $('#titleStatus').html(selectedStatus);
                     }, false);
-                }
+                };
 
                 window.resetFilter = function() {
-                    document.getElementById('q_status_page').value = 'Published';
-                    document.getElementById('filter-text').textContent = 'Published';
+                    document.getElementById('q_kategori_banner').value = 'Semua Data';
+                    document.getElementById('filter-text').textContent = 'Semua Data';
+                    $('#titleKategori').html('Semua Data');
 
                     $('#datatable_processing').show();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
-                        $('#titleStatus').html('Published');
                     }, false);
-                }
+                };
 
-                // Handle filter change
-                $('[name="q_status_page"]').change(function() {
-                    var q_status_page = $(this).val();
+                $('[name="q_kategori_banner"]').change(function() {
+                    var q_kategori_banner = $(this).val();
+                    $('#titleKategori').html(q_kategori_banner);
 
                     $('#datatable_processing').show();
-                    $('#datatable tbody').empty();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
                     }, false);
-
-                    $('#titleStatus').html(q_status_page);
                 });
-            }
+            };
 
-            // Handle events
             var handleEvents = function() {
-                // Handle checkbox events
                 $(document).on('change', '.row-checkbox', function() {
                     handleBulkActions();
                 });
 
-                // Handle select all checkbox
                 $(document).on('change', '[data-kt-check="true"]', function() {
                     const isChecked = $(this).is(':checked');
                     $('.row-checkbox').prop('checked', isChecked);
                     handleBulkActions();
                 });
 
-                // Handle cancel selection
-                $(document).on('click', '[data-kt-page-table-select="cancel_selection"]', function() {
+                $(document).on('click', '[data-kt-banner-table-select="cancel_selection"]', function() {
                     $('.row-checkbox').prop('checked', false);
                     $('[data-kt-check="true"]').prop('checked', false);
-
-                    const bulkToolbar = document.querySelector('[data-kt-page-table-toolbar="selected"]');
+                    const bulkToolbar = document.querySelector('[data-kt-banner-table-toolbar="selected"]');
                     bulkToolbar.classList.add('d-none');
                 });
 
-                // Handle bulk delete
-                $(document).on('click', '[data-kt-page-table-select="delete_selected"]', function() {
+                $(document).on('click', '[data-kt-banner-table-select="activate_selected"]', function() {
+                    handleBulkStatus('1', 'mengaktifkan');
+                });
+
+                $(document).on('click', '[data-kt-banner-table-select="deactivate_selected"]', function() {
+                    handleBulkStatus('0', 'menonaktifkan');
+                });
+
+                $(document).on('click', '[data-kt-banner-table-select="delete_selected"]', function() {
                     const checkedBoxes = document.querySelectorAll('#datatable .row-checkbox:checked');
                     if (checkedBoxes.length === 0) {
                         Swal.fire({
@@ -804,7 +666,7 @@
 
                     Swal.fire({
                         title: "Hapus Data Terpilih",
-                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} halaman yang dipilih?`,
+                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} Banner yang dipilih?`,
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#f1416c",
@@ -821,62 +683,11 @@
                                     Swal.showLoading();
                                 }
                             });
-
                             $.ajax({
-                                url: "{!! route('prt.apps.page.destroy.bulk', [$tags]) !!}",
+                                url: "{{ route('prt.apps.banner.destroy.bulk') }}",
                                 type: 'POST',
                                 data: {
-                                    uuids: selectedIds,
-                                    _token: "{{ csrf_token() }}"
-                                },
-                                success: function(res) {
-                                    datatable.ajax.reload(null, false);
-                                    const bulkToolbar = document.querySelector('[data-kt-page-table-toolbar="selected"]');
-                                    bulkToolbar.classList.add('d-none');
-                                    $('[data-kt-check="true"]').prop('checked', false);
-
-                                    Swal.fire({
-                                        title: "Success",
-                                        text: res.message,
-                                        icon: "success",
-                                    });
-
-                                    // Update statistics
-                                    getStatsCounter();
-                                },
-                                error: function(xhr) {
-                                    datatable.ajax.reload(null, false);
-                                    Swal.fire({
-                                        title: "Error",
-                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data',
-                                        icon: "error",
-                                    });
-                                }
-                            });
-                        }
-                    });
-                });
-
-                // Handle delete action
-                $(document).on('click', "[data-delete]", function() {
-                    let uuid = $(this).attr('data-delete');
-
-                    Swal.fire({
-                        title: "Hapus Data",
-                        text: "Apakah Anda Yakin?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#f1416c",
-                        cancelButtonColor: "#7e8299",
-                        confirmButtonText: "Ya, hapus!",
-                        cancelButtonText: "Batal"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: "{!! route('prt.apps.page.destroy', [$tags]) !!}",
-                                type: 'POST',
-                                data: {
-                                    uuid: uuid,
+                                    ids: selectedIds,
                                     _token: "{{ csrf_token() }}"
                                 },
                                 success: function(res) {
@@ -886,9 +697,6 @@
                                         text: res.message,
                                         icon: "success",
                                     });
-
-                                    // Update statistics
-                                    getStatsCounter();
                                 },
                                 error: function(xhr) {
                                     datatable.ajax.reload(null, false);
@@ -902,39 +710,146 @@
                         }
                     });
                 });
-            }
 
-            // Get statistics counter
-            var getStatsCounter = function() {
-                $.ajax({
-                    url: "{!! route('ajax.get.stats.content') !!}",
-                    type: 'POST',
-                    data: {
-                        model: "Halaman",
-                        tags: "{{ $tags }}",
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(res) {
-                        // Update statistics if elements exist
-                        if ($('#stats_draft').length) $('#stats_draft').html(res.data.draft);
-                        if ($('#stats_pending').length) $('#stats_pending').html(res.data.pending);
-                        if ($('#stats_published').length) $('#stats_published').html(res.data.published);
-                        if ($('#stats_scheduled').length) $('#stats_scheduled').html(res.data.scheduled);
-                        if ($('#stats_archived').length) $('#stats_archived').html(res.data.archived);
-                    },
-                    error: function(xhr) {
-                        console.log('Error getting statistics:', xhr.responseJSON);
+                $(document).on('click', "[data-delete]", function() {
+                    let id = $(this).attr('data-delete');
+                    Swal.fire({
+                        title: "Hapus Data",
+                        text: "Apakah Anda Yakin?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f1416c",
+                        cancelButtonColor: "#7e8299",
+                        confirmButtonText: "Ya, hapus!",
+                        cancelButtonText: "Batal"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "{{ route('prt.apps.banner.destroy', '') }}" + '/' + id,
+                                type: 'DELETE',
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(res) {
+                                    datatable.ajax.reload(null, false);
+                                    Swal.fire({
+                                        title: "Success",
+                                        text: res.message,
+                                        icon: "success",
+                                    });
+                                },
+                                error: function(xhr) {
+                                    datatable.ajax.reload(null, false);
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan',
+                                        icon: "error",
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                $(document).on('click', "[data-status]", function() {
+                    let id = $(this).attr("data-status");
+                    let status = $(this).attr("data-status-value");
+                    $.ajax({
+                        url: "{{ route('prt.apps.banner.status') }}",
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            status: status,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(res) {
+                            datatable.ajax.reload();
+                            Swal.fire({
+                                title: "Success",
+                                text: res.message,
+                                icon: "success",
+                            });
+                        },
+                        error: function(xhr) {
+                            datatable.ajax.reload();
+                            Swal.fire({
+                                title: "Error",
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan',
+                                icon: "error",
+                            });
+                        }
+                    });
+                });
+            };
+
+            var handleBulkStatus = function(status, actionText) {
+                const checkedBoxes = document.querySelectorAll('#datatable .row-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    Swal.fire({
+                        title: "Peringatan",
+                        text: "Pilih minimal satu item untuk diubah statusnya",
+                        icon: "warning"
+                    });
+                    return;
+                }
+
+                const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+                Swal.fire({
+                    title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Status`,
+                    text: `Apakah Anda yakin ingin ${actionText} ${selectedIds.length} Banner yang dipilih?`,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: status === '1' ? "#50cd89" : "#ffc700",
+                    cancelButtonColor: "#7e8299",
+                    confirmButtonText: `Ya, ${actionText}!`,
+                    cancelButtonText: "Batal"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} status...`,
+                            text: 'Mohon tunggu',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        $.ajax({
+                            url: "{{ route('prt.apps.banner.status.bulk') }}",
+                            type: 'POST',
+                            data: {
+                                ids: selectedIds,
+                                status: status,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            success: function(res) {
+                                datatable.ajax.reload(null, false);
+                                const bulkToolbar = document.querySelector('[data-kt-banner-table-toolbar="selected"]');
+                                bulkToolbar.classList.add('d-none');
+                                $('[data-kt-check="true"]').prop('checked', false);
+                                Swal.fire({
+                                    title: "Success",
+                                    text: res.message,
+                                    icon: "success",
+                                });
+                            },
+                            error: function(xhr) {
+                                datatable.ajax.reload(null, false);
+                                Swal.fire({
+                                    title: "Error",
+                                    text: xhr.responseJSON?.message || `Terjadi kesalahan saat ${actionText} data`,
+                                    icon: "error",
+                                });
+                            }
+                        });
                     }
                 });
             };
 
-            // Public methods
             return {
                 init: function() {
                     table = document.querySelector('#datatable');
-                    if (!table) {
-                        return;
-                    }
+                    if (!table) return;
 
                     initDatatable();
                     exportButtons();
@@ -945,10 +860,8 @@
             };
         }();
 
-        // On document ready
         $(document).ready(function() {
-            KTDatatablesHalaman.init();
+            KTDatatablesBanner.init();
         });
     </script>
 @endpush
-{{-- SCRIPTS::END --}}

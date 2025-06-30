@@ -109,7 +109,7 @@ class KategoriController extends Controller
 
                     return '
                         <div class="d-flex align-items-center justify-content-center">
-                            <span class="badge badge-circle badge-' . $color . ' w-15px h-15px me-2 fs-8 fw-bold">' . $jumlah . '</span>
+                            <span class="badge badge-light-' . $color . ' fs-base fs-3">' . $jumlah . '</span>
                         </div>
                     ';
                 })

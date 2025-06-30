@@ -103,7 +103,7 @@
             background: linear-gradient(135deg, #FFA726, #FB8C00);
         }
 
-        .stats-pending {
+        .stats-pending-review {
             background: linear-gradient(135deg, #42A5F5, #1E88E5);
         }
 
@@ -117,6 +117,10 @@
 
         .stats-archived {
             background: linear-gradient(135deg, #78909C, #546E7A);
+        }
+
+        .stats-deleted {
+            background: linear-gradient(135deg, #EF5350, #D32F2F);
         }
     </style>
 @endpush
@@ -284,96 +288,20 @@
 @section('content')
     {{-- begin::Statistics cards --}}
     <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_draft">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Draft') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Draft</div>
-                    <div class="stats-icon stats-draft position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="ki-outline ki-document fs-2 text-white"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- end::Col --}}
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_pending">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Pending Review') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Pending Review</div>
-                    <div class="stats-icon stats-pending position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="fa-solid fa-history fs-2 text-white"></i>
+        @foreach (['Draft' => 'warning', 'Pending Review' => 'info', 'Published' => 'success', 'Scheduled' => 'primary', 'Archived' => 'dark', 'Deleted' => 'danger'] as $label => $color)
+            <div class="col-xxl-2 col-lg-4 col-sm-6">
+                <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
+                    <div class="card-body">
+                        <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_{{ Str::slug($label) }}">{{ Helper::GetStatistikByModel('Postingan', $label) }}</div>
+                        <div class="fw-semibold text-gray-400">{{ $label }}</div>
+                        <div class="stats-icon stats-{{ Str::slug($label) }} position-absolute top-0 end-0 mt-3 me-3">
+                            <i
+                                class="ki-outline ki-{{ $label == 'Draft' ? 'document' : ($label == 'Pending Review' ? 'toggle-off-circle' : ($label == 'Published' ? 'verify' : ($label == 'Scheduled' ? 'calendar' : ($label == 'Archived' ? 'archive' : 'trash')))) }} fs-2 text-white"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {{-- end::Col --}}
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_published">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Published') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Published</div>
-                    <div class="stats-icon stats-published position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="ki-outline ki-verify fs-2 text-white"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- end::Col --}}
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_scheduled">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Scheduled') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Scheduled</div>
-                    <div class="stats-icon stats-scheduled position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="ki-outline ki-calendar fs-2 text-white"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- end::Col --}}
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_archived">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Archived') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Archived</div>
-                    <div class="stats-icon stats-archived position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="ki-outline ki-archive fs-2 text-white"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- end::Col --}}
-        {{-- begin::Col --}}
-        <div class="col-xxl-2 col-lg-4 col-sm-6">
-            <div class="card stats-card bg-body hoverable card-xl-stretch mb-xl-8">
-                <div class="card-body">
-                    <div class="text-gray-900 fw-bold fs-2 mb-2 mt-5" id="stats_deleted">
-                        {{ \Helper::GetStatistikByModel('Postingan', 'Deleted') }}
-                    </div>
-                    <div class="fw-semibold text-gray-400">Deleted</div>
-                    <div class="stats-icon stats-archived position-absolute top-0 end-0 mt-3 me-3">
-                        <i class="ki-outline ki-trash fs-2 text-white"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{-- end::Col --}}
+        @endforeach
     </div>
     {{-- end::Statistics cards --}}
 

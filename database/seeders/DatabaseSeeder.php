@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         // users & actors
         $this->call(ActorSeeder::class);
         // konten dummy
+        $this->call(DummyBannerSeeder::class);
         $this->call(DummyPesanSeeder::class);
         $this->call(DummyGaleriSeeder::class);
         $this->call(DummyPageSeeder::class);

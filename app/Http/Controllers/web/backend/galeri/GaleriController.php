@@ -32,16 +32,22 @@ class GaleriController extends Controller
         }
 
         if ($request->ajax()) {
-            $query = PortalGaleri::query()
-                ->where('status', $status)
-                ->orderBy('tanggal', 'DESC');
+            $query = PortalGaleri::query()->orderBy("tanggal", "DESC");
+
+            // Apply status filter
+            if ($status !== '') {
+                $query->where('status', $status);
+            }
 
             // Batasi data berdasarkan role
             if (! in_array($role, ['Super Admin', 'Admin', 'Editor'])) {
                 $query->where('uuid_created', $auth->uuid);
             }
 
-            return DataTables::of($query)
+            // Ambil semua data untuk client-side processing
+            $data = $query->get();
+
+            return DataTables::of($data)
                 ->addIndexColumn()
                 ->setRowId('uuid')
                 ->addColumn('checkbox', function ($data) {
@@ -50,7 +56,10 @@ class GaleriController extends Controller
                             <input class="form-check-input row-checkbox" type="checkbox" value="' . $data->uuid . '" />
                         </div>';
                 })
-                ->addColumn('judul', function ($data) {
+                ->addColumn('judul_raw', function ($data) {
+                    return $data->judul ?: '[draft]';
+                })
+                ->addColumn('judul_html', function ($data) {
                     $uuid_enc   = Helper::encode($data->uuid);
                     $edit_url   = route('prt.apps.galeri.edit', $uuid_enc);
                     $thumbnails = Helper::thumbnail($data->thumbnails);
@@ -66,33 +75,51 @@ class GaleriController extends Controller
                             </div>
                         </div>';
                 })
-                ->addColumn('kategori', function ($data) {
+                ->addColumn('kategori_raw', function ($data) {
+                    return $data->kategori ?: 'Tidak ada kategori';
+                })
+                ->addColumn('kategori_html', function ($data) {
                     $categories = explode(',', $data->kategori ? $data->kategori : '');
                     $badges     = '';
                     foreach ($categories as $category) {
                         $badges .= '<span class="badge badge-light-primary fw-bold fs-7 px-3 py-2 me-1">' . trim($category) . '</span>';
                     }
-                    return $badges ? $badges : '<span class="badge badge-light-secondary fw-bold fs-7 px-3 py-2">Tidak ada kategori</span>';
+                    return $badges ?: '<span class="badge badge-light-secondary fw-bold fs-7 px-3 py-2">Tidak ada kategori</span>';
                 })
-                ->addColumn('views', function ($data) {
+                ->addColumn('views_raw', function ($data) {
+                    return $data->views;
+                })
+                ->addColumn('views_html', function ($data) {
                     return '<div class="text-center"><span class="fw-bold text-gray-800">' . Helper::toDot($data->views) . '</span></div>';
                 })
-                ->addColumn('jumlah', function ($data) {
+                ->addColumn('jumlah_raw', function ($data) {
+                    return count($data->RelGaleriList) > 0 ? $data->GetJumlahGaleri() : 0;
+                })
+                ->addColumn('jumlah_html', function ($data) {
                     $jumlah = count($data->RelGaleriList) > 0 ? Helper::toDot($data->GetJumlahGaleri()) : 0;
                     $color  = $jumlah > 0 ? 'primary' : 'secondary';
                     return '<div class="d-flex align-items-center justify-content-center">
                                 <span class="badge badge-light-' . $color . ' fs-base fs-3">' . $jumlah . '</span>
                             </div>';
                 })
-                ->addColumn('penulis', function ($data) {
-                    return '<span class="text-gray-600 fw-semibold">' . ($data->Penulis->nama_lengkap ? $data->Penulis->nama_lengkap : '-') . '</span>';
+                ->addColumn('penulis_raw', function ($data) {
+                    return $data->Penulis->nama_lengkap ?? '-';
                 })
-                ->addColumn('publisher', function ($data) {
+                ->addColumn('penulis_html', function ($data) {
+                    return '<span class="text-gray-600 fw-semibold">' . ($data->Penulis->nama_lengkap ?? '-') . '</span>';
+                })
+                ->addColumn('publisher_raw', function ($data) {
+                    return $data->status === 'Published' ? ($data->Publisher->nama_lengkap ?? '-') : '-';
+                })
+                ->addColumn('publisher_html', function ($data) {
                     return $data->status === 'Published'
-                    ? '<span class="text-success fw-semibold">' . ($data->Publisher->nama_lengkap ? $data->Publisher->nama_lengkap : '-') . '</span>'
+                    ? '<span class="text-success fw-semibold">' . ($data->Publisher->nama_lengkap ?? '-') . '</span>'
                     : '<span class="text-muted">-</span>';
                 })
-                ->addColumn('status', function ($data) {
+                ->addColumn('status_raw', function ($data) {
+                    return $data->status;
+                })
+                ->addColumn('status_html', function ($data) {
                     $colors = [
                         'Draft'     => 'warning', 'Pending Review' => 'info', 'Published' => 'success',
                         'Scheduled' => 'primary', 'Archived'       => 'dark', 'Deleted'   => 'danger',
@@ -100,7 +127,10 @@ class GaleriController extends Controller
                     $color = isset($colors[$data->status]) ? $colors[$data->status] : 'secondary';
                     return '<span class="badge badge-light-' . $color . ' fw-bold fs-7 px-3 py-2">' . $data->status . '</span>';
                 })
-                ->addColumn('tanggal', function ($data) {
+                ->addColumn('tanggal_raw', function ($data) {
+                    return Helper::TglSimple($data->created_at);
+                })
+                ->addColumn('tanggal_html', function ($data) {
                     return '<span class="text-gray-600 fw-semibold">' . Helper::TglSimple($data->created_at) . '</span>';
                 })
                 ->addColumn('aksi', function ($data) use ($auth, $role) {

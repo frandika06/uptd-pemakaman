@@ -567,9 +567,9 @@ class KategoriController extends Controller
         }
     }
 
-/**
- * Bulk status update
- */
+    /**
+     * Bulk status update
+     */
     public function bulkStatus(Request $request)
     {
         try {

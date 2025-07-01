@@ -25,10 +25,10 @@ class KomparasiKategoriGlobalSeeder extends Seeder
 
         // kategori dan subkategori
         $kategori = [
-            'Banner' => ['Content', 'Event', 'Widget', 'Zona Integritas', 'Layanan Internal', 'Layanan Eksternal', 'Footer'],
-            'Galeri' => ['Berita', 'Kegiatan', 'Seminar', 'Event'],
-            'Post'   => ['Berita', 'Artikel'],
-            'Video'  => ['Umum'],
+            'Banner' => ['Content', 'Event', 'Widget', 'Zona Integritas', 'Footer'],
+            'Galeri' => ['Berita', 'Kegiatan', 'Seminar', 'Event', 'Kunjungan', 'Monev'],
+            'Post'   => ['Berita', 'Artikel', 'Pengumuman'],
+            'Video'  => ['Umum', 'Berita', 'Kegiatan', 'Seminar', 'Event', 'Kunjungan', 'Monev'],
         ];
 
         // Hitung total item untuk progress bar (kategori + subkategori)

@@ -166,6 +166,8 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [VideoController::class, 'edit'])->name('prt.apps.video.edit');
             Route::put('/edit/{uuid}', [VideoController::class, 'update'])->name('prt.apps.video.update');
             Route::post('/delete', [VideoController::class, 'destroy'])->name('prt.apps.video.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [VideoController::class, 'bulkDestroy'])->name('prt.apps.video.destroy.bulk');
         });
         // portal unduhan
         Route::group(['prefix' => 'unduhan'], function () {

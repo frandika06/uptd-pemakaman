@@ -108,7 +108,7 @@ class VideoController extends Controller
                 ->escapeColumns([''])
                 ->make(true);
         }
-        return view('pages.admin.portal_apps.video.index', compact(
+        return view('admin.cms.konten.media.video.index', compact(
             'status'
         ));
     }
@@ -124,7 +124,7 @@ class VideoController extends Controller
         $kategoriList = PortalKategori::whereType("Video")->whereStatus("1")->orderBy("nama")->get();
         $title        = "Tambah Data Video";
         $submit       = "Simpan";
-        return view('pages.admin.portal_apps.video.create_edit', compact(
+        return view('admin.cms.konten.media.video.create_edit', compact(
             'title',
             'submit',
             'auth',
@@ -266,7 +266,7 @@ class VideoController extends Controller
         $kategoriList = PortalKategori::whereType("Video")->whereStatus("1")->orderBy("nama")->get();
         $title        = "Edit Data Video";
         $submit       = "Simpan";
-        return view('pages.admin.portal_apps.video.create_edit', compact(
+        return view('admin.cms.konten.media.video.create_edit', compact(
             'uuid_enc',
             'title',
             'submit',

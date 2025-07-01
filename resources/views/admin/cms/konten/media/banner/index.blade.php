@@ -91,31 +91,52 @@
             min-width: 20px;
             text-align: center;
         }
+
+        /* Thumbnail and column styling */
+        .symbol-50px img {
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .text-gray-800 {
+            color: #181C32 !important;
+        }
+
+        .text-hover-primary:hover {
+            color: #009EF7 !important;
+        }
+
+        .badge-light-primary {
+            background-color: #F1FAFF !important;
+            color: #009EF7 !important;
+        }
+
+        .text-muted {
+            color: #7E8299 !important;
+        }
+
+        .text-success {
+            color: #50CD89 !important;
+        }
+
+        .text-gray-600 {
+            color: #A1A5B7 !important;
+        }
     </style>
 @endpush
 
 @extends('layouts.admin')
 
-{{-- SEO::BEGIN --}}
 @section('title', 'Banner Management')
-{{-- SEO::END --}}
 
-{{-- TOOLBAR::BEGIN --}}
 @section('toolbar')
     <div class="d-flex flex-stack flex-row-fluid">
-        {{-- begin::Toolbar container --}}
         <div class="d-flex flex-column flex-row-fluid">
-            {{-- begin::Toolbar wrapper --}}
-            {{-- begin::Page title --}}
             <div class="page-title d-flex align-items-center me-3">
-                {{-- begin::Title --}}
                 <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
                     <span>Banner Management</span>
                 </h1>
-                {{-- end::Title --}}
             </div>
-            {{-- end::Page title --}}
-            {{-- begin::Breadcrumb --}}
             <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-3 fs-7">
                 <li class="breadcrumb-item text-gray-700 fw-bold lh-1">
                     <a href="{{ route('auth.home') }}" class="text-gray-700 text-hover-primary">
@@ -135,12 +156,8 @@
                 </li>
                 <li class="breadcrumb-item text-gray-700">Banner</li>
             </ul>
-            {{-- end::Breadcrumb --}}
         </div>
-        {{-- end::Toolbar container --}}
-        {{-- begin::Actions --}}
         <div class="d-flex align-self-center flex-center flex-shrink-0">
-            {{-- begin::Filter dropdown --}}
             <div class="me-3">
                 <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
                     data-kt-menu-placement="bottom-end">
@@ -159,11 +176,9 @@
                                 <select class="form-select form-select-solid" name="q_kategori_banner" id="q_kategori_banner" data-control="select2" data-placeholder="Pilih Kategori"
                                     data-allow-clear="true">
                                     <option @if (!isset($kategori) || $kategori == 'Semua Data') selected @endif value="Semua Data">Semua Data</option>
-                                    @if (isset($kategoriList) && \count($kategoriList) > 0)
-                                        @foreach ($kategoriList as $item)
-                                            <option @if (isset($kategori) && $kategori == $item->nama) selected @endif value="{{ $item->nama }}">{{ $item->nama }}</option>
-                                        @endforeach
-                                    @endif
+                                    @foreach ($kategoriList as $item)
+                                        <option @if (isset($kategori) && $kategori == $item->nama) selected @endif value="{{ $item->nama }}">{{ $item->nama }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -174,8 +189,6 @@
                     </div>
                 </div>
             </div>
-            {{-- end::Filter dropdown --}}
-            {{-- begin::Export button --}}
             <button type="button" class="btn btn-sm btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                 <i class="ki-outline ki-exit-down fs-2"></i>
                 Export Report
@@ -183,24 +196,16 @@
             <div id="kt_datatable_example_export_menu"
                 class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
                 <div class="menu-item px-3">
-                    <a href="#" class="menu-link px-3" data-kt-export="copy">
-                        Copy to clipboard
-                    </a>
+                    <a href="#" class="menu-link px-3" data-kt-export="copy">Copy to clipboard</a>
                 </div>
                 <div class="menu-item px-3">
-                    <a href="#" class="menu-link px-3" data-kt-export="excel">
-                        Export as Excel
-                    </a>
+                    <a href="#" class="menu-link px-3" data-kt-export="excel">Export as Excel</a>
                 </div>
                 <div class="menu-item px-3">
-                    <a href="#" class="menu-link px-3" data-kt-export="csv">
-                        Export as CSV
-                    </a>
+                    <a href="#" class="menu-link px-3" data-kt-export="csv">Export as CSV</a>
                 </div>
                 <div class="menu-item px-3">
-                    <a href="#" class="menu-link px-3" data-kt-export="pdf">
-                        Export as PDF
-                    </a>
+                    <a href="#" class="menu-link px-3" data-kt-export="pdf">Export as PDF</a>
                 </div>
             </div>
             <div id="kt_datatable_example_buttons" class="d-none"></div>
@@ -209,12 +214,9 @@
                 <span>Tambah Banner</span>
             </a>
         </div>
-        {{-- end::Actions --}}
     </div>
 @endsection
-{{-- TOOLBAR::END --}}
 
-{{-- CONTENT::BEGIN --}}
 @section('content')
     <div class="card">
         <div class="card-header border-0 pt-6">
@@ -277,33 +279,21 @@
                             </th>
                             <th width="30px">#</th>
                             <th>Judul</th>
-                            <th width="10%">Author</th>
+                            <th width="15%">Kategori</th>
+                            <th width="10%">Penulis</th>
                             <th width="10%">Publisher</th>
                             <th width="10%">Tanggal</th>
                             <th width="10%">Status</th>
-                            <th>Aksi</th>
+                            <th width="10%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-600 fw-semibold">
                     </tbody>
-                    <tfoot>
-                        <tr>
-                            <th class="w-10px pe-2"></th>
-                            <th width="30px">#</th>
-                            <th>Judul</th>
-                            <th width="10%">Author</th>
-                            <th width="10%">Publisher</th>
-                            <th width="10%">Tanggal</th>
-                            <th width="10%">Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         </div>
     </div>
 @endsection
-{{-- CONTENT::END --}}
 
 @push('scripts')
     <script>
@@ -355,10 +345,9 @@
                         type: 'GET',
                         data: function(data) {
                             data.filter = {
-                                kategori: $('[name="q_kategori_banner"]').val() || 'Hero'
+                                kategori: $('[name="q_kategori_banner"]').val()
                             };
                         },
-                        dataSrc: 'data',
                         error: function(xhr, error, thrown) {
                             console.error('DataTable AJAX Error:', xhr.responseText);
                             $('#datatable_processing').hide();
@@ -376,61 +365,52 @@
                             searchable: false,
                             render: function(data, type, row) {
                                 return `<div class="form-check form-check-sm form-check-custom form-check-solid">
-                        <input class="form-check-input row-checkbox" type="checkbox" value="${row.uuid}" />
-                    </div>`;
+                                    <input class="form-check-input row-checkbox" type="checkbox" value="${row.uuid}" />
+                                </div>`;
                             }
                         },
                         {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
-                            title: '#',
                             orderable: false,
                             searchable: false
                         },
                         {
                             data: 'judul',
-                            name: 'judul',
-                            title: 'Judul'
+                            name: 'judul'
+                        },
+                        {
+                            data: 'kategori',
+                            name: 'kategori'
                         },
                         {
                             data: 'penulis',
-                            name: 'penulis',
-                            title: 'Penulis'
+                            name: 'penulis'
                         },
                         {
                             data: 'publisher',
-                            name: 'publisher',
-                            title: 'Publisher'
+                            name: 'publisher'
                         },
                         {
                             data: 'tanggal',
-                            name: 'tanggal',
-                            title: 'Tanggal'
+                            name: 'tanggal'
                         },
                         {
                             data: 'status',
                             name: 'status',
                             orderable: false,
-                            searchable: false,
-                            title: 'Status',
-                            render: function(data, type, row) {
-                                if (type === 'export') {
-                                    return row.status == 1 ? 'Aktif' : 'Tidak Aktif';
-                                }
-                                return data;
-                            }
+                            searchable: false
                         },
                         {
                             data: 'aksi',
                             name: 'aksi',
                             orderable: false,
-                            searchable: false,
-                            title: 'Aksi'
+                            searchable: false
                         }
                     ],
                     columnDefs: [{
                         className: "text-center",
-                        targets: [0, 1, 3, 4, 5, 6, 7]
+                        targets: [0, 1, 4, 5, 6, 7, 8]
                     }],
                     drawCallback: function() {
                         $('#datatable_processing').hide();
@@ -446,7 +426,6 @@
                 });
             };
 
-
             var exportButtons = function() {
                 const documentTitle = 'Data Banner';
 
@@ -458,7 +437,7 @@
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
+                                columns: [1, 2, 3, 4, 5, 6, 7]
                             }
                         },
                         {
@@ -473,7 +452,7 @@
                                 return `banner-data-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
+                                columns: [1, 2, 3, 4, 5, 6, 7]
                             }
                         },
                         {
@@ -488,7 +467,7 @@
                                 return `banner-data-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
+                                columns: [1, 2, 3, 4, 5, 6, 7]
                             }
                         },
                         {
@@ -505,10 +484,10 @@
                             orientation: 'landscape',
                             pageSize: 'A4',
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
+                                columns: [1, 2, 3, 4, 5, 6, 7]
                             },
                             customize: function(doc) {
-                                doc.content[1].table.widths = ['8%', '35%', '12%', '12%', '12%', '12%'];
+                                doc.content[1].table.widths = ['8%', '30%', '15%', '12%', '12%', '12%', '11%'];
                                 doc.styles.tableHeader.fontSize = 9;
                                 doc.styles.tableBodyOdd.fontSize = 8;
                                 doc.styles.tableBodyEven.fontSize = 8;
@@ -563,7 +542,7 @@
                 const filterSearch = document.querySelector('[data-kt-banner-table-filter="search"]');
                 if (filterSearch) {
                     filterSearch.addEventListener('keyup', function(e) {
-                        datatable.ajax.reload();
+                        datatable.search(e.target.value).draw();
                     });
                 }
             };
@@ -590,7 +569,9 @@
             };
 
             var handleFilter = function() {
-                $('#q_kategori_banner').select2();
+                $('#q_kategori_banner').select2({
+                    minimumResultsForSearch: Infinity
+                });
 
                 window.applyFilter = function() {
                     var selectedKategori = document.getElementById('q_kategori_banner').value;
@@ -598,30 +579,32 @@
                     $('#titleKategori').html(selectedKategori);
 
                     $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
+                    datatable.ajax.reload(function() {
                         $('#datatable_processing').hide();
-                    }, false);
+                    });
                 };
 
                 window.resetFilter = function() {
                     document.getElementById('q_kategori_banner').value = 'Semua Data';
+                    $('#q_kategori_banner').trigger('change');
                     document.getElementById('filter-text').textContent = 'Semua Data';
                     $('#titleKategori').html('Semua Data');
 
                     $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
+                    datatable.ajax.reload(function() {
                         $('#datatable_processing').hide();
-                    }, false);
+                    });
                 };
 
-                $('[name="q_kategori_banner"]').change(function() {
+                $('[name="q_kategori_banner"]').on('change', function() {
                     var q_kategori_banner = $(this).val();
+                    document.getElementById('filter-text').textContent = q_kategori_banner;
                     $('#titleKategori').html(q_kategori_banner);
 
                     $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
+                    datatable.ajax.reload(function() {
                         $('#datatable_processing').hide();
-                    }, false);
+                    });
                 });
             };
 
@@ -662,11 +645,11 @@
                         return;
                     }
 
-                    const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+                    const selectedUuids = Array.from(checkedBoxes).map(cb => cb.value);
 
                     Swal.fire({
                         title: "Hapus Data Terpilih",
-                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} Banner yang dipilih?`,
+                        text: `Apakah Anda yakin ingin menghapus ${selectedUuids.length} Banner yang dipilih?`,
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#f1416c",
@@ -687,7 +670,7 @@
                                 url: "{{ route('prt.apps.banner.destroy.bulk') }}",
                                 type: 'POST',
                                 data: {
-                                    ids: selectedIds,
+                                    uuids: selectedUuids,
                                     _token: "{{ csrf_token() }}"
                                 },
                                 success: function(res) {
@@ -711,11 +694,11 @@
                     });
                 });
 
-                $(document).on('click', "[data-delete]", function() {
-                    let id = $(this).attr('data-delete');
+                $(document).on('click', '[data-delete]', function() {
+                    let uuid = $(this).attr('data-delete');
                     Swal.fire({
                         title: "Hapus Data",
-                        text: "Apakah Anda Yakin?",
+                        text: "Apakah Anda yakin ingin menghapus banner ini?",
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#f1416c",
@@ -724,10 +707,19 @@
                         cancelButtonText: "Batal"
                     }).then((result) => {
                         if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Menghapus data...',
+                                text: 'Mohon tunggu',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
                             $.ajax({
-                                url: "{{ route('prt.apps.banner.destroy', '') }}" + '/' + id,
-                                type: 'DELETE',
+                                url: "{{ route('prt.apps.banner.destroy') }}",
+                                type: 'POST',
                                 data: {
+                                    uuid: uuid,
                                     _token: "{{ csrf_token() }}"
                                 },
                                 success: function(res) {
@@ -742,7 +734,7 @@
                                     datatable.ajax.reload(null, false);
                                     Swal.fire({
                                         title: "Error",
-                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan',
+                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data',
                                         icon: "error",
                                     });
                                 }
@@ -751,19 +743,19 @@
                     });
                 });
 
-                $(document).on('click', "[data-status]", function() {
+                $(document).on('click', '[data-status]', function() {
                     let id = $(this).attr("data-status");
                     let status = $(this).attr("data-status-value");
                     $.ajax({
                         url: "{{ route('prt.apps.banner.status') }}",
                         type: 'POST',
                         data: {
-                            id: id,
+                            uuid: id,
                             status: status,
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(res) {
-                            datatable.ajax.reload();
+                            datatable.ajax.reload(null, false);
                             Swal.fire({
                                 title: "Success",
                                 text: res.message,
@@ -771,7 +763,7 @@
                             });
                         },
                         error: function(xhr) {
-                            datatable.ajax.reload();
+                            datatable.ajax.reload(null, false);
                             Swal.fire({
                                 title: "Error",
                                 text: xhr.responseJSON?.message || 'Terjadi kesalahan',
@@ -793,11 +785,11 @@
                     return;
                 }
 
-                const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+                const selectedUuids = Array.from(checkedBoxes).map(cb => cb.value);
 
                 Swal.fire({
                     title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Status`,
-                    text: `Apakah Anda yakin ingin ${actionText} ${selectedIds.length} Banner yang dipilih?`,
+                    text: `Apakah Anda yakin ingin ${actionText} ${selectedUuids.length} Banner yang dipilih?`,
                     icon: "question",
                     showCancelButton: true,
                     confirmButtonColor: status === '1' ? "#50cd89" : "#ffc700",
@@ -818,7 +810,7 @@
                             url: "{{ route('prt.apps.banner.status.bulk') }}",
                             type: 'POST',
                             data: {
-                                ids: selectedIds,
+                                uuids: selectedUuids,
                                 status: status,
                                 _token: "{{ csrf_token() }}"
                             },

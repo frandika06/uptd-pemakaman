@@ -373,7 +373,7 @@
                                         </div>
                                         <div class="card-body pt-0">
                                             <div class="row">
-                                                <div class="col-lg-8">
+                                                <div class="col-lg-8 col-md-12">
                                                     <div class="mb-7 fv-row">
                                                         <label class="form-label fw-semibold text-gray-700">Judul Foto</label>
                                                         <input type="text" name="judul_foto_list[]"
@@ -387,9 +387,9 @@
                                                         @enderror
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-4">
+                                                <div class="col-lg-4 col-md-12">
                                                     <div class="mb-7 fv-row">
-                                                        <label class="form-label fw-semibold text-gray-700">Pratinjau</label>
+                                                        <label class="form-label fw-semibold text-gray-700">Pratinjau</label><br />
                                                         <div class="image-input image-input-outline image-input-placeholder">
                                                             <a href="{{ asset('storage/' . $foto->url) }}" data-fslightbox="gallery">
                                                                 <div class="image-input-wrapper w-150px h-100px photo-preview"
@@ -458,7 +458,7 @@
                 </div>
                 <div class="card-body pt-0">
                     <div class="row">
-                        <div class="col-lg-8">
+                        <div class="col-lg-8 col-md-12">
                             <div class="mb-7 fv-row">
                                 <label class="required form-label fw-semibold text-gray-700">Judul Foto</label>
                                 <input type="text" name="judul_foto[]" class="form-control form-control-solid @error('judul_foto') is-invalid @enderror"
@@ -469,9 +469,9 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-4 col-md-12">
                             <div class="mb-7 fv-row">
-                                <label class="required form-label fw-semibold text-gray-700">Foto</label>
+                                <label class="required form-label fw-semibold text-gray-700">Foto</label><br />
                                 <div class="image-input image-input-outline image-input-placeholder" data-kt-image-input="true">
                                     <div class="image-input-wrapper w-150px h-100px photo-preview"></div>
                                     <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change"

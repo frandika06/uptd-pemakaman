@@ -122,6 +122,11 @@
             border-radius: 6px;
             border: 2px solid #e1e5e9;
         }
+
+        .form-control-search:focus {
+            border-color: #009ef7;
+            box-shadow: 0 0 5px rgba(0, 158, 247, 0.3);
+        }
     </style>
 @endpush
 
@@ -168,6 +173,7 @@
                             <label class="form-label fw-semibold">Status Galeri:</label>
                             <select class="form-select form-select-solid" name="q_status_galeri" id="q_status_galeri" data-control="select2" data-placeholder="Pilih Status"
                                 data-allow-clear="true">
+                                <option value="">All</option>
                                 <option @selected($status == 'Draft') value="Draft">Draft</option>
                                 <option @selected($status == 'Pending Review') value="Pending Review">Pending Review</option>
                                 <option @selected($status == 'Published') value="Published">Published</option>
@@ -177,7 +183,7 @@
                         </div>
                         <div class="d-flex justify-content-end">
                             <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
-                            <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
+                            <button type="button" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
                         </div>
                     </div>
                 </div>
@@ -228,7 +234,7 @@
             <div class="card-toolbar">
                 <div class="d-flex align-items-center position-relative my-1">
                     <i class="ki-outline ki-magnifier fs-1 position-absolute ms-6"></i>
-                    <input type="text" data-kt-galeri-table-filter="search" class="form-control form-control-solid w-250px ps-14" placeholder="Cari galeri..." />
+                    <input type="text" data-kt-galeri-table-filter="search" class="form-control form-control-solid form-control-search w-250px ps-14" placeholder="Cari..." />
                 </div>
             </div>
         </div>
@@ -285,10 +291,11 @@
         "use strict";
         var KTDatatablesGaleri = function() {
             var table, datatable;
+
             var initDatatable = function() {
                 datatable = $('#datatable').DataTable({
                     processing: true,
-                    serverSide: true,
+                    serverSide: false, // Changed to client-side processing
                     responsive: true,
                     paging: true,
                     searching: true,
@@ -302,13 +309,13 @@
                         [10, 25, 50, 100, "All"]
                     ],
                     order: [
-                        [1, 'asc']
+                        [7, 'desc'] // Sort by tanggal (newest first)
                     ],
                     language: {
-                        searchPlaceholder: 'Search...',
+                        searchPlaceholder: 'Cari...',
                         sSearch: '',
-                        lengthMenu: '_MENU_ entries per page',
-                        processing: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
+                        lengthMenu: '_MENU_ entri per halaman',
+                        processing: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Memuat...</div>',
                         paginate: {
                             next: '<i class="ki-outline ki-arrow-right"></i>',
                             previous: '<i class="ki-outline ki-arrow-left"></i>',
@@ -324,13 +331,16 @@
                     ajax: {
                         url: "{{ route('prt.apps.galeri.index') }}",
                         type: 'GET',
-                        data: function(data) {
-                            data.filter = {
+                        data: function(d) {
+                            d.filter = {
                                 status: $('[name="q_status_galeri"]').val() || 'Published'
                             };
                         },
-                        dataSrc: function(json) {
-                            return json.data;
+                        beforeSend: function() {
+                            $('#datatable_processing').show();
+                        },
+                        complete: function() {
+                            $('#datatable_processing').hide();
                         },
                         error: function(xhr) {
                             $('#datatable_processing').hide();
@@ -354,30 +364,64 @@
                             searchable: false
                         },
                         {
-                            data: 'judul',
-                            name: 'judul'
+                            data: 'judul_raw',
+                            name: 'judul',
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.judul_html;
+                                }
+                                return data;
+                            }
                         },
                         {
-                            data: 'views',
-                            name: 'views'
+                            data: 'views_raw',
+                            name: 'views',
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.views_html;
+                                }
+                                return data;
+                            }
                         },
                         {
-                            data: 'jumlah',
+                            data: 'jumlah_raw',
                             name: 'jumlah',
-                            orderable: false,
-                            searchable: false
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.jumlah_html;
+                                }
+                                return data;
+                            }
                         },
                         {
-                            data: 'penulis',
-                            name: 'penulis'
+                            data: 'penulis_raw',
+                            name: 'penulis',
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.penulis_html;
+                                }
+                                return data;
+                            }
                         },
                         {
-                            data: 'publisher',
-                            name: 'publisher'
+                            data: 'publisher_raw',
+                            name: 'publisher',
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.publisher_html;
+                                }
+                                return data;
+                            }
                         },
                         {
-                            data: 'tanggal',
-                            name: 'tanggal'
+                            data: 'tanggal_raw',
+                            name: 'tanggal',
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return row.tanggal_html;
+                                }
+                                return data;
+                            }
                         },
                         {
                             data: 'aksi',
@@ -393,9 +437,11 @@
                     drawCallback: function() {
                         $('#datatable_processing').hide();
                         handleBulkActions();
+                        $('[data-bs-toggle="tooltip"]').tooltip();
                     }
                 });
             };
+
             var exportButtons = function() {
                 const documentTitle = 'Data Galeri';
                 var buttons = new $.fn.dataTable.Buttons(datatable, {
@@ -486,6 +532,7 @@
                     });
                 });
             };
+
             var handleSearchDatatable = function() {
                 const filterSearch = document.querySelector('[data-kt-galeri-table-filter="search"]');
                 if (filterSearch) {
@@ -494,6 +541,7 @@
                     });
                 }
             };
+
             var handleBulkActions = function() {
                 const checkboxes = document.querySelectorAll('#datatable .row-checkbox');
                 const bulkToolbar = document.querySelector('[data-kt-galeri-table-toolbar="selected"]');
@@ -502,10 +550,14 @@
                 countElement.textContent = checkedCount;
                 bulkToolbar.classList.toggle('d-none', checkedCount === 0);
             };
+
             var handleFilter = function() {
-                $('#q_status_galeri').select2();
+                $('#q_status_galeri').select2({
+                    minimumResultsForSearch: Infinity,
+                    allowClear: true
+                });
                 window.applyFilter = function() {
-                    var selectedStatus = document.getElementById('q_status_galeri').value;
+                    var selectedStatus = document.getElementById('q_status_galeri').value || 'Published';
                     document.getElementById('filter-text').textContent = selectedStatus;
                     $('#datatable_processing').show();
                     datatable.ajax.reload(function() {
@@ -523,7 +575,7 @@
                     }, false);
                 };
                 $('[name="q_status_galeri"]').change(function() {
-                    var q_status_galeri = $(this).val();
+                    var q_status_galeri = $(this).val() || 'Published';
                     $('#datatable_processing').show();
                     $('#datatable tbody').empty();
                     datatable.ajax.reload(function() {
@@ -532,6 +584,7 @@
                     }, false);
                 });
             };
+
             var handleEvents = function() {
                 $(document).on('change', '.row-checkbox, [data-kt-check="true"]', function() {
                     handleBulkActions();
@@ -644,6 +697,7 @@
                     });
                 });
             };
+
             var getStatsCounter = function() {
                 $.ajax({
                     url: "{{ route('ajax.get.stats.content') }}",
@@ -653,8 +707,8 @@
                         _token: "{{ csrf_token() }}"
                     },
                     success: function(res) {
-                        ['draft', 'pending', 'published', 'scheduled', 'archived', 'deleted'].forEach(status => {
-                            if ($(`#stats_${status}`).length) $(`#stats_${status}`).html(res.data[status]);
+                        ['draft', 'pending-review', 'published', 'scheduled', 'archived', 'deleted'].forEach(status => {
+                            if ($(`#stats_${status}`).length) $(`#stats_${status}`).html(res.data[status] || 0);
                         });
                     },
                     error: function(xhr) {
@@ -662,6 +716,7 @@
                     }
                 });
             };
+
             return {
                 init: function() {
                     table = document.querySelector('#datatable');
@@ -674,6 +729,7 @@
                 }
             };
         }();
+
         $(document).ready(function() {
             KTDatatablesGaleri.init();
         });

@@ -43,6 +43,7 @@ class HalamanController extends Controller
             if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
                 if ($status == "Draft") {
                     $data = PortalPage::whereStatus($status)
+                        ->whereUuidCreated($auth->uuid)
                         ->whereKategori($kategori)
                         ->orderBy("no_urut", "ASC")
                         ->get();

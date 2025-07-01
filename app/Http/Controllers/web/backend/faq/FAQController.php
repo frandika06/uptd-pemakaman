@@ -70,7 +70,7 @@ class FAQController extends Controller
                         </div>
                         <div class="d-flex flex-column">
                             <a href="' . $edit_url . '" class="' . $class . ' mb-1 fs-6">' . $judul_display . '</a>
-                            <span class="text-muted fw-semibold d-block fs-7">' . $deskripsi_display . '</span>
+                            <span class="text-muted fw-semibold d-block fs-7">' . Str::slug($data->judul) . '</span>
                         </div>
                     </div>
                 ';

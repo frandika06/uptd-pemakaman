@@ -31,7 +31,7 @@
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
                 <li class="breadcrumb-item text-gray-700">
-                    <a href="{{ route('prt.apps.video.index') }}" class="text-gray-700 text-hover-primary">Video</a>
+                    <a href="{{ route('prt.apps.unduhan.index') }}" class="text-gray-700 text-hover-primary">Unduhan</a>
                 </li>
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
@@ -45,7 +45,7 @@
 
 {{-- CONTENT::BEGIN --}}
 @section('content')
-    <form id="kt_video_form" class="form d-flex flex-column flex-lg-row" action="{{ isset($data) ? route('prt.apps.video.update', [$uuid_enc]) : route('prt.apps.video.store') }}"
+    <form id="kt_unduhan_form" class="form d-flex flex-column flex-lg-row" action="{{ isset($data) ? route('prt.apps.unduhan.update', [$uuid_enc]) : route('prt.apps.unduhan.store') }}"
         method="POST" enctype="multipart/form-data">
         @csrf
         @isset($data)
@@ -63,7 +63,7 @@
                 </div>
                 <div class="card-body text-center pt-0">
                     <select class="form-select mb-2 @error('status') is-invalid @enderror" data-control="select2" data-hide-search="true" data-placeholder="Pilih Status"
-                        id="kt_video_status" name="status" required>
+                        id="kt_unduhan_status" name="status" required>
                         <option></option>
                         @if ($auth->role == 'Super Admin' || $auth->role == 'Admin' || $auth->role == 'Editor')
                             <option value="Draft" {{ old('status', isset($data) ? $data->status : '') == 'Draft' ? 'selected' : '' }}>Draft</option>
@@ -79,20 +79,20 @@
                     @error('status')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="text-muted fs-7">Pilih status publikasi video.</div>
+                    <div class="text-muted fs-7">Pilih status publikasi unduhan.</div>
                 </div>
             </div>
             {{-- end::Status settings --}}
 
             {{-- begin::Thumbnail settings --}}
-            <div class="card card-flush py-4 {{ old('sumber', isset($data) ? $data->sumber : '') != 'Upload' ? 'd-none' : '' }}" id="thumbnail_card">
+            <div class="card card-flush py-4">
                 <div class="card-header">
                     <div class="card-title">
                         <h2>Thumbnail</h2>
                     </div>
                 </div>
                 <div class="card-body text-center pt-0">
-                    @if (isset($data) && $data->sumber == 'Upload' && !empty($data->thumbnails))
+                    @if (isset($data) && !empty($data->thumbnails))
                         <div class="image-input image-input-outline" data-kt-image-input="true" style="background-image: url('{{ asset('be/media/svg/files/blank-image.svg') }}')">
                             <div class="image-input-wrapper w-150px h-150px" style="background-image: url('{{ \Helper::urlImg($data->thumbnails) }}')"></div>
                             <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip"
@@ -125,8 +125,7 @@
                             <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip"
                                 title="Pilih thumbnail">
                                 <i class="ki-outline ki-pencil fs-7"></i>
-                                <input type="file" name="thumbnails" id="thumbnails" accept=".png,.jpg,.jpeg"
-                                    {{ old('sumber', isset($data) ? $data->sumber : '') == 'Upload' && !isset($data) ? 'required' : '' }} />
+                                <input type="file" name="thumbnails" id="thumbnails" accept=".png,.jpg,.jpeg" required />
                                 <input type="hidden" name="thumbnails_remove" />
                             </label>
                             <span class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
@@ -165,7 +164,7 @@
                     @error('kategori')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="text-muted fs-7">Pilih kategori untuk video ini.</div>
+                    <div class="text-muted fs-7">Pilih kategori untuk unduhan ini.</div>
                 </div>
             </div>
             {{-- end::Category settings --}}
@@ -181,7 +180,7 @@
                     <div class="d-flex flex-column gap-5">
                         <div class="m-0 p-0">
                             <span class="fw-bold text-gray-600">Slug:</span><br />
-                            <span class="text-gray-800 fw-bold" id="video_slug_preview">{{ isset($data) ? $data->slug : '-' }}</span>
+                            <span class="text-gray-800 fw-bold" id="unduhan_slug_preview">{{ isset($data) ? $data->slug : '-' }}</span>
                         </div>
                         <div class="m-0 p-0">
                             <span class="fw-bold text-gray-600">Dibuat:</span><br />
@@ -207,56 +206,80 @@
             <div class="card card-flush py-4">
                 <div class="card-header">
                     <div class="card-title">
-                        <h2>Detail Video</h2>
+                        <h2>Detail Unduhan</h2>
                     </div>
                 </div>
                 <div class="card-body pt-0">
                     <div class="mb-10 fv-row">
-                        <label class="required form-label">Sumber Video</label>
+                        <label class="required form-label">Sumber Unduhan</label>
                         @if (isset($data))
                             <input type="text" class="form-control mb-2" value="{{ old('sumber', $data->sumber) }}" readonly>
                             <input type="hidden" name="sumber" id="sumber" value="{{ old('sumber', $data->sumber) }}">
                         @else
-                            <select class="form-select mb-2 @error('sumber') is-invalid @enderror" id="sumber" name="sumber" required>
-                                <option value="">Pilih sumber video...</option>
-                                <option value="YouTube" {{ old('sumber') == 'YouTube' ? 'selected' : '' }}>YouTube</option>
+                            <select class="form-select mb-2 @error('sumber') is-invalid @enderror" id="sumber" name="sumber" data-placeholder="Pilih sumber unduhan..."
+                                required>
+                                <option value="Link" {{ old('sumber') == 'Link' ? 'selected' : '' }}>Link</option>
                                 <option value="Upload" {{ old('sumber') == 'Upload' ? 'selected' : '' }}>Upload</option>
                             </select>
                             @error('sumber')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         @endif
-                        <div class="text-muted fs-7">Pilih sumber video (YouTube atau Upload).</div>
+                        <div class="text-muted fs-7">Pilih sumber unduhan (Link atau Upload).</div>
                     </div>
 
-                    <div class="mb-10 fv-row {{ old('sumber', isset($data) ? $data->sumber : '') != 'YouTube' ? 'd-none' : '' }}" id="item_youtube">
-                        <label class="form-label {{ old('sumber', isset($data) ? $data->sumber : '') == 'YouTube' ? 'required' : '' }}">URL YouTube</label>
-                        <input type="url" name="url" id="url" class="form-control mb-2 @error('url') is-invalid @enderror" placeholder="Masukkan URL YouTube"
+                    <div class="mb-10 fv-row {{ old('sumber', isset($data) ? $data->sumber : '') != 'Link' ? 'd-none' : '' }}" id="item_link">
+                        <label class="form-label {{ old('sumber', isset($data) ? $data->sumber : '') == 'Link' ? 'required' : '' }}">URL Link</label>
+                        <input type="url" name="url" id="url" class="form-control mb-2 @error('url') is-invalid @enderror" placeholder="Masukkan URL"
                             value="{{ old('url', isset($data) ? $data->url : '') }}" maxlength="300" autocomplete="off"
-                            {{ old('sumber', isset($data) ? $data->sumber : '') == 'YouTube' ? 'required' : '' }} />
-                        <div class="text-muted fs-7">Contoh: <strong>https://www.youtube.com/watch?v=3oD5YSTCun0</strong></div>
+                            {{ old('sumber', isset($data) ? $data->sumber : '') == 'Link' ? 'required' : '' }} />
+                        <div class="text-muted fs-7">Contoh: <strong>https://example.com/dokumen.pdf</strong></div>
                         @error('url')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        @if (isset($data) && $data->sumber == 'Link')
+                            <div class="mt-3">
+                                <a href="{{ $data->url }}" target="_blank" class="btn btn-sm btn-light-primary">
+                                    <i class="ki-outline ki-eye fs-3"></i>Lihat File
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="mb-10 fv-row {{ old('sumber', isset($data) ? $data->sumber : '') != 'Upload' ? 'd-none' : '' }}" id="item_upload">
                         <div class="mb-10 fv-row">
-                            <label class="form-label {{ old('sumber', isset($data) ? $data->sumber : '') == 'Upload' && !isset($data) ? 'required' : '' }}">File Video</label>
-                            <input type="file" name="file_video" id="file_video" class="form-control mb-2 @error('file_video') is-invalid @enderror" accept=".mp4,.webm,.ogg"
+                            <label class="form-label {{ old('sumber', isset($data) ? $data->sumber : '') == 'Upload' && !isset($data) ? 'required' : '' }}">File Unduhan</label>
+                            <input type="file" name="file_unduhan" id="file_unduhan" class="form-control mb-2 @error('file_unduhan') is-invalid @enderror"
+                                accept=".jpg,.jpeg,.png,.gif,.bmp,.svg,.tiff,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.pdf,.txt,.csv,.xml,.json,.md,.mp3,.wav,.ogg,.m4a,.flac,.aac,.mp4,.mkv,.avi,.mov,.wmv,.flv,.webm,.3gp,.mpeg,.zip,.rar,.tar,.gz,.7z,.bz2,.xz,.iso"
                                 {{ old('sumber', isset($data) ? $data->sumber : '') == 'Upload' && !isset($data) ? 'required' : '' }} />
-                            <div class="text-muted fs-7">Format: MP4, WebM, OGG | Max: 200MB</div>
-                            @error('file_video')
+                            <div class="text-muted fs-7">Format: JPG, PNG, PDF, MP4, ZIP, dll (kecuali .html, .php) | Max: 200MB</div>
+                            @error('file_unduhan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @if (isset($data) && $data->sumber == 'Upload')
+                                <div class="mt-3">
+                                    <a href="{{ \Helper::urlImg($data->url) }}" target="_blank" class="btn btn-sm btn-light-primary">
+                                        <i class="ki-outline ki-eye fs-3"></i>Lihat File
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="mb-10 fv-row">
+                            <label class="form-label">Password</label>
+                            <input type="text" name="password" id="password" class="form-control mb-2 @error('password') is-invalid @enderror" placeholder="Masukkan password"
+                                value="{{ old('password', isset($data) ? $data->password : '') }}" maxlength="100" autocomplete="off" />
+                            <div class="text-muted fs-7">Berikan password jika file tidak untuk diakses secara publik.</div>
+                            @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
                     <div class="mb-10 fv-row">
-                        <label class="required form-label">Judul Video</label>
-                        <input type="text" name="judul" id="judul" class="form-control mb-2 @error('judul') is-invalid @enderror" placeholder="Masukkan judul video"
+                        <label class="required form-label">Judul Unduhan</label>
+                        <input type="text" name="judul" id="judul" class="form-control mb-2 @error('judul') is-invalid @enderror" placeholder="Masukkan judul unduhan"
                             value="{{ old('judul', isset($data) ? $data->judul : '') }}" maxlength="300" autocomplete="off" required />
-                        <div class="text-muted fs-7">Judul video maksimal 300 karakter.</div>
+                        <div class="text-muted fs-7">Judul unduhan maksimal 300 karakter.</div>
                         @error('judul')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -266,7 +289,7 @@
                         <label class="required form-label">Tanggal Publikasi</label>
                         <input type="datetime-local" name="tanggal" id="tanggal" class="form-control mb-2 @error('tanggal') is-invalid @enderror"
                             value="{{ old('tanggal', isset($data) ? date('Y-m-d\TH:i', strtotime($data->tanggal)) : date('Y-m-d\TH:i')) }}" autocomplete="off" required />
-                        <div class="text-muted fs-7">Tanggal dan waktu publikasi video.</div>
+                        <div class="text-muted fs-7">Tanggal dan waktu publikasi unduhan.</div>
                         @error('tanggal')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -288,53 +311,63 @@
                 <div class="card card-flush py-4">
                     <div class="card-header">
                         <div class="card-title">
-                            <h2>Preview Video</h2>
+                            <h2>Preview File</h2>
                         </div>
                     </div>
                     <div class="card-body pt-0">
-                        @if ($data->sumber == 'YouTube')
-                            <div class="alert alert-danger alert-dismissible fade show">
+                        @if ($data->sumber == 'Link')
+                            <div class="alert alert-warning alert-dismissible fade show">
                                 <i class="ki-outline ki-information-3 fs-2 me-2"></i>
-                                <strong>PERHATIAN!</strong> Jika video tidak muncul, berarti ada kesalahan pada URL; video telah dihapus; atau URL teblokir oleh server CSP.
+                                <strong>PERHATIAN!</strong> Pratinjau tidak tersedia untuk file eksternal. Klik tombol di bawah untuk mengakses file.
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                            <div class="ratio ratio-16x9">
-                                <iframe src="https://www.youtube.com/embed/{{ \Helper::getYouTubeVideoID($data->url) }}?rel=0" title="{{ e($data->judul) }}"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"
-                                    referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                            <div class="mt-3">
+                                <a href="{{ $data->url }}" target="_blank" class="btn btn-sm btn-light-primary">
+                                    <i class="ki-outline ki-eye fs-3"></i>Buka File Eksternal
+                                </a>
                             </div>
                         @else
-                            <video width="100%" height="auto" controls>
-                                <source src="{{ \Helper::urlImg($data->url) }}" type="video/{{ $data->tipe }}">
-                                Your browser does not support the video tag.
-                            </video>
+                            @if (in_array($data->tipe, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'tiff', 'webp']))
+                                <div class="image-preview">
+                                    <img src="{{ \Helper::urlImg($data->url) }}" alt="{{ e($data->judul) }}" class="img-fluid rounded" style="max-width: 100%; height: auto;" />
+                                </div>
+                            @elseif ($data->tipe == 'pdf')
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="{{ \Helper::urlImg($data->url) }}#toolbar=0" title="{{ e($data->judul) }}" style="width: 100%; height: 100%;"
+                                        loading="lazy"></iframe>
+                                </div>
+                            @elseif (in_array($data->tipe, ['mp4', 'webm', 'ogg', 'mkv', 'avi', 'mov', 'wmv', 'flv', '3gp', 'mpeg']))
+                                <video width="100%" height="auto" controls>
+                                    <source src="{{ \Helper::urlImg($data->url) }}" type="video/{{ $data->tipe }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            @elseif (in_array($data->tipe, ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac']))
+                                <audio controls style="width: 100%;">
+                                    <source src="{{ \Helper::urlImg($data->url) }}" type="audio/{{ $data->tipe }}">
+                                    Your browser does not support the audio tag.
+                                </audio>
+                            @else
+                                <div class="alert alert-info alert-dismissible fade show">
+                                    <i class="ki-outline ki-information-3 fs-2 me-2"></i>
+                                    <strong>INFORMASI!</strong> Pratinjau tidak tersedia untuk tipe file ini. Klik tombol di bawah untuk mengunduh file.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ \Helper::urlImg($data->url) }}" target="_blank" class="btn btn-sm btn-light-primary">
+                                        <i class="ki-outline ki-eye fs-3"></i>Unduh File
+                                    </a>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
             @endif
 
-            <div class="card card-flush py-4">
-                <div class="card-header">
-                    <div class="card-title">
-                        <h2>Konten Post</h2>
-                    </div>
-                </div>
-                <div class="card-body pt-0">
-                    <div class="fv-row">
-                        <label class="form-label">Isi Post</label>
-                        <textarea name="post" id="post" class="form-control @error('post') is-invalid @enderror" placeholder="Masukkan konten post"></textarea>
-                        @error('post')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
             <div class="d-flex justify-content-end">
-                <a href="{{ route('prt.apps.video.index') }}" id="kt_video_cancel" class="btn btn-light me-5">
+                <a href="{{ route('prt.apps.unduhan.index') }}" id="kt_unduhan_cancel" class="btn btn-light me-5">
                     <i class="ki-outline ki-arrow-left fs-2"></i>Batal
                 </a>
-                <button type="submit" id="kt_video_submit" class="btn btn-primary">
+                <button type="submit" id="kt_unduhan_submit" class="btn btn-primary">
                     <span class="indicator-label">
                         <i class="fa-solid fa-save me-2"></i>{{ $submit }}
                     </span>
@@ -353,12 +386,10 @@
 
 {{-- SCRIPTS::BEGIN --}}
 @push('scripts')
-    <script src="{{ asset('be/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
-
     <script>
         "use strict";
 
-        var KTAppVideoSave = function() {
+        var KTAppUnduhanSave = function() {
             var form;
             var submitButton;
             var cancelButton;
@@ -374,19 +405,19 @@
                     var kategori = form.querySelector('select[name="kategori"]').value;
                     var sumber = form.querySelector('#sumber') ? form.querySelector('#sumber').value : '{{ old('sumber', isset($data) ? $data->sumber : '') }}';
                     var url = form.querySelector('input[name="url"]') ? form.querySelector('input[name="url"]').value.trim() : '';
-                    var fileVideo = form.querySelector('input[name="file_video"]');
+                    var fileUnduhan = form.querySelector('input[name="file_unduhan"]');
                     var thumbnails = form.querySelector('input[name="thumbnails"]');
-                    var post = tinymce.get('post').getContent().trim();
+                    var password = form.querySelector('input[name="password"]') ? form.querySelector('input[name="password"]').value.trim() : '';
 
                     var isValid = true;
                     var errorMessage = '';
 
                     if (!judul) {
                         isValid = false;
-                        errorMessage = 'Judul video wajib diisi';
+                        errorMessage = 'Judul unduhan wajib diisi';
                     } else if (judul.length > 300) {
                         isValid = false;
-                        errorMessage = 'Judul video maksimal 300 karakter';
+                        errorMessage = 'Judul unduhan maksimal 300 karakter';
                     }
 
                     if (!tanggal) {
@@ -414,30 +445,27 @@
 
                     if (!sumber) {
                         isValid = false;
-                        errorMessage = 'Sumber video wajib dipilih';
-                    }
-
-                    if (sumber === 'YouTube' && !url) {
-                        isValid = false;
-                        errorMessage = 'URL YouTube wajib diisi';
-                    } else if (sumber === 'YouTube' && url && !url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
-                        isValid = false;
-                        errorMessage = 'URL YouTube tidak valid';
+                        errorMessage = 'Sumber unduhan wajib dipilih';
                     }
 
                     if (sumber === 'Upload' && !{{ isset($data) ? 'true' : 'false' }}) {
-                        if (!fileVideo || !fileVideo.files.length) {
+                        if (!fileUnduhan || !fileUnduhan.files.length) {
                             isValid = false;
-                            errorMessage = 'File video wajib diisi';
-                        }
-                        if (!thumbnails || !thumbnails.files.length) {
-                            isValid = false;
-                            errorMessage = 'Thumbnail wajib diisi';
+                            errorMessage = 'File unduhan wajib diisi';
                         }
                     }
 
+                    if (!thumbnails || !thumbnails.files.length && !{{ isset($data) ? 'true' : 'false' }}) {
+                        isValid = false;
+                        errorMessage = 'Thumbnail wajib diisi';
+                    }
+
+                    if (password && password.length > 100) {
+                        isValid = false;
+                        errorMessage = 'Password maksimal 100 karakter';
+                    }
+
                     if (isValid) {
-                        tinymce.get('post').save();
                         submitButton.setAttribute('data-kt-indicator', 'on');
                         submitButton.disabled = true;
                         form.submit();
@@ -477,7 +505,7 @@
 
             var handleSlugPreview = function() {
                 const judulInput = document.querySelector('input[name="judul"]');
-                const slugPreview = document.querySelector('#video_slug_preview');
+                const slugPreview = document.querySelector('#unduhan_slug_preview');
 
                 if (judulInput && slugPreview) {
                     judulInput.addEventListener('input', function() {
@@ -503,67 +531,51 @@
 
             var handleSumberToggle = function() {
                 const sumberSelect = document.querySelector('#sumber');
-                const itemYouTube = document.querySelector('#item_youtube');
+                const itemLink = document.querySelector('#item_link');
                 const itemUpload = document.querySelector('#item_upload');
-                const thumbnailCard = document.querySelector('#thumbnail_card');
                 const urlInput = document.querySelector('#url');
-                const fileVideoInput = document.querySelector('#file_video');
-                const thumbnailsInput = document.querySelector('#thumbnails');
+                const fileUnduhanInput = document.querySelector('#file_unduhan');
 
                 const isEditMode = {{ isset($data) ? 'true' : 'false' }};
 
                 function toggleItems() {
-                    if (!sumberSelect || !itemYouTube || !itemUpload || !thumbnailCard || !urlInput || !fileVideoInput || !thumbnailsInput) {
+                    if (!itemLink || !itemUpload || !urlInput || !fileUnduhanInput) {
                         console.warn('One or more elements not found:', {
                             sumberSelect,
-                            itemYouTube,
+                            itemLink,
                             itemUpload,
-                            thumbnailCard,
                             urlInput,
-                            fileVideoInput,
-                            thumbnailsInput
+                            fileUnduhanInput
                         });
                         return;
                     }
 
-                    const selectedSumber = sumberSelect.value;
-                    if (selectedSumber === 'YouTube') {
-                        itemYouTube.classList.remove('d-none');
+                    const selectedSumber = sumberSelect ? sumberSelect.value : '{{ old('sumber', isset($data) ? $data->sumber : '') }}';
+                    if (selectedSumber === 'Link') {
+                        itemLink.classList.remove('d-none');
                         itemUpload.classList.add('d-none');
-                        thumbnailCard.classList.add('d-none');
                         const urlLabel = urlInput.closest('.fv-row')?.querySelector('.form-label');
                         if (urlInput && urlLabel) {
                             urlInput.setAttribute('required', 'required');
                             urlLabel.classList.add('required');
                         }
-                        if (fileVideoInput) {
-                            fileVideoInput.removeAttribute('required');
-                            const fileVideoLabel = fileVideoInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (fileVideoLabel) fileVideoLabel.classList.remove('required');
-                        }
-                        if (thumbnailsInput) {
-                            thumbnailsInput.removeAttribute('required');
-                            const thumbnailsLabel = thumbnailsInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (thumbnailsLabel) thumbnailsLabel.classList.remove('required');
+                        if (fileUnduhanInput) {
+                            fileUnduhanInput.removeAttribute('required');
+                            const fileUnduhanLabel = fileUnduhanInput.closest('.fv-row')?.querySelector('.form-label');
+                            if (fileUnduhanLabel) fileUnduhanLabel.classList.remove('required');
                         }
                     } else if (selectedSumber === 'Upload') {
-                        itemYouTube.classList.add('d-none');
+                        itemLink.classList.add('d-none');
                         itemUpload.classList.remove('d-none');
-                        thumbnailCard.classList.remove('d-none');
                         if (urlInput) {
                             urlInput.removeAttribute('required');
                             const urlLabel = urlInput.closest('.fv-row')?.querySelector('.form-label');
                             if (urlLabel) urlLabel.classList.remove('required');
                         }
-                        if (fileVideoInput && !isEditMode) {
-                            fileVideoInput.setAttribute('required', 'required');
-                            const fileVideoLabel = fileVideoInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (fileVideoLabel) fileVideoLabel.classList.add('required');
-                        }
-                        if (thumbnailsInput && !isEditMode) {
-                            thumbnailsInput.setAttribute('required', 'required');
-                            const thumbnailsLabel = thumbnailsInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (thumbnailsLabel) thumbnailsLabel.classList.add('required');
+                        if (fileUnduhanInput && !isEditMode) {
+                            fileUnduhanInput.setAttribute('required', 'required');
+                            const fileUnduhanLabel = fileUnduhanInput.closest('.fv-row')?.querySelector('.form-label');
+                            if (fileUnduhanLabel) fileUnduhanLabel.classList.add('required');
                         }
                     }
                 }
@@ -572,240 +584,17 @@
                     sumberSelect.addEventListener('change', toggleItems);
                 }
 
-                // Set initial state only if sumberSelect exists (create mode)
-                if (sumberSelect) {
-                    toggleItems();
-                } else if (isEditMode) {
-                    // Handle edit mode initial state
-                    const initialSumber = '{{ old('sumber', isset($data) ? $data->sumber : '') }}';
-                    if (initialSumber === 'YouTube' && itemYouTube && urlInput) {
-                        itemYouTube.classList.remove('d-none');
-                        itemUpload.classList.add('d-none');
-                        thumbnailCard.classList.add('d-none');
-                        const urlLabel = urlInput.closest('.fv-row')?.querySelector('.form-label');
-                        if (urlLabel) urlLabel.classList.add('required');
-                        urlInput.setAttribute('required', 'required');
-                    } else if (initialSumber === 'Upload' && itemUpload && fileVideoInput && thumbnailsInput) {
-                        itemYouTube.classList.add('d-none');
-                        itemUpload.classList.remove('d-none');
-                        thumbnailCard.classList.remove('d-none');
-                        if (!isEditMode) {
-                            const fileVideoLabel = fileVideoInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (fileVideoLabel) fileVideoLabel.classList.add('required');
-                            fileVideoInput.setAttribute('required', 'required');
-                            const thumbnailsLabel = thumbnailsInput.closest('.fv-row')?.querySelector('.form-label');
-                            if (thumbnailsLabel) thumbnailsLabel.classList.add('required');
-                            thumbnailsInput.setAttribute('required', 'required');
-                        }
-                    }
-                }
-
+                toggleItems();
                 @if (old('sumber'))
                     if (sumberSelect) toggleItems();
                 @endif
             }
 
-            var handleTinyMCE = function() {
-                tinymce.init({
-                    selector: "#post",
-                    height: 480,
-                    menubar: false,
-                    statusbar: false,
-                    toolbar_mode: 'sliding',
-                    toolbar: [
-                        "styleselect fontselect fontsizeselect",
-                        "undo redo | cut copy paste | bold italic underline strikethrough | link image | alignleft aligncenter alignright alignjustify",
-                        "bullist numlist | outdent indent | blockquote subscript superscript | table | charmap | print preview | code fullscreen"
-                    ],
-                    plugins: "advlist autolink link image lists charmap print preview code fullscreen table paste wordcount",
-                    content_style: `
-                        body {
-                            font-family: 'Inter', sans-serif;
-                            font-size: 14px;
-                            line-height: 1.6;
-                        }
-                        img {
-                            max-width: 100% !important;
-                            width: 100% !important;
-                            height: auto !important;
-                            display: block;
-                            margin: 15px auto;
-                            border-radius: 8px;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
-                    `,
-                    paste_data_images: true,
-                    paste_as_text: false,
-                    paste_block_drop: false,
-                    automatic_uploads: false,
-                    images_upload_url: false,
-                    convert_urls: false,
-                    relative_urls: false,
-                    file_picker_callback: function(callback, value, meta) {
-                        if (meta.filetype === 'image') {
-                            var input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/*';
-
-                            input.onchange = function() {
-                                var file = this.files[0];
-                                if (!file) return;
-
-                                if (file.size > 5 * 1024 * 1024) {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'File Terlalu Besar',
-                                        text: 'Ukuran maksimal 5MB'
-                                    });
-                                    return;
-                                }
-
-                                if (!file.type.match(/^image\//)) {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Format Salah',
-                                        text: 'File harus berupa gambar'
-                                    });
-                                    return;
-                                }
-
-                                var reader = new FileReader();
-                                reader.onload = function(e) {
-                                    callback(e.target.result, {
-                                        alt: file.name.replace(/\.[^/.]+$/, ""),
-                                        title: file.name
-                                    });
-                                };
-                                reader.readAsDataURL(file);
-                            };
-
-                            input.click();
-                        }
-                    },
-                    setup: function(editor) {
-                        function autoStyleImages() {
-                            var images = editor.getBody().querySelectorAll('img');
-                            images.forEach(function(img) {
-                                if (!img.hasAttribute('data-styled')) {
-                                    img.style.width = '100%';
-                                    img.style.height = 'auto';
-                                    img.style.maxWidth = '100%';
-                                    img.style.display = 'block';
-                                    img.style.margin = '15px auto';
-                                    img.setAttribute('width', '100%');
-                                    img.setAttribute('height', 'auto');
-                                    img.setAttribute('data-styled', 'true');
-                                }
-                            });
-                        }
-
-                        editor.on('init', function() {
-                            @if (isset($data))
-                                var content = {!! json_encode(\Helper::updateImageUrls($data->post)) !!};
-                                editor.setContent(content);
-                            @endif
-                            setTimeout(autoStyleImages, 500);
-                        });
-
-                        editor.on('change', function() {
-                            editor.save();
-                        });
-
-                        editor.on('NodeChange', function(e) {
-                            if (e.element.nodeName === 'IMG') {
-                                autoStyleImages();
-                            }
-                        });
-
-                        editor.on('SetContent paste', function() {
-                            setTimeout(autoStyleImages, 100);
-                        });
-
-                        editor.on('paste', function(e) {
-                            var clipboardData = e.clipboardData || window.clipboardData;
-                            if (clipboardData && clipboardData.items) {
-                                for (var i = 0; i < clipboardData.items.length; i++) {
-                                    var item = clipboardData.items[i];
-                                    if (item.type.indexOf('image') !== -1) {
-                                        e.preventDefault();
-                                        var file = item.getAsFile();
-                                        if (file) {
-                                            var reader = new FileReader();
-                                            reader.onload = function(event) {
-                                                var imgHtml = '<img src="' + event.target.result +
-                                                    '" style="width: 100%; height: auto; max-width: 100%; display: block; margin: 15px auto;" alt="Pasted image" data-styled="true">';
-                                                editor.insertContent(imgHtml);
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                        });
-
-                        editor.on('drop', function(e) {
-                            var files = e.dataTransfer.files;
-                            if (files && files.length > 0) {
-                                for (var i = 0; i < files.length; i++) {
-                                    var file = files[i];
-                                    if (file.type.match(/^image\//)) {
-                                        e.preventDefault();
-                                        var reader = new FileReader();
-                                        reader.onload = function(event) {
-                                            var imgHtml = '<img src="' + event.target.result +
-                                                '" style="width: 100%; height: auto; max-width: 100%; display: block; margin: 15px auto;" alt="Dropped image" data-styled="true">';
-                                            editor.insertContent(imgHtml);
-                                        };
-                                        reader.readAsDataURL(file);
-                                        break;
-                                    }
-                                }
-                            }
-                        });
-                    },
-                    verify_html: false,
-                    valid_elements: 'p,br,strong,em,h1,h2,h3,h4,h5,h6,ul,ol,li,a[href|target|title],img[src|alt|width|height|style|data-*],table,tr,td,th,tbody,thead,tfoot,blockquote,div,span[style],sub,sup,strike,u,code,pre',
-                    extended_valid_elements: 'img[*]',
-                    style_formats: [{
-                            title: 'Paragraph',
-                            block: 'p'
-                        },
-                        {
-                            title: 'Heading 1',
-                            block: 'h1'
-                        },
-                        {
-                            title: 'Heading 2',
-                            block: 'h2'
-                        },
-                        {
-                            title: 'Heading 3',
-                            block: 'h3'
-                        },
-                        {
-                            title: 'Heading 4',
-                            block: 'h4'
-                        },
-                        {
-                            title: 'Heading 5',
-                            block: 'h5'
-                        },
-                        {
-                            title: 'Heading 6',
-                            block: 'h6'
-                        }
-                    ],
-                    font_family_formats: "Arial=arial,helvetica,sans-serif; Courier New=courier new,courier,monospace; Georgia=georgia,palatino,serif; Helvetica=helvetica,arial,sans-serif; Impact=impact,sans-serif; Tahoma=tahoma,arial,helvetica,sans-serif; Times New Roman=times new roman,times,serif; Verdana=verdana,arial,helvetica,sans-serif;",
-                    font_size_formats: "8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt"
-                });
-            }
-
             return {
                 init: function() {
-                    form = document.querySelector('#kt_video_form');
-                    submitButton = document.querySelector('#kt_video_submit');
-                    cancelButton = document.querySelector('#kt_video_cancel');
+                    form = document.querySelector('#kt_unduhan_form');
+                    submitButton = document.querySelector('#kt_unduhan_submit');
+                    cancelButton = document.querySelector('#kt_unduhan_cancel');
 
                     if (!form) {
                         return;
@@ -814,35 +603,12 @@
                     handleForm();
                     handleSlugPreview();
                     handleSumberToggle();
-                    handleTinyMCE();
                 }
             };
         }();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            function autoResizeImages() {
-                var editors = tinymce.editors;
-                for (var i = 0; i < editors.length; i++) {
-                    var editor = editors[i];
-                    if (editor.getBody) {
-                        var images = editor.getBody().querySelectorAll('img');
-                        images.forEach(function(img) {
-                            if (!img.hasAttribute('data-auto-resized')) {
-                                img.style.width = '100%';
-                                img.style.height = 'auto';
-                                img.setAttribute('width', '100%');
-                                img.setAttribute('height', 'auto');
-                                img.setAttribute('data-auto-resized', 'true');
-                            }
-                        });
-                    }
-                }
-            }
-            setInterval(autoResizeImages, 1000);
-        });
-
         KTUtil.onDOMContentLoaded(function() {
-            KTAppVideoSave.init();
+            KTAppUnduhanSave.init();
         });
 
         KTUtil.onDOMContentLoaded(function() {

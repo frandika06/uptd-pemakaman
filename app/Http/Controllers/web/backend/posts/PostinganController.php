@@ -42,6 +42,7 @@ class PostinganController extends Controller
             if ($role == "Super Admin" || $role == "Admin" || $role == "Editor") {
                 if ($status == "Draft") {
                     $data = PortalPost::whereStatus($status)
+                        ->whereUuidCreated($auth->uuid)
                         ->orderBy("tanggal", "DESC")
                         ->get();
                 } else {

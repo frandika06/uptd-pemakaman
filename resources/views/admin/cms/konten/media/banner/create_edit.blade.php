@@ -42,7 +42,7 @@
                 </li>
                 {{-- end::Item --}}
                 {{-- begin::Item --}}
-                <li class="breadcrumb-item text-gray-700">Konten Media</li>
+                <li class="breadcrumb-item text-gray-700">Media</li>
                 {{-- end::Item --}}
                 {{-- begin::Item --}}
                 <li class="breadcrumb-item">

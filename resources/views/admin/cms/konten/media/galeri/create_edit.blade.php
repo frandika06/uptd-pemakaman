@@ -148,7 +148,7 @@
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                <li class="breadcrumb-item text-gray-700">Konten Media</li>
+                <li class="breadcrumb-item text-gray-700">Media</li>
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>

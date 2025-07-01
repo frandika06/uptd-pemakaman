@@ -177,6 +177,8 @@ Route::group(['prefix' => 'cms'], function () {
             Route::get('/edit/{uuid}', [UnduhanController::class, 'edit'])->name('prt.apps.unduhan.edit');
             Route::put('/edit/{uuid}', [UnduhanController::class, 'update'])->name('prt.apps.unduhan.update');
             Route::post('/delete', [UnduhanController::class, 'destroy'])->name('prt.apps.unduhan.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [UnduhanController::class, 'bulkDestroy'])->name('prt.apps.unduhan.destroy.bulk');
         });
     });
 

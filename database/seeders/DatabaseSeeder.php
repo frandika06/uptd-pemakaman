@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
     {
         // users & actors
         $this->call(ActorSeeder::class);
+        // komparasi
+        $this->call(KomparasiKategoriGlobalSeeder::class);
         // konten dummy
         $this->call(DummyBannerSeeder::class);
         $this->call(DummyPesanSeeder::class);
@@ -21,8 +23,8 @@ class DatabaseSeeder extends Seeder
         $this->call(DummyFaqSeeder::class);
         $this->call(DummySosmedSeeder::class);
         $this->call(DummySurveySeeder::class);
+        $this->call(DummyVideoSeeder::class);
+        $this->call(DummyUnduhanSeeder::class);
         $this->call(DummySetupSeeder::class);
-        // komparasi
-        $this->call(KomparasiKategoriGlobalSeeder::class);
     }
 }

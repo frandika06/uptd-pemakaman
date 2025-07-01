@@ -71,7 +71,7 @@ class GaleriController extends Controller
                             </div>
                             <div class="d-flex flex-column">
                                 <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . $judulText . '</a>
-                                <span class="text-muted fw-semibold d-block fs-7">' . Str::limit($data->deskripsi, 100, "...") . '</span>
+                                <span class="text-muted fw-semibold d-block fs-7">' . Str::slug($data->judul) . '</span>
                             </div>
                         </div>';
                 })

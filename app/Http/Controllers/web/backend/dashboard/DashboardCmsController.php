@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers\web\backend\dasahboard;
+namespace App\Http\Controllers\web\backend\dashboard;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;

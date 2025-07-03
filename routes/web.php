@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\web\backend\dasahboard\DashboardController;
+use App\Http\Controllers\web\backend\dashboard\DashboardController;
 
 /*
 |--------------------------------------------------------------------------

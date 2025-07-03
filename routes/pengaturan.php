@@ -7,16 +7,16 @@
 */
 // pengaturan
 
-use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
+use App\Http\Controllers\web\backend\dashboard\DashboardSetupController;
 use App\Http\Controllers\web\backend\master\SosmedController;
 use App\Http\Controllers\web\backend\master\UsersController;
 use App\Http\Controllers\web\backend\profile\ProfileController;
 
 Route::group(['prefix' => 'pengaturan'], function () {
-    // dashboard
-    Route::get('/', [DashboardCmsController::class, 'index'])->name('setup.apps.index');
+    // dashboard pengaturan
+    Route::get('/', [DashboardSetupController::class, 'index'])->name('setup.apps.index');
 
-    // middleware: Admin
+    // middleware: Admin (Super Admin & Admin)
     Route::group(['middleware' => ['Admin']], function () {
         // portal users
         Route::group(['prefix' => 'users/{tags}'], function () {
@@ -28,6 +28,7 @@ Route::group(['prefix' => 'pengaturan'], function () {
             Route::post('/status', [UsersController::class, 'status'])->name('prt.apps.mst.users.status');
             Route::post('/delete', [UsersController::class, 'destroy'])->name('prt.apps.mst.users.destroy');
         });
+
         // portal sosmed
         Route::group(['prefix' => 'sosmed'], function () {
             Route::get('/', [SosmedController::class, 'index'])->name('prt.apps.mst.sosmed.index');
@@ -37,7 +38,7 @@ Route::group(['prefix' => 'pengaturan'], function () {
 
     /*
     |--------------------------------------------------------------------------
-    | MENU PROFILE
+    | MENU PROFILE (Semua Role)
     |--------------------------------------------------------------------------
     */
     // profile

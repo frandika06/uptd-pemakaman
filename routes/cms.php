@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\web\backend\banner\BannerController;
-use App\Http\Controllers\web\backend\dasahboard\DashboardCmsController;
+use App\Http\Controllers\web\backend\dashboard\DashboardCmsController;
 use App\Http\Controllers\web\backend\faq\FAQController;
 use App\Http\Controllers\web\backend\galeri\GaleriController;
 use App\Http\Controllers\web\backend\links\LinksController;

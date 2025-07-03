@@ -66,7 +66,7 @@ class AuthController extends Controller
                 } else {
                     //Success Login
                     $SuccessLogin = [
-                        'uuid_profile' => $user->uuid_user,
+                        'uuid_profile' => $user->uuid,
                         'ip'           => $request->ip(),
                         "agent"        => $request->header('user-agent'),
                         "status"       => "Akun " . $username . " Login ke Aplikasi melalui Website",
@@ -164,7 +164,7 @@ class AuthController extends Controller
             Auth::login($user, $remember);
 
             SysLogin::create([
-                'uuid_profile' => $user->uuid_user,
+                'uuid_profile' => $user->uuid,
                 'ip'           => $request->ip(),
                 'agent'        => $request->userAgent(),
                 'status'       => 'Akun ' . $email . ' Login ke Aplikasi melalui Website',
@@ -198,7 +198,7 @@ class AuthController extends Controller
         $user = Auth::user();
         //Success Logout
         $SuccessLogout = [
-            'uuid_profile' => $user->uuid_user,
+            'uuid_profile' => $user->uuid,
             'ip'           => $request->ip(),
             "agent"        => $request->header('user-agent'),
             "status"       => "Akun " . $user->username . " Logout dari Aplikasi melalui Website",

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,12 +11,12 @@ class PortalPesan extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    public $incrementing = false;
-    protected $table = "portal_pesan";
+    public $incrementing  = false;
+    protected $table      = "portal_pesan";
     protected $primaryKey = "uuid";
-    protected $keyType = 'string';
-    protected $guarded = [];
-    protected $hidden = [
+    protected $keyType    = 'string';
+    protected $guarded    = [];
+    protected $hidden     = [
         "uuid_created",
         "uuid_updated",
         "uuid_deleted",

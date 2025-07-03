@@ -4,16 +4,10 @@ $role = $auth->role;
 ?>
 
 @if (Request::is('backend/cms*'))
-    @if ($role == 'Super Admin')
+    @if ($role == 'Super Admin' || $role == 'Admin' || $role == 'Editor')
         @include('partials.admin.header.cms.admin')
-    @elseif ($role == 'Admin')
-        @include('partials.admin.header.cms.admin')
-    @elseif ($role == 'Editor')
-        @include('partials.admin.header.cms.editor')
-    @elseif ($role == 'Penulis')
+    @elseif ($role == 'Penulis' || $role == 'Kontributor')
         @include('partials.admin.header.cms.penulis')
-    @elseif ($role == 'Kontributor')
-        @include('partials.admin.header.cms.kontributor')
     @elseif ($role == 'Operator')
         @include('partials.admin.header.cms.operator')
     @endif
@@ -31,6 +25,8 @@ $role = $auth->role;
     @elseif ($role == 'Operator')
         @include('partials.admin.header.tpu.operator')
     @endif
+@elseif(Request::is('backend/helpdesk*'))
+    @include('partials.admin.header.helpdesk.admin')
 @else
     @include('partials.admin.header.default')
 @endif

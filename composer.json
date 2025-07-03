@@ -19,6 +19,7 @@
         "maatwebsite/excel": "^3.1",
         "mews/captcha": "^3.4",
         "realrashid/sweet-alert": "^7.3",
+        "stevebauman/purify": "^6.3",
         "yajra/laravel-datatables-oracle": "^12.4"
     },
     "require-dev": {

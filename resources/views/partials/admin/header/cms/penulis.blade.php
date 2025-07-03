@@ -45,32 +45,6 @@ $auth = \Auth::user();
                         </div>
                         {{-- end:Menu item --}}
 
-                        {{-- begin:Menu item - Master Data --}}
-                        <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                            class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                            {{-- begin:Menu link --}}
-                            <span class="menu-link">
-                                <span class="menu-title">Master Data</span>
-                                <span class="menu-arrow d-lg-none"></span>
-                            </span>
-                            {{-- end:Menu link --}}
-                            {{-- begin:Menu sub --}}
-                            <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-                                {{-- begin:Menu item - Kategori --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('prt.apps.mst.tags.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="fa-solid fa-tags fs-4"></i>
-                                        </span>
-                                        <span class="menu-title">Kategori</span>
-                                    </a>
-                                </div>
-                                {{-- end:Menu item --}}
-                            </div>
-                            {{-- end:Menu sub --}}
-                        </div>
-                        {{-- end:Menu item --}}
-
                         {{-- begin:Menu item - Konten --}}
                         <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                             class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
@@ -82,89 +56,6 @@ $auth = \Auth::user();
                             {{-- end:Menu link --}}
                             {{-- begin:Menu sub --}}
                             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-
-                                {{-- begin:Menu item - Konten Internal --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
-                                    <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-office-bag fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Internal</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item - Halaman --}}
-                                        <div data-kt-menu-trigger="click" class="menu-item menu-accordion menu-sub-indention">
-                                            {{-- begin:Menu link --}}
-                                            <span class="menu-link">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Halaman</span>
-                                                <span class="menu-arrow"></span>
-                                            </span>
-                                            {{-- end:Menu link --}}
-                                            {{-- begin:Menu sub --}}
-                                            <div class="menu-sub menu-sub-accordion">
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('Profile')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Profile</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('Layanan')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Layanan</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                            </div>
-                                            {{-- end:Menu sub --}}
-                                        </div>
-                                        {{-- end:Menu item --}}
-
-                                        {{-- begin:Menu item - Links --}}
-                                        <div data-kt-menu-trigger="click" class="menu-item menu-accordion menu-sub-indention">
-                                            {{-- begin:Menu link --}}
-                                            <span class="menu-link">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Links</span>
-                                                <span class="menu-arrow"></span>
-                                            </span>
-                                            {{-- end:Menu link --}}
-                                            {{-- begin:Menu sub --}}
-                                            <div class="menu-sub menu-sub-accordion">
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.links.index', [\Helper::encode('Survey')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Survey</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                            </div>
-                                            {{-- end:Menu sub --}}
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
-                                </div>
-                                {{-- end:Menu item --}}
 
                                 {{-- begin:Menu item - Konten Text --}}
                                 <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
@@ -189,16 +80,6 @@ $auth = \Auth::user();
                                             </a>
                                         </div>
                                         {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.faq.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">FAQ</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
                                     </div>
                                     {{-- end:Menu sub --}}
                                 </div>
@@ -217,16 +98,6 @@ $auth = \Auth::user();
                                     {{-- end:Menu link --}}
                                     {{-- begin:Menu sub --}}
                                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.banner.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Banner</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
                                         {{-- begin:Menu item --}}
                                         <div class="menu-item">
                                             <a class="menu-link" href="{{ route('prt.apps.galeri.index') }}">

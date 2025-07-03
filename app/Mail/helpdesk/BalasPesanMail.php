@@ -1,10 +1,10 @@
 <?php
-
 namespace App\Mail\helpdesk;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Stevebauman\Purify\Facades\Purify;
 
 class BalasPesanMail extends Mailable
 {
@@ -29,14 +29,14 @@ class BalasPesanMail extends Mailable
      */
     public function build()
     {
-        $subjek = "Reply Pesan : " . $this->data->subjek;
-        return $this->view('pages.mail.balas_pesan')
+        $subjek = "Reply Pesan: " . $this->data->subjek;
+        return $this->view('mail.helpdesk.balas_pesan')
             ->subject($subjek)
             ->with([
                 'nama_lengkap' => $this->data->nama_lengkap,
-                'subjek' => $this->data->subjek,
-                'pesan' => $this->data->pesan,
-                'balasan' => $this->data->balasan,
+                'subjek'       => $this->data->subjek,
+                'pesan'        => $this->data->pesan,
+                'balasan'      => Purify::clean($this->data->balasan),
             ]);
     }
 }

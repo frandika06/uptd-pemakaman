@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\web\backend\master;
 
 use App\Helpers\Helper;
@@ -39,9 +38,9 @@ class SosmedController extends Controller
             for ($i = 0; $i < $csosmed; $i++) {
                 // value
                 $value_1 = [
-                    "uuid" => Str::uuid(),
+                    "uuid"   => Str::uuid(),
                     "sosmed" => $sosmed[$i],
-                    "url" => $url[$i],
+                    "url"    => $url[$i],
                 ];
                 // save
                 PortalSosmed::create($value_1);
@@ -62,10 +61,10 @@ class SosmedController extends Controller
         $auth = Auth::user();
 
         // uuid
-        $uuids = $request->uuid;
+        $uuids  = $request->uuid;
         $sosmed = $request->sosmed;
-        $url = $request->url;
-        $cuuid = count($uuids);
+        $url    = $request->url;
+        $cuuid  = count($uuids);
         for ($i = 0; $i < $cuuid; $i++) {
             // value
             $uuid = $uuids[$i];
@@ -76,20 +75,20 @@ class SosmedController extends Controller
             }
             $value_1 = [
                 "sosmed" => $sosmed[$i],
-                "url" => $url[$i],
+                "url"    => $url[$i],
             ];
             $save_1 = $data->update($value_1);
             // create log
             $aktifitas = [
                 "tabel" => ["portal_sosmed"],
-                "uuid" => [$uuid],
+                "uuid"  => [$uuid],
                 "value" => [$value_1],
             ];
             $log = [
-                "apps" => "Portal Apps",
-                "subjek" => "Mengubah Data Master Sosial Media UUID= " . $uuid,
+                "apps"      => "Portal Apps",
+                "subjek"    => "Mengubah Data Master Sosial Media UUID= " . $uuid,
                 "aktifitas" => $aktifitas,
-                "device" => "web",
+                "device"    => "web",
             ];
             Helper::addToLogAktifitas($request, $log);
         }

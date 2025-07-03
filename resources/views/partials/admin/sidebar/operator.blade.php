@@ -16,42 +16,6 @@
                     {{-- begin::Col --}}
                     <div class="col-6">
                         {{-- begin::Link --}}
-                        <a href="{{ route('prt.apps.index') }}"
-                            class="btn btn-icon btn-outline btn-bg-light btn-active-light-primary btn-flex flex-column flex-center w-100px h-100px @if (Request::is('backend/cms*')) active border-primary border-dashed @endif"
-                            data-kt-button="true">
-                            {{-- begin::Icon --}}
-                            <span class="mb-2">
-                                <i class="fa-solid fa-newspaper fs-1"></i>
-                            </span>
-                            {{-- end::Icon --}}
-                            {{-- begin::Label --}}
-                            <span class="fs-7 fw-bold">Portal CMS</span>
-                            {{-- end::Label --}}
-                        </a>
-                        {{-- end::Link --}}
-                    </div>
-                    {{-- end::Col --}}
-                    {{-- begin::Col --}}
-                    <div class="col-6">
-                        {{-- begin::Link --}}
-                        <a href="#"
-                            class="btn btn-icon btn-outline btn-bg-light btn-active-light-primary btn-flex flex-column flex-center w-100px h-100px @if (Request::is('backend/tpu*')) active border-primary border-dashed @endif"
-                            data-kt-button="true">
-                            {{-- begin::Icon --}}
-                            <span class="mb-2">
-                                <i class="fa-solid fa-font-awesome fs-1"></i>
-                            </span>
-                            {{-- end::Icon --}}
-                            {{-- begin::Label --}}
-                            <span class="fs-7 fw-bold">TPU</span>
-                            {{-- end::Label --}}
-                        </a>
-                        {{-- end::Link --}}
-                    </div>
-                    {{-- end::Col --}}
-                    {{-- begin::Col --}}
-                    <div class="col-6">
-                        {{-- begin::Link --}}
                         <a href="{{ route('prt.apps.kotak.pesan.index') }}"
                             class="btn btn-icon btn-outline btn-bg-light btn-active-light-primary btn-flex flex-column flex-center w-100px h-100px @if (Request::is('backend/helpdesk*')) active border-primary border-dashed @endif"
                             data-kt-button="true">

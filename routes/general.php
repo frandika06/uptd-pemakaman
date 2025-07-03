@@ -11,12 +11,17 @@ use App\Http\Controllers\web\configs\AjaxController;
 use App\Http\Controllers\web\configs\AjaxDatatableController;
 
 Route::group(['middleware' => ['Operator']], function () {
-    // portal pesan
-    Route::group(['prefix' => 'pesan'], function () {
-        Route::get('/', [KotakPesanController::class, 'index'])->name('prt.apps.kotak.pesan.index');
-        Route::get('/read/{uuid}', [KotakPesanController::class, 'edit'])->name('prt.apps.kotak.pesan.edit');
-        Route::put('/read/{uuid}', [KotakPesanController::class, 'update'])->name('prt.apps.kotak.pesan.update');
-        Route::post('/delete', [KotakPesanController::class, 'destroy'])->name('prt.apps.kotak.pesan.destroy');
+    // helpdesk
+    Route::group(['prefix' => 'helpdesk'], function () {
+        // portal pesan
+        Route::group(['prefix' => 'pesan'], function () {
+            Route::get('/', [KotakPesanController::class, 'index'])->name('prt.apps.kotak.pesan.index');
+            Route::get('/read/{uuid}', [KotakPesanController::class, 'edit'])->name('prt.apps.kotak.pesan.edit');
+            Route::put('/read/{uuid}', [KotakPesanController::class, 'update'])->name('prt.apps.kotak.pesan.update');
+            Route::post('/delete', [KotakPesanController::class, 'destroy'])->name('prt.apps.kotak.pesan.destroy');
+            // New bulk operation routes
+            Route::post('/bulk-destroy', [KotakPesanController::class, 'bulkDestroy'])->name('prt.apps.kotak.pesan.destroy.bulk');
+        });
     });
 });
 

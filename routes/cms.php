@@ -19,8 +19,10 @@ use App\Http\Controllers\web\backend\video\VideoController;
 */
 // cms
 Route::group(['prefix' => 'cms'], function () {
-    // dashboard
-    Route::get('/', [DashboardCmsController::class, 'index'])->name('prt.apps.index');
+    Route::group(['middleware' => ['Penulis']], function () {
+        // dashboard
+        Route::get('/', [DashboardCmsController::class, 'index'])->name('prt.apps.index');
+    });
     /*
     |--------------------------------------------------------------------------
     | MENU MASTER DATA
@@ -180,10 +182,5 @@ Route::group(['prefix' => 'cms'], function () {
             // New bulk operation routes
             Route::post('/bulk-destroy', [UnduhanController::class, 'bulkDestroy'])->name('prt.apps.unduhan.destroy.bulk');
         });
-    });
-
-    // portal statistik
-    Route::group(['prefix' => 'statistik'], function () {
-        // Route::get('/', [StatistikController::class, 'index'])->name('prt.apps.stat.index');
     });
 });

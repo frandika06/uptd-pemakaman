@@ -97,7 +97,7 @@ class UsersController extends Controller
                 ->escapeColumns([''])
                 ->make(true);
         }
-        return view('pages.admin.portal_apps.users.index', compact(
+        return view('admin.setup.master.users.index', compact(
             'tags',
             'role'
         ));
@@ -112,7 +112,7 @@ class UsersController extends Controller
         $role   = Helper::decode($tags);
         $title  = "Tambah Data Master Users " . $role;
         $submit = "Simpan";
-        return view('pages.admin.portal_apps.users.create_edit', compact(
+        return view('admin.setup.master.users.create_edit', compact(
             'tags',
             'role',
             'title',
@@ -231,7 +231,7 @@ class UsersController extends Controller
         $data   = PortalActor::findOrFail($uuid);
         $title  = "Edit Data Master Users";
         $submit = "Simpan";
-        return view('pages.admin.portal_apps.users.create_edit', compact(
+        return view('admin.setup.master.users.create_edit', compact(
             'tags',
             'role',
             'uuid_enc',

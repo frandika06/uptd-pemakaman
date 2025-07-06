@@ -53,7 +53,7 @@ $auth = \Auth::user();
                         <div class="d-flex flex-column my-7">
                             <span class="fw-semibold fs-3x text-gray-800 lh-1 ls-n2">{{ number_format($data['users']['total']) }}</span>
                             <div class="m-0">
-                                <span class="fw-semibold fs-2x text-muted">Total Users</span>
+                                <span class="fw-semibold fs-6 text-gray-400">Total Users</span>
                             </div>
                         </div>
                         <span class="badge badge-light-success fs-base">
@@ -75,12 +75,12 @@ $auth = \Auth::user();
                         <div class="d-flex flex-column my-7">
                             <span class="fw-semibold fs-3x text-gray-800 lh-1 ls-n2">{{ number_format($data['users']['active']) }}</span>
                             <div class="m-0">
-                                <span class="fw-semibold fs-2x text-muted">Users Aktif</span>
+                                <span class="fw-semibold fs-6 text-gray-400">Users Aktif</span>
                             </div>
                         </div>
                         <span class="badge badge-light-primary fs-base">
                             <i class="ki-outline ki-arrow-up fs-5 text-primary ms-n1"></i>
-                            {{ $data['users']['online'] }} Online Hari Ini
+                            {{ $data['users']['online'] }} Online
                         </span>
                     </div>
                 </div>
@@ -97,7 +97,7 @@ $auth = \Auth::user();
                         <div class="d-flex flex-column my-7">
                             <span class="fw-semibold fs-3x text-gray-800 lh-1 ls-n2">{{ number_format($data['content']['total_posts']) }}</span>
                             <div class="m-0">
-                                <span class="fw-semibold fs-2x text-muted">Total Konten</span>
+                                <span class="fw-semibold fs-6 text-gray-400">Total Konten</span>
                             </div>
                         </div>
                         <span class="badge badge-light-info fs-base">
@@ -119,7 +119,7 @@ $auth = \Auth::user();
                         <div class="d-flex flex-column my-7">
                             <span class="fw-semibold fs-3x text-gray-800 lh-1 ls-n2">{{ number_format($data['content']['total_messages']) }}</span>
                             <div class="m-0">
-                                <span class="fw-semibold fs-2x text-muted">Total Pesan</span>
+                                <span class="fw-semibold fs-6 text-gray-400">Total Pesan</span>
                             </div>
                         </div>
                         <span class="badge badge-light-warning fs-base">
@@ -185,7 +185,7 @@ $auth = \Auth::user();
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="d-flex flex-column">
                                             <span class="fw-bold text-gray-800 fs-6">
-                                                {{ $login->RelPortalActor->RelUser->nama ?? 'Unknown User' }}
+                                                {{ $login->user_name ?? ($login->user_email ?? 'Unknown User') }}
                                             </span>
                                             <span class="text-muted fw-semibold fs-7">{{ $login->ip ?? 'N/A' }}</span>
                                         </div>
@@ -244,10 +244,10 @@ $auth = \Auth::user();
                                                             <i class="ki-outline ki-user fs-6 text-primary"></i>
                                                         </div>
                                                     </div>
-                                                    <span class="fw-bold">{{ $activity->RelPortalActor->RelUser->nama ?? 'Unknown User' }}</span>
+                                                    <span class="fw-bold">{{ $activity->user_name ?? 'Unknown User' }}</span>
                                                 </div>
                                             </td>
-                                            <td>{{ $activity->status ?? 'N/A' }}</td>
+                                            <td>{{ $activity->subjek ?? 'N/A' }}</td>
                                             <td>{{ $activity->ip ?? 'N/A' }}</td>
                                             <td>{{ \Carbon\Carbon::parse($activity->created_at)->format('d/m/Y H:i') }}</td>
                                         </tr>

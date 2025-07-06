@@ -27,6 +27,12 @@ $role = $auth->role;
     @endif
 @elseif(Request::is('backend/helpdesk*'))
     @include('partials.admin.header.helpdesk.admin')
+@elseif(Request::is('backend/pengaturan*'))
+    @if ($role == 'Super Admin' || $role == 'Admin')
+        @include('partials.admin.header.setup.admin')
+    @else
+        @include('partials.admin.header.setup.user')
+    @endif
 @else
     @include('partials.admin.header.default')
 @endif

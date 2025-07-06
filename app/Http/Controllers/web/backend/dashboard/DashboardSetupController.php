@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\web\backend\dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\PortalActor;
 use App\Models\PortalBanner;
 use App\Models\PortalPesan;
 use App\Models\PortalPost;
@@ -11,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardSetupController extends Controller
@@ -53,11 +55,15 @@ class DashboardSetupController extends Controller
         $totalUsers    = User::count();
         $activeUsers   = User::whereStatus('1')->count();
         $inactiveUsers = User::whereStatus('0')->count();
-        $onlineUsers   = User::whereStatus('1')
-            ->whereHas('RelPortalActor', function ($query) {
-                $query->whereDate('updated_at', Carbon::today());
-            })
-            ->count();
+
+        // Users Online (menggunakan Cache dari middleware LastSeen)
+        $onlineUsers = 0;
+        $allUsers    = User::whereStatus('1')->get();
+        foreach ($allUsers as $user) {
+            if (Cache::has('user-is-online-' . $user->uuid)) {
+                $onlineUsers++;
+            }
+        }
 
         // Statistik berdasarkan Role
         $usersByRole = User::select('role', DB::raw('count(*) as total'))
@@ -76,15 +82,28 @@ class DashboardSetupController extends Controller
             ->limit(30)
             ->get();
 
-        // Recent Login Activity
-        $recentLogins = SysLogin::with('RelPortalActor.RelUser')
-            ->orderBy('created_at', 'desc')
+        // Recent Login Activity - uuid_profile menyimpan users.uuid
+        $recentLogins = SysLogin::join('users', 'sys_login.uuid_profile', '=', 'users.uuid')
+            ->leftJoin('portal_actor', 'users.uuid', '=', 'portal_actor.uuid_user')
+            ->select(
+                'sys_login.*',
+                'users.username as user_email',
+                'users.role as user_role',
+                'portal_actor.nama_lengkap as user_name'
+            )
+            ->orderBy('sys_login.created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // System Activity Log
-        $recentActivities = SysLogAktifitas::with('RelPortalActor.RelUser')
-            ->orderBy('created_at', 'desc')
+        // System Activity Log - uuid_profile menyimpan portal_actor.uuid
+        $recentActivities = SysLogAktifitas::join('portal_actor', 'sys_log_aktifitas.uuid_profile', '=', 'portal_actor.uuid')
+            ->join('users', 'portal_actor.uuid_user', '=', 'users.uuid')
+            ->select(
+                'sys_log_aktifitas.*',
+                'portal_actor.nama_lengkap as user_name',
+                'users.role as user_role'
+            )
+            ->orderBy('sys_log_aktifitas.created_at', 'desc')
             ->limit(15)
             ->get();
 
@@ -96,18 +115,24 @@ class DashboardSetupController extends Controller
         $totalMessages  = PortalPesan::count();
         $unreadMessages = PortalPesan::where('status', 'Pending')->count();
 
-        // Failed Login Attempts
+        // Failed Login Attempts (dari table sys_failed_login)
         $failedLogins = DB::table('sys_failed_login')
             ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->count();
 
+        // Users berdasarkan last_seen (aktif dalam 24 jam terakhir)
+        $usersActive24h = User::whereStatus('1')
+            ->where('last_seen', '>=', Carbon::now()->subHours(24))
+            ->count();
+
         return [
             'users'             => [
-                'total'    => $totalUsers,
-                'active'   => $activeUsers,
-                'inactive' => $inactiveUsers,
-                'online'   => $onlineUsers,
-                'by_role'  => $usersByRole,
+                'total'      => $totalUsers,
+                'active'     => $activeUsers,
+                'inactive'   => $inactiveUsers,
+                'online'     => $onlineUsers,
+                'active_24h' => $usersActive24h,
+                'by_role'    => $usersByRole,
             ],
             'login_stats'       => $loginStats,
             'recent_logins'     => $recentLogins,
@@ -131,14 +156,35 @@ class DashboardSetupController extends Controller
      */
     private function getUserDashboardData($auth)
     {
-        // Personal Login History
+        // Get PortalActor untuk user ini
+        $portalActor = PortalActor::where('uuid_user', $auth->uuid)->first();
+
+        if (! $portalActor) {
+            // Jika tidak ada PortalActor, return data kosong
+            return [
+                'personal' => [
+                    'login_history'      => collect([]),
+                    'activities'         => collect([]),
+                    'last_login'         => null,
+                    'login_count_30days' => 0,
+                    'activity_stats'     => collect([])
+                ],
+                'content'  => [
+                    'my_posts'           => 0,
+                    'my_published_posts' => 0,
+                    'my_draft_posts'     => 0,
+                ]
+            ];
+        }
+
+        // Personal Login History menggunakan users.uuid
         $myLoginHistory = SysLogin::where('uuid_profile', $auth->uuid)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // Personal Activity Log
-        $myActivities = SysLogAktifitas::where('uuid_user', $auth->uuid)
+        // Personal Activity Log menggunakan uuid_profile dari PortalActor
+        $myActivities = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
             ->orderBy('created_at', 'desc')
             ->limit(15)
             ->get();
@@ -152,7 +198,7 @@ class DashboardSetupController extends Controller
             ->where('status', 'Draft')
             ->count();
 
-        // Login Statistics (personal)
+        // Login Statistics (personal) menggunakan users.uuid
         $loginCount30Days = SysLogin::where('uuid_profile', $auth->uuid)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->count();
@@ -162,8 +208,8 @@ class DashboardSetupController extends Controller
             ->skip(1) // Skip current session
             ->first();
 
-        // Activity count by days
-        $activityStats = SysLogAktifitas::where('uuid_user', $auth->uuid)
+        // Activity count by days menggunakan uuid_profile dari PortalActor
+        $activityStats = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
             ->groupBy('date')

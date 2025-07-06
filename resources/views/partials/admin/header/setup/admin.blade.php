@@ -140,6 +140,26 @@ $auth = \Auth::user();
                         </div>
                         {{-- end:Menu item --}}
 
+                        {{-- begin:Menu item - Profile --}}
+                        <div class="menu-item me-0 me-lg-2">
+                            {{-- begin:Menu link --}}
+                            <a href="{{ route('prt.apps.profile.index') }}" class="menu-link">
+                                <span class="menu-title">Profile</span>
+                            </a>
+                            {{-- end:Menu link --}}
+                        </div>
+                        {{-- end:Menu item --}}
+
+                        {{-- begin:Menu item - Profile --}}
+                        <div class="menu-item me-0 me-lg-2">
+                            {{-- begin:Menu link --}}
+                            <a href="{{ route('setup.apps.log.index') }}" class="menu-link">
+                                <span class="menu-title">Audit Trail</span>
+                            </a>
+                            {{-- end:Menu link --}}
+                        </div>
+                        {{-- end:Menu item --}}
+
                     </div>
                     {{-- end::Menu --}}
                 </div>

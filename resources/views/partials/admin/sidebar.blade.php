@@ -3,7 +3,7 @@ $auth = Auth::user();
 $role = $auth->role;
 ?>
 
-@if ($role == 'Super Admin' || $role == 'Admin' || $role == 'Super Editor')
+@if ($role == 'Super Admin' || $role == 'Admin' || $role == 'Editor')
     @include('partials.admin.sidebar.admin')
 @elseif ($role == 'Penulis' || $role == 'Kontributor')
     @include('partials.admin.sidebar.penulis')

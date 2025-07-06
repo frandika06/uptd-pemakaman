@@ -30,15 +30,9 @@ class DashboardSetupController extends Controller
 
         // Role check untuk menentukan view dan data yang ditampilkan
         if (in_array($role, ['Super Admin', 'Admin'])) {
-            // Data untuk Super Admin & Admin
             $data     = $this->getAdminDashboardData($auth);
             $viewPath = 'admin.setup.home.admin';
-        } elseif (in_array($role, ['Editor', 'Penulis', 'Kontributor', 'Operator'])) {
-            // Data untuk Editor, Penulis, Kontributor, Operator
-            $data     = $this->getUserDashboardData($auth);
-            $viewPath = 'admin.setup.home.user';
         } else {
-            // Default fallback
             $data     = $this->getUserDashboardData($auth);
             $viewPath = 'admin.setup.home.user';
         }
@@ -82,25 +76,34 @@ class DashboardSetupController extends Controller
             ->limit(30)
             ->get();
 
-        // Recent Login Activity - uuid_profile menyimpan users.uuid
+        // Recent Login Activity
         $recentLogins = SysLogin::join('users', 'sys_login.uuid_profile', '=', 'users.uuid')
             ->leftJoin('portal_actor', 'users.uuid', '=', 'portal_actor.uuid_user')
             ->select(
-                'sys_login.*',
+                'sys_login.created_at',
+                'sys_login.status',
+                'sys_login.ip',
+                'sys_login.agent',
                 'users.username as user_email',
                 'users.role as user_role',
-                'portal_actor.nama_lengkap as user_name'
+                'portal_actor.nama_lengkap as user_name',
+                'portal_actor.foto as user_foto'
             )
             ->orderBy('sys_login.created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // System Activity Log - uuid_profile menyimpan portal_actor.uuid
+        // Recent System Activity Log
         $recentActivities = SysLogAktifitas::join('portal_actor', 'sys_log_aktifitas.uuid_profile', '=', 'portal_actor.uuid')
             ->join('users', 'portal_actor.uuid_user', '=', 'users.uuid')
             ->select(
-                'sys_log_aktifitas.*',
+                'sys_log_aktifitas.created_at',
+                'sys_log_aktifitas.subjek',
+                'sys_log_aktifitas.aktifitas',
+                'sys_log_aktifitas.ip',
+                'sys_log_aktifitas.agent',
                 'portal_actor.nama_lengkap as user_name',
+                'portal_actor.foto as user_foto',
                 'users.role as user_role'
             )
             ->orderBy('sys_log_aktifitas.created_at', 'desc')
@@ -115,12 +118,12 @@ class DashboardSetupController extends Controller
         $totalMessages  = PortalPesan::count();
         $unreadMessages = PortalPesan::where('status', 'Pending')->count();
 
-        // Failed Login Attempts (dari table sys_failed_login)
+        // Failed Login Attempts
         $failedLogins = DB::table('sys_failed_login')
             ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->count();
 
-        // Users berdasarkan last_seen (aktif dalam 24 jam terakhir)
+        // Users active in last 24 hours
         $usersActive24h = User::whereStatus('1')
             ->where('last_seen', '>=', Carbon::now()->subHours(24))
             ->count();
@@ -156,40 +159,51 @@ class DashboardSetupController extends Controller
      */
     private function getUserDashboardData($auth)
     {
-        // Get PortalActor untuk user ini
         $portalActor = PortalActor::where('uuid_user', $auth->uuid)->first();
 
         if (! $portalActor) {
-            // Jika tidak ada PortalActor, return data kosong
             return [
                 'personal' => [
                     'login_history'      => collect([]),
                     'activities'         => collect([]),
                     'last_login'         => null,
                     'login_count_30days' => 0,
-                    'activity_stats'     => collect([])
+                    'activity_stats'     => collect([]),
                 ],
                 'content'  => [
                     'my_posts'           => 0,
                     'my_published_posts' => 0,
                     'my_draft_posts'     => 0,
-                ]
+                ],
             ];
         }
 
-        // Personal Login History menggunakan users.uuid
+        // Personal Login History
         $myLoginHistory = SysLogin::where('uuid_profile', $auth->uuid)
+            ->select(
+                'created_at',
+                'status',
+                'ip',
+                'agent'
+            )
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // Personal Activity Log menggunakan uuid_profile dari PortalActor
+        // Personal Activity Log
         $myActivities = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
+            ->select(
+                'created_at',
+                'subjek',
+                'aktifitas',
+                'ip',
+                'agent'
+            )
             ->orderBy('created_at', 'desc')
             ->limit(15)
             ->get();
 
-        // Personal Content Statistics (jika user adalah content creator)
+        // Personal Content Statistics
         $myPosts          = PortalPost::where('uuid_created', $auth->uuid)->count();
         $myPublishedPosts = PortalPost::where('uuid_created', $auth->uuid)
             ->where('status', 'Published')
@@ -198,7 +212,7 @@ class DashboardSetupController extends Controller
             ->where('status', 'Draft')
             ->count();
 
-        // Login Statistics (personal) menggunakan users.uuid
+        // Login Statistics (personal)
         $loginCount30Days = SysLogin::where('uuid_profile', $auth->uuid)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->count();
@@ -208,7 +222,7 @@ class DashboardSetupController extends Controller
             ->skip(1) // Skip current session
             ->first();
 
-        // Activity count by days menggunakan uuid_profile dari PortalActor
+        // Activity count by days
         $activityStats = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
@@ -219,8 +233,27 @@ class DashboardSetupController extends Controller
 
         return [
             'personal' => [
-                'login_history'      => $myLoginHistory,
-                'activities'         => $myActivities,
+                'login_history'      => $myLoginHistory->map(function ($log) use ($portalActor) {
+                    return [
+                        'created_at' => $log->created_at,
+                        'status'     => $log->status,
+                        'ip'         => $log->ip,
+                        'agent'      => $log->agent,
+                        'user_name'  => $portalActor->nama_lengkap ?? '-',
+                        'user_foto'  => $portalActor->foto ?? null,
+                    ];
+                }),
+                'activities'         => $myActivities->map(function ($log) use ($portalActor) {
+                    return [
+                        'created_at' => $log->created_at,
+                        'subjek'     => $log->subjek,
+                        'aktifitas'  => $log->aktifitas,
+                        'ip'         => $log->ip,
+                        'agent'      => $log->agent,
+                        'user_name'  => $portalActor->nama_lengkap ?? '-',
+                        'user_foto'  => $portalActor->foto ?? null,
+                    ];
+                }),
                 'last_login'         => $lastLogin,
                 'login_count_30days' => $loginCount30Days,
                 'activity_stats'     => $activityStats,

@@ -178,10 +178,8 @@ $auth = \Auth::user();
                     <div class="card-body pt-6">
                         @forelse($data['recent_logins'] as $login)
                             <div class="d-flex align-items-center mb-6">
-                                <div class="symbol symbol-40px me-5">
-                                    <div class="symbol-label bg-light-primary">
-                                        <i class="ki-outline ki-user fs-2 text-primary"></i>
-                                    </div>
+                                <div class="symbol symbol-40px symbol-circle me-3">
+                                    <img src="{{ Helper::pp($login->user_foto) }}" alt="{{ htmlspecialchars($login->user_name) }}" class="object-fit-cover" />
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-start">
@@ -219,7 +217,7 @@ $auth = \Auth::user();
                             <span class="text-muted fw-semibold fs-7">15 aktivitas terbaru</span>
                         </h3>
                         <div class="card-toolbar">
-                            <a href="#" class="btn btn-sm btn-primary">
+                            <a href="{{ route('setup.apps.log.index') }}" class="btn btn-sm btn-primary">
                                 <i class="ki-outline ki-eye fs-3"></i>
                                 Lihat Semua
                             </a>
@@ -241,10 +239,8 @@ $auth = \Auth::user();
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="symbol symbol-35px me-3">
-                                                        <div class="symbol-label bg-light-primary">
-                                                            <i class="ki-outline ki-user fs-6 text-primary"></i>
-                                                        </div>
+                                                    <div class="symbol symbol-40px symbol-circle me-3">
+                                                        <img src="{{ Helper::pp($login->user_foto) }}" alt="{{ htmlspecialchars($login->user_name) }}" class="object-fit-cover" />
                                                     </div>
                                                     <span class="fw-bold">{{ $activity->user_name ?? 'Unknown User' }}</span>
                                                 </div>

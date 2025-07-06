@@ -11,7 +11,6 @@ $auth = \Auth::user();
 
 {{-- TOOLBAR::BEGIN --}}
 @section('toolbar')
-    {{-- begin::Page title --}}
     <div class="d-flex flex-column flex-row-fluid">
         <div class="page-title d-flex align-items-center me-3">
             <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
@@ -34,22 +33,19 @@ $auth = \Auth::user();
             <li class="breadcrumb-item text-gray-700">Dashboard</li>
         </ul>
     </div>
-    {{-- end::Page title --}}
 @endsection
 {{-- TOOLBAR::END --}}
 
 {{-- CONTENT::BEGIN --}}
 @section('content')
-    {{-- begin::Container --}}
     <div class="d-flex flex-column gap-7 gap-lg-10">
-
         {{-- begin::Welcome Section --}}
         <div class="row g-5 g-xl-10">
             <div class="col-12">
                 <div class="card h-lg-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h3 class="text-white fw-bold mb-3">Selamat Datang, {{ $auth->RelPortalActor->nama_lengkap }}!</h3>
+                            <h3 class="text-white fw-bold mb-3">Selamat Datang, {{ $auth->RelPortalActor->nama_lengkap ?? 'Pengguna' }}!</h3>
                             <p class="text-white opacity-75 mb-4">
                                 Anda login sebagai <strong>{{ $auth->role }}</strong>.
                                 @if ($data['personal']['last_login'])
@@ -70,8 +66,8 @@ $auth = \Auth::user();
                             </div>
                         </div>
                         <div class="flex-shrink-0">
-                            <div class="symbol symbol-100px">
-                                <img alt="Profile" src="{{ \Helper::pp($profile->foto) }}" class="border border-white">
+                            <div class="symbol symbol-100px symbol-circle">
+                                <img alt="Profile" src="{{ \Helper::pp($profile->foto ?? '') }}" class="border border-white object-fit-cover" />
                             </div>
                         </div>
                     </div>
@@ -83,7 +79,6 @@ $auth = \Auth::user();
         {{-- begin::Row - Personal Statistics --}}
         @if (in_array($auth->role, ['Editor', 'Penulis', 'Kontributor']))
             <div class="row g-5 g-xl-10">
-                {{-- begin::Col - My Posts --}}
                 <div class="col-sm-6 col-xl-4">
                     <div class="card h-lg-100">
                         <div class="card-body d-flex justify-content-between align-items-start flex-column">
@@ -103,9 +98,6 @@ $auth = \Auth::user();
                         </div>
                     </div>
                 </div>
-                {{-- end::Col --}}
-
-                {{-- begin::Col - Published Posts --}}
                 <div class="col-sm-6 col-xl-4">
                     <div class="card h-lg-100">
                         <div class="card-body d-flex justify-content-between align-items-start flex-column">
@@ -125,9 +117,6 @@ $auth = \Auth::user();
                         </div>
                     </div>
                 </div>
-                {{-- end::Col --}}
-
-                {{-- begin::Col - Draft Posts --}}
                 <div class="col-sm-6 col-xl-4">
                     <div class="card h-lg-100">
                         <div class="card-body d-flex justify-content-between align-items-start flex-column">
@@ -147,14 +136,12 @@ $auth = \Auth::user();
                         </div>
                     </div>
                 </div>
-                {{-- end::Col --}}
             </div>
-            {{-- end::Row --}}
         @endif
+        {{-- end::Row --}}
 
         {{-- begin::Row - Activity Charts & Login History --}}
         <div class="row g-5 g-xl-10">
-            {{-- begin::Col - Activity Chart --}}
             <div class="col-xl-6">
                 <div class="card h-lg-100">
                     <div class="card-header align-items-center border-0 mt-5">
@@ -185,9 +172,6 @@ $auth = \Auth::user();
                     </div>
                 </div>
             </div>
-            {{-- end::Col --}}
-
-            {{-- begin::Col - Login History --}}
             <div class="col-xl-6">
                 <div class="card h-lg-100">
                     <div class="card-header align-items-center border-0 mt-5">
@@ -199,22 +183,20 @@ $auth = \Auth::user();
                     <div class="card-body pt-6">
                         @forelse($data['personal']['login_history'] as $login)
                             <div class="d-flex align-items-center mb-6">
-                                <div class="symbol symbol-40px me-5">
-                                    <div class="symbol-label bg-light-success">
-                                        <i class="ki-outline ki-check fs-2 text-success"></i>
-                                    </div>
+                                <div class="symbol symbol-40px symbol-circle me-5">
+                                    <img src="{{ \Helper::pp($login['user_foto'] ?? '') }}" alt="{{ htmlspecialchars($login['user_name']) }}" class="object-fit-cover" />
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-gray-800 fs-6">{{ $login->status }}</span>
-                                            <span class="text-muted fw-semibold fs-7">IP: {{ $login->ip ?? 'N/A' }}</span>
-                                            @if ($login->agent)
-                                                <span class="text-muted fw-semibold fs-8">{{ Str::limit($login->agent, 50) }}</span>
+                                            <span class="fw-bold text-gray-800 fs-6">{{ $login['status'] }}</span>
+                                            <span class="text-muted fw-semibold fs-7">IP: {{ $login['ip'] ?? '-' }}</span>
+                                            @if ($login['agent'])
+                                                <span class="text-muted fw-semibold fs-8">{{ \Illuminate\Support\Str::limit($login['agent'], 50) }}</span>
                                             @endif
                                         </div>
                                         <span class="text-muted fw-semibold fs-7">
-                                            {{ \Carbon\Carbon::parse($login->created_at)->format('d/m/Y H:i') }}
+                                            {{ \Carbon\Carbon::parse($login['created_at'])->format('d/m/Y H:i') }}
                                         </span>
                                     </div>
                                 </div>
@@ -227,7 +209,6 @@ $auth = \Auth::user();
                     </div>
                 </div>
             </div>
-            {{-- end::Col --}}
         </div>
         {{-- end::Row --}}
 
@@ -241,7 +222,7 @@ $auth = \Auth::user();
                             <span class="text-muted fw-semibold fs-7">15 aktivitas terbaru</span>
                         </h3>
                         <div class="card-toolbar">
-                            <a href="#" class="btn btn-sm btn-primary">
+                            <a href="{{ route('setup.apps.log.index') }}" class="btn btn-sm btn-primary">
                                 <i class="ki-outline ki-eye fs-3"></i>
                                 Lihat Semua
                             </a>
@@ -252,10 +233,10 @@ $auth = \Auth::user();
                             <table class="table align-middle table-row-dashed fs-6 gy-3">
                                 <thead>
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                                        <th>User</th>
-                                        <th>Aktivitas</th>
-                                        <th>IP Address</th>
-                                        <th>Waktu</th>
+                                        <th width="30%">User</th>
+                                        <th width="30%">Aktivitas</th>
+                                        <th width="20%">IP Address</th>
+                                        <th width="20%">Waktu</th>
                                     </tr>
                                 </thead>
                                 <tbody class="fw-semibold text-gray-600">
@@ -263,17 +244,16 @@ $auth = \Auth::user();
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="symbol symbol-35px me-3">
-                                                        <div class="symbol-label bg-light-info">
-                                                            <i class="ki-outline ki-activity fs-6 text-info"></i>
-                                                        </div>
+                                                    <div class="symbol symbol-40px symbol-circle me-3">
+                                                        <img src="{{ \Helper::pp($activity['user_foto'] ?? '') }}" alt="{{ htmlspecialchars($activity['user_name']) }}"
+                                                            class="object-fit-cover" />
                                                     </div>
-                                                    <span class="fw-bold">{{ $activity->RelPortalActor->nama_lengkap ?? 'Unknown User' }}</span>
+                                                    <span class="fw-bold">{{ $activity['user_name'] }}</span>
                                                 </div>
                                             </td>
-                                            <td>{{ $activity->subjek ?? 'N/A' }}</td>
-                                            <td>{{ $activity->ip ?? 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($activity->created_at)->format('d/m/Y H:i') }}</td>
+                                            <td>{{ $activity['subjek'] ?? '-' }}</td>
+                                            <td>{{ $activity['ip'] ?? '-' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($activity['created_at'])->format('d/m/Y H:i') }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -291,8 +271,6 @@ $auth = \Auth::user();
             </div>
         </div>
         {{-- end::Row --}}
-
     </div>
-    {{-- end::Container --}}
 @endsection
 {{-- CONTENT::END --}}

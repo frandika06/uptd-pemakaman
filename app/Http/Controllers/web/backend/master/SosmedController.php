@@ -49,7 +49,7 @@ class SosmedController extends Controller
 
         // update
         $data = PortalSosmed::all();
-        return view('pages.admin.portal_apps.sosmed.create_edit', compact(
+        return view('admin.setup.master.sosmed.create_edit', compact(
             'data'
         ));
     }

@@ -24,7 +24,7 @@ class ProfileController extends Controller
         $data      = PortalActor::whereUuidUser($uuid_user)->firstOrFail();
         $title     = "Edit Profile";
         $submit    = "Simpan";
-        return view('pages.admin.portal_apps.profile.create_edit', compact(
+        return view('admin.setup.profile.create_edit', compact(
             'title',
             'submit',
             'data'
@@ -48,7 +48,7 @@ class ProfileController extends Controller
             'jenis_kelamin' => 'required|string',
             'kontak'        => 'required|numeric',
             "email"         => "required|string|max:100",
-            "kategori"      => 'required|string|max:100',
+            "jabatan"       => 'required|string|max:100',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -102,7 +102,7 @@ class ProfileController extends Controller
             'jenis_kelamin' => $request->jenis_kelamin,
             'kontak'        => $request->kontak,
             'email'         => $email,
-            'kategori'      => $request->kategori,
+            'jabatan'       => $request->jabatan,
         ];
 
         // foto

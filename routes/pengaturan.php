@@ -1,24 +1,25 @@
 <?php
-
 /*
 |--------------------------------------------------------------------------
 | MODUL PENGATURAN
 |--------------------------------------------------------------------------
 */
-// pengaturan
-
 use App\Http\Controllers\web\backend\dashboard\DashboardSetupController;
+use App\Http\Controllers\web\backend\log\AuditTrailController;
 use App\Http\Controllers\web\backend\master\SosmedController;
 use App\Http\Controllers\web\backend\master\UsersController;
 use App\Http\Controllers\web\backend\profile\ProfileController;
 
 Route::group(['prefix' => 'pengaturan'], function () {
-    // dashboard pengaturan
+    // Dashboard pengaturan
     Route::get('/', [DashboardSetupController::class, 'index'])->name('setup.apps.index');
 
-    // middleware: Admin (Super Admin & Admin)
+    // Audit Trail (accessible by all roles)
+    Route::get('/audit-trail', [AuditTrailController::class, 'index'])->name('setup.apps.log.index');
+
+    // Middleware: Admin (Super Admin & Admin)
     Route::group(['middleware' => ['Admin']], function () {
-        // portal users
+        // Portal users
         Route::group(['prefix' => 'users/{tags}'], function () {
             Route::get('/', [UsersController::class, 'index'])->name('prt.apps.mst.users.index');
             Route::get('/create', [UsersController::class, 'create'])->name('prt.apps.mst.users.create');
@@ -29,7 +30,7 @@ Route::group(['prefix' => 'pengaturan'], function () {
             Route::post('/delete', [UsersController::class, 'destroy'])->name('prt.apps.mst.users.destroy');
         });
 
-        // portal sosmed
+        // Portal sosmed
         Route::group(['prefix' => 'sosmed'], function () {
             Route::get('/', [SosmedController::class, 'index'])->name('prt.apps.mst.sosmed.index');
             Route::put('/', [SosmedController::class, 'update'])->name('prt.apps.mst.sosmed.update');
@@ -41,10 +42,9 @@ Route::group(['prefix' => 'pengaturan'], function () {
     | MENU PROFILE (Semua Role)
     |--------------------------------------------------------------------------
     */
-    // profile
+    // Profile
     Route::group(['prefix' => 'profile'], function () {
         Route::get('/profile', [ProfileController::class, 'index'])->name('prt.apps.profile.index');
         Route::put('/profile', [ProfileController::class, 'update'])->name('prt.apps.profile.update');
     });
-
 });

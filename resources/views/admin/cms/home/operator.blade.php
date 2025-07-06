@@ -12,21 +12,23 @@ $auth = \Auth::user();
 {{-- TOOLBAR::BEGIN --}}
 @section('toolbar')
     {{-- begin::Page title --}}
-    <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
-        {{-- begin::Title --}}
-        <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">Dashboard CMS</h1>
-        {{-- end::Title --}}
-        {{-- begin::Breadcrumb --}}
-        <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
-            <li class="breadcrumb-item text-dark">
-                <a href="{{ route('auth.home') }}" class="text-dark text-hover-primary">Home</a>
+    <div class="d-flex flex-column flex-row-fluid">
+        <div class="page-title d-flex align-items-center me-3">
+            <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
+                <span>Dashboard</span>
+            </h1>
+        </div>
+        <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-3 fs-7">
+            <li class="breadcrumb-item text-gray-700 fw-bold lh-1">
+                <a href="{{ route('auth.home') }}" class="text-gray-700 text-hover-primary">
+                    <i class="ki-outline ki-home fs-6"></i>
+                </a>
             </li>
             <li class="breadcrumb-item">
-                <span class="bullet bg-dark w-5px h-2px"></span>
+                <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
             </li>
-            <li class="breadcrumb-item text-dark">Dashboard CMS</li>
+            <li class="breadcrumb-item text-gray-700">Dashboard</li>
         </ul>
-        {{-- end::Breadcrumb --}}
     </div>
     {{-- end::Page title --}}
 @endsection

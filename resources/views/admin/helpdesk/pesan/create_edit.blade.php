@@ -20,7 +20,7 @@
             {{-- begin::Breadcrumb --}}
             <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-3 fs-7">
                 <li class="breadcrumb-item text-gray-700 fw-bold lh-1">
-                    <a href="{{ route('prt.apps.index') }}" class="text-gray-700 text-hover-primary">
+                    <a href="{{ route('auth.home') }}" class="text-gray-700 text-hover-primary">
                         <i class="ki-outline ki-home fs-6"></i>
                     </a>
                 </li>
@@ -32,7 +32,7 @@
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
                 <li class="breadcrumb-item text-gray-700">
-                    <a href="{{ route('prt.apps.kotak.pesan.index') }}" class="text-gray-700 text-hover-primary">Kotak Pesan</a>
+                    <a href="{{ route('prt.apps.kotak.pesan.index') }}" class="text-gray-700 text-hover-primary">Pesan</a>
                 </li>
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>

@@ -38,65 +38,103 @@ class UsersController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->setRowId('uuid')
-                ->addColumn('nama_lengkap', function ($data) {
-                    $foto         = Helper::pp($data->foto);
-                    $nama_lengkap = '
-                    <div class="trans-list">
-                        <img src="' . $foto . '" alt="" class="avatar avatar-sm me-3" draggable="false">
-                        <h4>' . $data->nama_lengkap . '</h4>
-                    </div>';
-                    return $nama_lengkap;
+                ->addColumn('nama_lengkap', function ($data) use ($tags) {
+                    $uuid_enc = Helper::encode($data->uuid);
+                    $edit_url = route('prt.apps.mst.users.edit', [$tags, $uuid_enc]);
+                    $foto     = Helper::pp($data->foto);
+                    return '
+                        <div class="d-flex align-items-center">
+                            <div class="symbol symbol-40px symbol-circle me-3">
+                                <img src="' . $foto . '" alt="' . $data->nama_lengkap . '" class="object-fit-cover" />
+                            </div>
+                            <div class="d-flex flex-column">
+                                <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . $data->nama_lengkap . '</a>
+                                <span class="text-muted fw-semibold d-block fs-7">' . $data->jabatan . '</span>
+                            </div>
+                        </div>
+                    ';
                 })
                 ->addColumn('kontak', function ($data) {
-                    $kontak = $data->kontak;
-                    return $kontak;
+                    return '<span class="fw-semibold">' . $data->kontak . '</span>';
                 })
                 ->addColumn('email', function ($data) {
-                    $email = $data->email;
-                    return $email;
+                    return '<span class="fw-semibold">' . $data->email . '</span>';
                 })
-                ->addColumn('kategori', function ($data) {
-                    $kategori = $data->kategori;
-                    return $kategori;
+                ->addColumn('jabatan', function ($data) {
+                    return '<span class="badge badge-light-primary fw-bold fs-7 px-3 py-2">' . $data->jabatan . '</span>';
                 })
                 ->addColumn('status', function ($data) use ($auth) {
-                    $uuid   = Helper::encode($data->uuid);
-                    $status = $data->status;
-                    if ($status == "1") {
-                        $toogle = "checked";
-                        $text   = "Aktif";
+                    $uuid = Helper::encode($data->uuid);
+                    if ($data->status == "1") {
+                        $checked = "checked";
+                        $text    = "Aktif";
+                        $color   = "success";
                     } else {
-                        $toogle = "";
-                        $text   = "Tidak Aktif";
+                        $checked = "";
+                        $text    = "Tidak Aktif";
+                        $color   = "danger";
                     }
-                    // role
-                    $role = $auth->role;
-                    if ($role == "Super Admin" || $role == "Admin") {
+                    if ($auth->role == "Super Admin" || $auth->role == "Admin") {
                         $status = '
-                            <div class="form-check form-switch form-switch-custom form-switch-primary mb-3">
-                                <input class="form-check-input" type="checkbox" role="switch" id="status_' . $data->uuid . '" data-onclick="ubah-status" data-status="' . $uuid . '" data-status-value="' . $status . '" ' . $toogle . '>
-                                <label class="form-check-label" for="status_' . $data->uuid . '">' . $text . '</label>
+                            <div class="form-check form-switch form-check-custom form-check-success">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    id="status_' . $data->uuid . '"
+                                    data-status="' . $uuid . '"
+                                    data-status-value="' . $data->status . '" ' . $checked . '>
+                                <label class="form-check-label fw-semibold text-' . $color . ' ms-3"
+                                    for="status_' . $data->uuid . '">' . $text . '</label>
                             </div>
                         ';
                     } else {
-                        $status = '<label class="form-check-label" for="status">' . $text . '</label>';
+                        $status = '<span class="badge badge-light-' . $color . ' fw-bold">' . $text . '</span>';
                     }
                     return $status;
                 })
-                ->addColumn('aksi', function ($data) use ($tags) {
+                ->addColumn('aksi', function ($data) use ($auth, $tags) {
                     $uuid_enc = Helper::encode($data->uuid);
-                    $edit     = route('prt.apps.mst.users.edit', [$tags, $uuid_enc]);
-                    $aksi     = '
-                        <div class="d-flex">
-                            <a href="' . $edit . '" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-                            <a href="javascript:void(0);" class="btn btn-danger shadow btn-xs sharp" data-delete="' . $uuid_enc . '"><i class="fa fa-trash"></i></a>
-                        </div>
-                    ';
+                    $edit_url = route('prt.apps.mst.users.edit', [$tags, $uuid_enc]);
+                    if ($auth->role == "Super Admin" || $auth->role == "Admin") {
+                        $aksi = '
+                            <div class="d-flex justify-content-center">
+                                <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                    <i class="ki-outline ki-pencil fs-2"></i>
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                    <i class="ki-outline ki-trash fs-2"></i>
+                                </a>
+                            </div>
+                        ';
+                    } else {
+                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
+                            $aksi = '
+                                <div class="d-flex justify-content-center">
+                                    <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="ki-outline ki-pencil fs-2"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                        <i class="ki-outline ki-trash fs-2"></i>
+                                    </a>
+                                </div>
+                            ';
+                        } else {
+                            $aksi = '
+                                <div class="d-flex justify-content-center">
+                                    <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                        <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                                    </span>
+                                    <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                        <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                                    </span>
+                                </div>
+                            ';
+                        }
+                    }
                     return $aksi;
                 })
                 ->escapeColumns([''])
                 ->make(true);
         }
+
         return view('admin.setup.master.users.index', compact(
             'tags',
             'role'
@@ -137,7 +175,7 @@ class UsersController extends Controller
             'jenis_kelamin' => 'required|string',
             'kontak'        => 'required|numeric',
             'email'         => 'required|email|unique:portal_actor,email',
-            "kategori"      => 'required|string|max:100',
+            "jabatan"       => 'required|string|max:100',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'password'      => [
                 'required',
@@ -171,12 +209,12 @@ class UsersController extends Controller
             'jenis_kelamin' => $request->jenis_kelamin,
             'kontak'        => $request->kontak,
             'email'         => $email,
-            'kategori'      => $request->kategori,
+            'jabatan'       => $request->jabatan,
         ];
 
         // foto
         $path = "actor/" . $uuid_actor;
-        if ($request->hasFile('foto')) {
+        if ($request->hasFile("foto")) {
             $foto = Helper::UpFoto($request, "foto", $path);
             if ($foto == "0") {
                 alert()->error('Error!', 'Gagal Menyimpan Data, Foto Tidak Sesuai Format!');
@@ -214,7 +252,7 @@ class UsersController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($uuid_enc)
+    public function show(string $uuid_enc)
     {
         //
     }
@@ -261,7 +299,7 @@ class UsersController extends Controller
             'jenis_kelamin' => 'required|string',
             'kontak'        => 'required|numeric',
             "email"         => "required|string|max:100",
-            "kategori"      => 'required|string|max:100',
+            "jabatan"       => 'required|string|max:100',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -309,14 +347,14 @@ class UsersController extends Controller
         }
 
         // value 2
-        $uuid_actor = Str::uuid();
+        $uuid_actor = $data->uuid;
         $value_2    = [
             'nip'           => $request->nip,
             'nama_lengkap'  => $request->nama_lengkap,
             'jenis_kelamin' => $request->jenis_kelamin,
             'kontak'        => $request->kontak,
             'email'         => $email,
-            'kategori'      => $request->kategori,
+            'jabatan'       => $request->jabatan,
         ];
 
         // foto

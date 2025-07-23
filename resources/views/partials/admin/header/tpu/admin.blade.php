@@ -35,10 +35,10 @@ $auth = \Auth::user();
                     <div class="menu menu-rounded menu-column menu-lg-row menu-active-bg menu-state-primary menu-title-gray-700 menu-arrow-gray-400 menu-bullet-gray-400 my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
                         id="#kt_header_menu" data-kt-menu="true">
 
-                        {{-- begin:Menu item - Dashboard --}}
+                        {{-- begin:Menu item - Dashboard TPU --}}
                         <div class="menu-item here show menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
                             {{-- begin:Menu link --}}
-                            <a href="{{ route('auth.home') }}" class="menu-link">
+                            <a href="{{ route('tpu.dashboard.index') }}" class="menu-link">
                                 <span class="menu-title">Dashboard</span>
                             </a>
                             {{-- end:Menu link --}}
@@ -56,121 +56,47 @@ $auth = \Auth::user();
                             {{-- end:Menu link --}}
                             {{-- begin:Menu sub --}}
                             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-                                {{-- begin:Menu item - Kategori --}}
+                                {{-- begin:Menu item - Kategori Dokumen --}}
                                 <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('prt.apps.mst.tags.index') }}">
+                                    <a class="menu-link" href="{{ route('tpu.kategori-dokumen.index') }}">
                                         <span class="menu-icon">
-                                            <i class="ki-outline ki-tag fs-2"></i>
+                                            <i class="fa-solid fa-folder-tree fs-4"></i>
                                         </span>
-                                        <span class="menu-title">Kategori</span>
+                                        <span class="menu-title">Kategori Dokumen</span>
                                     </a>
                                 </div>
                                 {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Sosial Media --}}
+                                {{-- begin:Menu item - Status Makam --}}
                                 <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('prt.apps.mst.sosmed.index') }}">
+                                    <a class="menu-link" href="{{ route('tpu.ref-status-makam.index') }}">
                                         <span class="menu-icon">
-                                            <i class="ki-outline ki-facebook fs-2"></i>
+                                            <i class="fa-solid fa-clipboard-list fs-4"></i>
                                         </span>
-                                        <span class="menu-title">Sosial Media</span>
+                                        <span class="menu-title">Status Makam</span>
                                     </a>
                                 </div>
                                 {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Users --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
-                                    <span class="menu-link">
+                                {{-- begin:Menu item - Jenis Sarpras --}}
+                                <div class="menu-item">
+                                    <a class="menu-link" href="{{ route('tpu.ref-jenis-sarpras.index') }}">
                                         <span class="menu-icon">
-                                            <i class="ki-outline ki-people fs-2"></i>
+                                            <i class="fa-solid fa-list fs-4"></i>
                                         </span>
-                                        <span class="menu-title">Users</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.users.index', [\Helper::encode('Admin')]) }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Admin</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.users.index', [\Helper::encode('Editor')]) }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Editor</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.users.index', [\Helper::encode('Penulis')]) }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Penulis</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.users.index', [\Helper::encode('Kontributor')]) }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Kontributor</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.users.index', [\Helper::encode('Operator')]) }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Operator</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
+                                        <span class="menu-title">Jenis Sarpras</span>
+                                    </a>
                                 </div>
                                 {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Pengaturan Portal --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
-                                    <span class="menu-link">
+                                {{-- begin:Menu item - Data TPU --}}
+                                <div class="menu-item">
+                                    <a class="menu-link" href="{{ route('tpu.datas.index') }}">
                                         <span class="menu-icon">
-                                            <i class="ki-outline ki-setting-2 fs-2"></i>
+                                            <i class="fa-solid fa-signs-post fs-4"></i>
                                         </span>
-                                        <span class="menu-title">Pengaturan Portal</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.mst.setup.model.hero.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Model Hero</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
+                                        <span class="menu-title">Data TPU</span>
+                                    </a>
                                 </div>
                                 {{-- end:Menu item --}}
                             </div>
@@ -178,295 +104,115 @@ $auth = \Auth::user();
                         </div>
                         {{-- end:Menu item --}}
 
-                        {{-- begin:Menu item - Konten --}}
+                        {{-- begin:Menu item - Manajemen TPU --}}
                         <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                             class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
                             {{-- begin:Menu link --}}
                             <span class="menu-link">
-                                <span class="menu-title">Konten</span>
+                                <span class="menu-title">Manajemen TPU</span>
                                 <span class="menu-arrow d-lg-none"></span>
                             </span>
                             {{-- end:Menu link --}}
                             {{-- begin:Menu sub --}}
                             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
 
-                                {{-- begin:Menu item - Konten Internal --}}
+                                {{-- ===================== Data Utama TPU ===================== --}}
                                 <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
                                     <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-office-bag fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Internal</span>
+                                        <span class="menu-icon"><i class="fa-solid fa-database fs-4"></i></span>
+                                        <span class="menu-title">Data Utama TPU</span>
                                         <span class="menu-arrow"></span>
                                     </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
                                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item - Data Direktur --}}
+
+                                        {{-- Data Petugas --}}
                                         <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.data.direktur.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Data Direktur</span>
+                                            <a class="menu-link" href="{{ route('tpu.petugas.index') }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Data Petugas</span>
                                             </a>
                                         </div>
-                                        {{-- end:Menu item --}}
 
-                                        {{-- begin:Menu item - Halaman --}}
-                                        <div data-kt-menu-trigger="click" class="menu-item menu-accordion menu-sub-indention">
-                                            {{-- begin:Menu link --}}
-                                            <span class="menu-link">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Halaman</span>
-                                                <span class="menu-arrow"></span>
-                                            </span>
-                                            {{-- end:Menu link --}}
-                                            {{-- begin:Menu sub --}}
-                                            <div class="menu-sub menu-sub-accordion">
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('Profile')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Profile</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('TOS')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">TOS</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.page.index', [\Helper::encode('Kebijakan')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Kebijakan</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                            </div>
-                                            {{-- end:Menu sub --}}
+                                        {{-- Data Lahan --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.lahan.index') }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Data Lahan</span>
+                                            </a>
                                         </div>
-                                        {{-- end:Menu item --}}
 
-                                        {{-- begin:Menu item - Links --}}
-                                        <div data-kt-menu-trigger="click" class="menu-item menu-accordion menu-sub-indention">
-                                            {{-- begin:Menu link --}}
-                                            <span class="menu-link">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Links</span>
-                                                <span class="menu-arrow"></span>
-                                            </span>
-                                            {{-- end:Menu link --}}
-                                            {{-- begin:Menu sub --}}
-                                            <div class="menu-sub menu-sub-accordion">
-                                                {{-- begin:Menu item --}}
-                                                <div class="menu-item">
-                                                    <a class="menu-link" href="{{ route('prt.apps.links.index', [\Helper::encode('Survey')]) }}">
-                                                        <span class="menu-bullet">
-                                                            <span class="bullet bullet-dot"></span>
-                                                        </span>
-                                                        <span class="menu-title">Survey</span>
-                                                    </a>
-                                                </div>
-                                                {{-- end:Menu item --}}
-                                            </div>
-                                            {{-- end:Menu sub --}}
+                                        {{-- Data Makam --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.makam.index') }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Data Makam</span>
+                                            </a>
                                         </div>
-                                        {{-- end:Menu item --}}
+
+                                        {{-- Data Sarpras --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.sarpras.index') }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Data Sarpras</span>
+                                            </a>
+                                        </div>
                                     </div>
-                                    {{-- end:Menu sub --}}
                                 </div>
-                                {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Konten Text --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
+                                {{-- ===================== Data Pendukung TPU ===================== --}}
+                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion mt-2">
                                     <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-notepad-edit fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Text</span>
+                                        <span class="menu-icon"><i class="fa-solid fa-folder-open fs-4"></i></span>
+                                        <span class="menu-title">Data Pendukung TPU</span>
                                         <span class="menu-arrow"></span>
                                     </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
                                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.post.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Postingan</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.runningtext.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Running Text</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.greeting.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Greeting</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.faq.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">FAQ</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
-                                </div>
-                                {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Konten Media --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
+                                        {{-- Dokumen TPU --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'TPU']) }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Dokumen TPU</span>
+                                            </a>
+                                        </div>
+
+                                        {{-- Dokumen Lahan --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'Lahan']) }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Dokumen Lahan</span>
+                                            </a>
+                                        </div>
+
+                                        {{-- Dokumen Sarpras --}}
+                                        <div class="menu-item">
+                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'Sarpras']) }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Dokumen Sarpras</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- ===================== Laporan & Statistik ===================== --}}
+                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion mt-2">
                                     <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-picture fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Media</span>
+                                        <span class="menu-icon"><i class="fa-solid fa-chart-column fs-4"></i></span>
+                                        <span class="menu-title">Laporan & Statistik</span>
                                         <span class="menu-arrow"></span>
                                     </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
                                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.banner.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Banner</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.infografis.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Infografis</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.galeri.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Galeri</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.video.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Video</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.unduhan.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">Unduhan</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                    </div>
-                                    {{-- end:Menu sub --}}
-                                </div>
-                                {{-- end:Menu item --}}
 
-                                {{-- begin:Menu item - Konten Digital --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
-                                    {{-- begin:Menu link --}}
-                                    <span class="menu-link">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-tablet-book fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Konten Digital</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    {{-- end:Menu link --}}
-                                    {{-- begin:Menu sub --}}
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                        {{-- begin:Menu item --}}
+                                        {{-- Statistik Kapasitas --}}
                                         <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.ebook.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Book</span>
+                                            <a class="menu-link" href="{{ route('tpu.statistik-kapasitas.index') }}">
+                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                <span class="menu-title">Statistik Kapasitas</span>
                                             </a>
                                         </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.emagazine.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Magazine</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
-                                        {{-- begin:Menu item --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('prt.apps.esertifikat.index') }}">
-                                                <span class="menu-bullet">
-                                                    <span class="bullet bullet-dot"></span>
-                                                </span>
-                                                <span class="menu-title">E-Sertifikat</span>
-                                            </a>
-                                        </div>
-                                        {{-- end:Menu item --}}
                                     </div>
-                                    {{-- end:Menu sub --}}
                                 </div>
-                                {{-- end:Menu item --}}
+
                             </div>
                             {{-- end:Menu sub --}}
                         </div>

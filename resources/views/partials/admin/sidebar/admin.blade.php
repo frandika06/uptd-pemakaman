@@ -34,7 +34,7 @@
                     {{-- begin::Col --}}
                     <div class="col-6">
                         {{-- begin::Link --}}
-                        <a href="#"
+                        <a href="{{ route('tpu.dashboard.index') }}"
                             class="btn btn-icon btn-outline btn-bg-light btn-active-light-primary btn-flex flex-column flex-center w-100px h-100px @if (Request::is('backend/tpu*')) active border-primary border-dashed @endif"
                             data-kt-button="true">
                             {{-- begin::Icon --}}

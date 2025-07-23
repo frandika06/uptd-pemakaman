@@ -63,4 +63,30 @@ class AjaxController extends Controller
             return response()->json($response, 200);
         }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FUNCTION API - Indonesia Region API (KWID v1)
+    |--------------------------------------------------------------------------
+    */
+    public function getKecamatan($kabupatenId)
+    {
+        $response = Helper::getKecamatanList($kabupatenId);
+
+        if ($response && isset($response['status']) && $response['status'] && isset($response['data'])) {
+            return response()->json($response['data']);
+        }
+
+        return response()->json(['error' => 'Data kecamatan tidak ditemukan'], 404);
+    }
+    public function getKelurahan($kecamatanId)
+    {
+        $response = Helper::getDesaList($kecamatanId);
+
+        if ($response && isset($response['status']) && $response['status'] && isset($response['data'])) {
+            return response()->json($response['data']);
+        }
+
+        return response()->json(['error' => 'Data kelurahan tidak ditemukan'], 404);
+    }
 }

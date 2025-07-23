@@ -41,6 +41,11 @@ Route::group(['prefix' => 'ajax'], function () {
         Route::get('/list-esertifikat', [AjaxDatatableController::class, 'dataEsertifikatList'])->name('ajax.dt.esertifikat.list');
         Route::get('/list-anggota-tanos', [AjaxDatatableController::class, 'dataAnggotaTanos'])->name('ajax.dt.tanos.anggota');
     });
+    // wilayah
+    Route::group(['prefix' => 'wilayah'], function () {
+        Route::get('/kecamatan/{kabupatenId}', [AjaxController::class, 'getKecamatan'])->name('wilayah.kecamatan');
+        Route::get('/kelurahan/{kecamatanId}', [AjaxController::class, 'getKelurahan'])->name('wilayah.kelurahan');
+    });
 });
 
 /*

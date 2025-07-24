@@ -16,11 +16,11 @@ class SecurityHeaders
 
         // ✅ CSP diatur agar YouTube & CKEditor tetap bisa embed
         $csp = "default-src 'self'; "
-            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.ckeditor.com https://trusted-scripts.com https://cdn.datatables.net; "
-            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.datatables.net; "
+            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.ckeditor.com https://trusted-scripts.com https://cdn.datatables.net https://unpkg.com https://speedcf.cloudflareaccess.com https://nominatim.openstreetmap.org; "
+            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.datatables.net https://unpkg.com https://speedcf.cloudflareaccess.com; "
             . "font-src 'self' https://fonts.gstatic.com data:; "
-            . "img-src 'self' data: blob: https:; "
-            . "connect-src 'self' blob: http://127.0.0.1 http://upt-pemakaman.test https://cdn.datatables.net https://cdn.ckeditor.com; "
+            . "img-src 'self' data: blob: https: *.tile.openstreetmap.org; "
+            . "connect-src 'self' blob: http://127.0.0.1 http://upt-pemakaman.test https://cdn.datatables.net https://cdn.ckeditor.com https://nominatim.openstreetmap.org *.tile.openstreetmap.org; "
             . "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; "
             . "frame-ancestors 'self'; "
             . "object-src 'none'; "

@@ -32,5 +32,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DummyTPURefJenisSarprasSeeder::class);
         $this->call(DummyTpuDatasSeeder::class);
         $this->call(DummyTpuPetugasSeeder::class);
+        $this->call(DummyTpuLahanSeeder::class);
     }
 }

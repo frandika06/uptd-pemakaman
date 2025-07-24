@@ -33,5 +33,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DummyTpuDatasSeeder::class);
         $this->call(DummyTpuPetugasSeeder::class);
         $this->call(DummyTpuLahanSeeder::class);
+        $this->call(DummyTpuMakamSeeder::class);
     }
 }

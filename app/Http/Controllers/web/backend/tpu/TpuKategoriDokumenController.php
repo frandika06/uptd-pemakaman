@@ -33,7 +33,7 @@ class TpuKategoriDokumenController extends Controller
                 $request->session()->put('filter_type_kategori_dokumen', $type);
             }
 
-            // Cek type
+            // Cek type - Tidak perlu filter TPU karena ini master data
             if ($type == 'Semua Data') {
                 $data = TpuKategoriDokumen::orderBy('tipe', 'ASC')->orderBy('nama', 'ASC')->get();
             } else {
@@ -79,7 +79,9 @@ class TpuKategoriDokumenController extends Controller
                     }
 
                     $role = $auth->role;
-                    if ($role == 'Super Admin' || $role == 'Admin') {
+                    // Super Admin, Admin, dan Admin TPU bisa mengubah status
+                    // Petugas TPU hanya readonly
+                    if ($role == 'Super Admin' || $role == 'Admin' || $role == 'Admin TPU') {
                         $status = '
                             <div class="form-check form-switch form-check-custom form-check-success">
                                 <input class="form-check-input" type="checkbox" role="switch"
@@ -100,7 +102,8 @@ class TpuKategoriDokumenController extends Controller
                     $edit_url = route('tpu.kategori-dokumen.edit', $uuid_enc);
 
                     $role = $auth->role;
-                    if ($role == 'Super Admin' || $role == 'Admin') {
+                    // Super Admin, Admin, dan Admin TPU memiliki akses penuh
+                    if ($role == 'Super Admin' || $role == 'Admin' || $role == 'Admin TPU') {
                         $aksi = '
                             <div class="d-flex justify-content-center">
                                 <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
@@ -112,29 +115,17 @@ class TpuKategoriDokumenController extends Controller
                             </div>
                         ';
                     } else {
-                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
-                            $aksi = '
-                                <div class="d-flex justify-content-center">
-                                    <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
-                                        <i class="ki-outline ki-pencil fs-2"></i>
-                                    </a>
-                                    <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-delete="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
-                                        <i class="ki-outline ki-trash fs-2"></i>
-                                    </a>
-                                </div>
-                            ';
-                        } else {
-                            $aksi = '
-                                <div class="d-flex justify-content-center">
-                                    <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
-                                        <i class="ki-outline ki-pencil fs-2 text-muted"></i>
-                                    </span>
-                                    <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
-                                        <i class="ki-outline ki-trash fs-2 text-muted"></i>
-                                    </span>
-                                </div>
-                            ';
-                        }
+                        // Petugas TPU - readonly (button disabled)
+                        $aksi = '
+                            <div class="d-flex justify-content-center">
+                                <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                    <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                                </span>
+                                <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                    <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                                </span>
+                            </div>
+                        ';
                     }
                     return $aksi;
                 })
@@ -444,12 +435,9 @@ class TpuKategoriDokumenController extends Controller
                     $uuid = $uuid_enc;
                     $data = TpuKategoriDokumen::findOrFail($uuid);
 
-                    $role      = $auth->role;
-                    $canDelete = ($role == 'Super Admin' || $role == 'Admin');
-
-                    if (! $canDelete && isset($data->uuid_created)) {
-                        $canDelete = ($data->uuid_created == $auth->uuid);
-                    }
+                    $role = $auth->role;
+                    // Super Admin, Admin, dan Admin TPU bisa menghapus
+                    $canDelete = ($role == 'Super Admin' || $role == 'Admin' || $role == 'Admin TPU');
 
                     if (! $canDelete) {
                         $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->nama;
@@ -549,12 +537,9 @@ class TpuKategoriDokumenController extends Controller
                     $uuid = $uuid_enc;
                     $data = TpuKategoriDokumen::findOrFail($uuid);
 
-                    $role      = $auth->role;
-                    $canUpdate = ($role == 'Super Admin' || $role == 'Admin');
-
-                    if (! $canUpdate && isset($data->uuid_created)) {
-                        $canUpdate = ($data->uuid_created == $auth->uuid);
-                    }
+                    $role = $auth->role;
+                    // Super Admin, Admin, dan Admin TPU bisa mengubah status
+                    $canUpdate = ($role == 'Super Admin' || $role == 'Admin' || $role == 'Admin TPU');
 
                     if (! $canUpdate) {
                         $failedItems[] = 'Tidak memiliki izin untuk mengubah: ' . $data->nama;

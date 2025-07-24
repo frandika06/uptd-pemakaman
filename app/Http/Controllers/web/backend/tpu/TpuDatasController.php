@@ -33,11 +33,27 @@ class TpuDatasController extends Controller
                 $request->session()->put('filter_jenis_tpu', $jenis_tpu);
             }
 
-            // Query berdasarkan filter
+            // Query berdasarkan role dan filter
             $query = TpuDatas::query();
+
+            // Filter berdasarkan role user
+            if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+                // Filter hanya TPU yang terkait dengan user
+                if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                    $query->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+                } else {
+                                               // Jika tidak ada relasi TPU, kembalikan data kosong
+                    $query->whereNull('uuid'); // This will return empty result
+                }
+            }
+            // Super Admin dan Admin bisa melihat semua TPU
+
+            // Filter berdasarkan status
             if ($status != 'Semua Data') {
                 $query->where('status', $status);
             }
+
+            // Filter berdasarkan jenis TPU
             if ($jenis_tpu != 'Semua Jenis') {
                 $query->where('jenis_tpu', $jenis_tpu);
             }
@@ -88,6 +104,8 @@ class TpuDatasController extends Controller
                     $uuid_enc = Helper::encode($data->uuid);
                     $edit_url = route('tpu.datas.edit', $uuid_enc);
                     $role     = $auth->role;
+
+                    // Super Admin dan Admin memiliki akses penuh
                     if ($role == 'Super Admin' || $role == 'Admin') {
                         $aksi = '
                         <div class="d-flex justify-content-center">
@@ -99,8 +117,9 @@ class TpuDatasController extends Controller
                             </a>
                         </div>
                     ';
-                    } else {
-                        if (isset($data->uuid_created) && $data->uuid_created == $auth->uuid) {
+                    } elseif ($role == 'Admin TPU') {
+                        // Admin TPU bisa edit/hapus TPU mereka sendiri
+                        if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid) {
                             $aksi = '
                             <div class="d-flex justify-content-center">
                                 <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
@@ -123,6 +142,18 @@ class TpuDatasController extends Controller
                             </div>
                         ';
                         }
+                    } else {
+                        // Petugas TPU - readonly (button disabled)
+                        $aksi = '
+                        <div class="d-flex justify-content-center">
+                            <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                            </span>
+                            <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                            </span>
+                        </div>
+                    ';
                     }
                     return $aksi;
                 })
@@ -130,9 +161,25 @@ class TpuDatasController extends Controller
                 ->make(true);
         }
 
-        // Get all status and jenis_tpu options
-        $getStatus   = TpuDatas::select('status')->distinct()->orderBy('status', 'ASC')->get();
-        $getJenisTpu = TpuDatas::select('jenis_tpu')->distinct()->orderBy('jenis_tpu', 'ASC')->get();
+        // Get all status and jenis_tpu options (filter berdasarkan akses user)
+        $statusQuery   = TpuDatas::select('status')->distinct()->orderBy('status', 'ASC');
+        $jenisTpuQuery = TpuDatas::select('jenis_tpu')->distinct()->orderBy('jenis_tpu', 'ASC');
+
+        // Filter untuk Admin TPU dan Petugas TPU
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+            if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                $statusQuery->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+                $jenisTpuQuery->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+            } else {
+                // Jika tidak ada relasi TPU, kembalikan data kosong
+                $statusQuery->whereNull('uuid');
+                $jenisTpuQuery->whereNull('uuid');
+            }
+        }
+
+        $getStatus   = $statusQuery->get();
+        $getJenisTpu = $jenisTpuQuery->get();
+
         return view('admin.tpu.data.index', compact(
             'status',
             'jenis_tpu',
@@ -420,11 +467,18 @@ class TpuDatasController extends Controller
                     $data = TpuDatas::findOrFail($uuid);
 
                     $role      = $auth->role;
-                    $canDelete = ($role == 'Super Admin' || $role == 'Admin');
+                    $canDelete = false;
 
-                    if (! $canDelete && isset($data->uuid_created)) {
-                        $canDelete = ($data->uuid_created == $auth->uuid);
+                    // Super Admin dan Admin bisa menghapus semua
+                    if ($role == 'Super Admin' || $role == 'Admin') {
+                        $canDelete = true;
+                    } elseif ($role == 'Admin TPU') {
+                        // Admin TPU hanya bisa menghapus TPU mereka sendiri
+                        if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid) {
+                            $canDelete = true;
+                        }
                     }
+                    // Petugas TPU tidak bisa menghapus
 
                     if (! $canDelete) {
                         $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->nama;

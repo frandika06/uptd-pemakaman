@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -63,7 +62,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
@@ -109,14 +108,19 @@ class User extends Authenticatable
     {
         $google2fa = new Google2FA();
         return $google2fa->getQRCodeUrl(
-            config('app.name'), // Nama aplikasi Anda
-            $this->username,       // Identitas pengguna
-            $this->two_factor_secret // Secret yang sudah di-generate
+            config('app.name'),     // Nama aplikasi Anda
+            $this->username,        // Identitas pengguna
+            $this->two_factor_secret// Secret yang sudah di-generate
         );
     }
 
     public function RelPortalActor()
     {
         return $this->belongsTo('App\Models\PortalActor', 'uuid', 'uuid_user')->withTrashed();
+    }
+
+    public function RelPertugasTpu()
+    {
+        return $this->belongsTo('App\Models\TpuPetugas', 'uuid', 'uuid_user')->withTrashed();
     }
 }

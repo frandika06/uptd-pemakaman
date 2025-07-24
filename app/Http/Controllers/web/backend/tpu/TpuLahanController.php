@@ -147,7 +147,7 @@ class TpuLahanController extends Controller
 
         $data = [
             'title' => 'Data Lahan',
-            'tpus'  => TpuDatas::where('status', 'Aktif')->get(),
+            'tpus'  => TpuDatas::orderBy('nama', 'ASC')->get(),
         ];
 
         return view('admin.tpu.lahan.index', $data);

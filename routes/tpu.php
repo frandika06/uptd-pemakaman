@@ -100,6 +100,9 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::put('/edit/{uuid}', [TpuMakamController::class, 'update'])->name('tpu.makam.update');
             Route::post('/delete', [TpuMakamController::class, 'destroy'])->name('tpu.makam.destroy');
             Route::post('/bulk-destroy', [TpuMakamController::class, 'bulkDestroy'])->name('tpu.makam.destroy.bulk');
+            Route::post('/calculate-kapasitas', [TpuMakamController::class, 'calculateKapasitasAjax'])->name('tpu.makam.calculate-kapasitas');
+            Route::post('/lahan-details', [TpuMakamController::class, 'getLahanDetails'])->name('tpu.makam.lahan-details');
+            Route::get('/lahan-by-tpu', [TpuMakamController::class, 'getLahanByTpu'])->name('tpu.makam.lahan-by-tpu');
         });
 
         // Manajemen Petugas

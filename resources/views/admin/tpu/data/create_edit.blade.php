@@ -207,7 +207,7 @@
                     </div>
                     {{-- end::Input group - Kelurahan --}}
 
-                    <div class="mb-10 fv-row">
+                    {{-- <div class="mb-10 fv-row">
                         <label class="form-label">Latitude</label>
                         <input type="number" step="any" name="latitude" class="form-control mb-2 @error('latitude') is-invalid @enderror"
                             placeholder="Masukkan latitude (contoh: -6.123456)" value="{{ old('latitude', isset($data) ? $data->latitude : '') }}" autocomplete="off" />
@@ -225,7 +225,7 @@
                         @error('longitude')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
 
                     {{-- begin::Input group - Jenis TPU --}}
                     <div class="mb-10 fv-row">
@@ -384,8 +384,8 @@
                     var kelurahanId = form.querySelector('select[name="kelurahan_id"]').value;
                     var jenis_tpu = form.querySelector('select[name="jenis_tpu"]').value;
                     var status = form.querySelector('select[name="status"]').value;
-                    var latitude = form.querySelector('input[name="latitude"]').value.trim();
-                    var longitude = form.querySelector('input[name="longitude"]').value.trim();
+                    // var latitude = form.querySelector('input[name="latitude"]').value.trim();
+                    // var longitude = form.querySelector('input[name="longitude"]').value.trim();
 
                     var isValid = true;
                     var errorMessage = '';
@@ -417,15 +417,15 @@
                         errorMessage = 'Kelurahan wajib dipilih';
                     }
 
-                    if (latitude && (isNaN(latitude) || latitude < -90 || latitude > 90)) {
-                        isValid = false;
-                        errorMessage = 'Latitude harus antara -90 dan 90';
-                    }
+                    // if (latitude && (isNaN(latitude) || latitude < -90 || latitude > 90)) {
+                    //     isValid = false;
+                    //     errorMessage = 'Latitude harus antara -90 dan 90';
+                    // }
 
-                    if (longitude && (isNaN(longitude) || longitude < -180 || longitude > 180)) {
-                        isValid = false;
-                        errorMessage = 'Longitude harus antara -180 dan 180';
-                    }
+                    // if (longitude && (isNaN(longitude) || longitude < -180 || longitude > 180)) {
+                    //     isValid = false;
+                    //     errorMessage = 'Longitude harus antara -180 dan 180';
+                    // }
 
                     if (!jenis_tpu) {
                         isValid = false;

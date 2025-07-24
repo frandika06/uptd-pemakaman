@@ -9,9 +9,9 @@ Route::get('/proxy-nominatim', function (Request $request) {
 
     try {
         $response = Http::withHeaders(['User-Agent' => 'UPTD-Pemakaman-Tangerang/1.0'])->timeout(10)->get($url);
-        \Log::info('Nominatim Request URL: ' . $url);
-        \Log::info('Nominatim Response Status: ' . $response->status());
-        \Log::info('Nominatim Response Body: ' . $response->body());
+        // \Log::info('Nominatim Request URL: ' . $url);
+        // \Log::info('Nominatim Response Status: ' . $response->status());
+        // \Log::info('Nominatim Response Body: ' . $response->body());
 
         if ($response->successful()) {
             $data = $response->json();

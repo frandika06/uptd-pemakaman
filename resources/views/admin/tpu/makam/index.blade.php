@@ -132,8 +132,14 @@
             <div class="me-3">
                 <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
                     data-kt-menu-placement="bottom-end">
-                    <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
-                    Filter: <span id="filter-text" class="ms-1">Semua TPU</span>
+                    <i class="ki-outline ki-filter fs- VITAMIN 6 text-muted me-1"></i>
+                    Filter: <span id="filter-text" class="ms-1">
+                        @if (in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first())
+                            {{ $tpus->first()->nama }}
+                        @else
+                            Semua TPU
+                        @endif
+                    </span>
                 </a>
                 {{-- begin::Filter Menu --}}
                 <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true" id="kt_menu_filter">
@@ -142,19 +148,21 @@
                     </div>
                     <div class="separator border-gray-200"></div>
                     <div class="px-7 py-5">
-                        {{-- Filter TPU --}}
-                        <div class="mb-10">
-                            <label class="form-label fw-semibold">TPU:</label>
-                            <div>
-                                <select class="form-select form-select-solid" name="filter[tpu]" id="q_tpu" data-control="select2" data-placeholder="Pilih TPU"
-                                    data-allow-clear="true">
-                                    <option value="Semua TPU">Semua TPU</option>
-                                    @foreach ($tpus as $tpu)
-                                        <option value="{{ $tpu->nama }}">{{ $tpu->nama }}</option>
-                                    @endforeach
-                                </select>
+                        @if (!in_array($user_role, ['Admin TPU', 'Petugas TPU']))
+                            {{-- Filter TPU --}}
+                            <div class="mb-10">
+                                <label class="form-label fw-semibold">TPU:</label>
+                                <div>
+                                    <select class="form-select form-select-solid" name="filter[tpu]" id="q_tpu" data-control="select2" data-placeholder="Pilih TPU"
+                                        data-allow-clear="true">
+                                        <option value="Semua TPU">Semua TPU</option>
+                                        @foreach ($tpus as $tpu)
+                                            <option value="{{ $tpu->nama }}">{{ $tpu->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                         {{-- Filter Lahan --}}
                         <div class="mb-10">
                             <label class="form-label fw-semibold">Lahan:</label>
@@ -162,7 +170,9 @@
                                 <select class="form-select form-select-solid" name="filter[lahan]" id="q_lahan" data-control="select2" data-placeholder="Pilih Lahan"
                                     data-allow-clear="true">
                                     <option value="Semua Lahan">Semua Lahan</option>
-                                    <!-- Options will be populated via AJAX -->
+                                    @foreach ($lahans as $lahan)
+                                        <option value="{{ $lahan->kode_lahan }}">{{ $lahan->kode_lahan }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -214,12 +224,14 @@
             {{-- Hidden export buttons container --}}
             <div id="kt_datatable_example_buttons" class="d-none"></div>
             {{-- end::Export button --}}
-            {{-- begin::Primary button --}}
-            <a href="{{ route('tpu.makam.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
-                <i class="ki-outline ki-plus fs-2"></i>
-                <span>Tambah Data Makam</span>
-            </a>
-            {{-- end::Primary button --}}
+            @if ($user_role !== 'Petugas TPU')
+                {{-- begin::Primary button --}}
+                <a href="{{ route('tpu.makam.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
+                    <i class="ki-outline ki-plus fs-2"></i>
+                    <span>Tambah Data Makam</span>
+                </a>
+                {{-- end::Primary button --}}
+            @endif
         </div>
         {{-- end::Actions --}}
     </div>
@@ -233,7 +245,16 @@
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
                     <span class="card-label fw-bold fs-3 mb-1">Data Makam</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan TPU: <strong id="titleType">Semua TPU</strong></span>
+                    <span class="text-muted mt-1 fw-semibold fs-7">
+                        Menampilkan TPU:
+                        <strong id="titleType">
+                            @if (in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first())
+                                {{ $tpus->first()->nama }}
+                            @else
+                                Semua TPU
+                            @endif
+                        </strong>
+                    </span>
                 </h4>
             </div>
             <div class="card-toolbar">
@@ -250,11 +271,13 @@
                     <span data-kt-makam-table-select="selected_count"></span> item dipilih
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-makam-table-select="delete_selected" data-bs-toggle="tooltip"
-                        title="Hapus yang dipilih">
-                        <i class="ki-outline ki-trash fs-6 me-1"></i>
-                        Hapus
-                    </button>
+                    @if ($user_role !== 'Petugas TPU')
+                        <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-makam-table-select="delete_selected" data-bs-toggle="tooltip"
+                            title="Hapus yang dipilih">
+                            <i class="ki-outline ki-trash fs-6 me-1"></i>
+                            Hapus
+                        </button>
+                    @endif
                     <button type="button" class="btn btn-sm btn-light" data-kt-makam-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
                         <i class="ki-outline ki-cross fs-6"></i>
                     </button>
@@ -331,7 +354,7 @@
                         infoEmpty: "Menampilkan 0 sampai 0 dari 0 data makam",
                         infoFiltered: "(disaring dari _MAX_ total data makam)",
                         loadingRecords: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
-                        processing: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
+                        processing: '<div class="d-fle align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
                         zeroRecords: "Tidak ditemukan data yang sesuai",
                         paginate: {
                             next: '<i class="ki-outline ki-arrow-right"></i>',
@@ -347,7 +370,7 @@
                         data: function(d) {
                             // Server-side filter data
                             d.filter = {
-                                tpu: $('#q_tpu').val() || 'Semua TPU',
+                                tpu: $('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU'),
                                 lahan: $('#q_lahan').val() || 'Semua Lahan',
                                 status: $('#q_status').val() || 'Semua Status'
                             };
@@ -394,7 +417,7 @@
                         {
                             data: 'lahan_info',
                             name: 'lahan_info',
-                            orderable: true, // Enable ordering dengan orderColumn di controller
+                            orderable: true,
                             searchable: false
                         },
                         {
@@ -456,7 +479,7 @@
                     buttons: [{
                             extend: 'copyHtml5',
                             title: function() {
-                                const currentFilter = $('#q_tpu').val() || 'Semua TPU';
+                                const currentFilter = $('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             exportOptions: {
@@ -466,12 +489,12 @@
                         {
                             extend: 'excelHtml5',
                             title: function() {
-                                const currentFilter = $('#q_tpu').val() || 'Semua TPU';
+                                const currentFilter = $('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('#q_tpu').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                const filter = ($('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
                                 return `data-makam-${filter}-${date}`;
                             },
                             exportOptions: {
@@ -481,12 +504,12 @@
                         {
                             extend: 'csvHtml5',
                             title: function() {
-                                const currentFilter = $('#q_tpu').val() || 'Semua TPU';
+                                const currentFilter = $('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('#q_tpu').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                const filter = ($('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
                                 return `data-makam-${filter}-${date}`;
                             },
                             exportOptions: {
@@ -496,12 +519,12 @@
                         {
                             extend: 'pdfHtml5',
                             title: function() {
-                                const currentFilter = $('#q_tpu').val() || 'Semua TPU';
+                                const currentFilter = $('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('#q_tpu').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                const filter = ($('#q_tpu').val() || @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
                                 return `data-makam-${filter}-${date}`;
                             },
                             orientation: 'landscape',
@@ -698,22 +721,34 @@
 
                 // Fungsi untuk memperbarui label filter
                 window.applyFilter = function() {
-                    var selectedTpu = document.getElementById('q_tpu').value;
+                    var selectedTpu = document.getElementById('q_tpu') ? document.getElementById('q_tpu').value : @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                     document.getElementById('filter-text').textContent = selectedTpu;
                     document.getElementById('titleType').textContent = selectedTpu;
                     if (typeof KTMenu !== 'undefined') {
                         KTMenu.dismissMenu(document.querySelector('#kt_menu_filter'));
                     }
+                    reloadDataTable();
                 };
 
                 // Fungsi untuk reset filter
                 window.resetFilter = function() {
                     // Reset dropdown ke nilai default
-                    $('#q_tpu').val('Semua TPU').trigger('change.select2');
-                    $('#q_lahan').empty().append('<option value="Semua Lahan">Semua Lahan</option>').val('Semua Lahan').trigger('change.select2');
+                    if (document.getElementById('q_tpu')) {
+                        $('#q_tpu').val('Semua TPU').trigger('change.select2');
+                    }
+                    $('#q_lahan').val('Semua Lahan').trigger('change.select2');
                     $('#q_status').val('Semua Status').trigger('change.select2');
-                    document.getElementById('filter-text').textContent = 'Semua TPU';
-                    document.getElementById('titleType').textContent = 'Semua TPU';
+                    document.getElementById('filter-text').textContent = @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                    document.getElementById('titleType').textContent = @json(in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                    // Reset dropdown lahan untuk role Admin TPU/Petugas TPU
+                    @if (in_array($user_role, ['Admin TPU', 'Petugas TPU']))
+                        let lahanSelect = $('#q_lahan');
+                        lahanSelect.empty().append('<option value="Semua Lahan">Semua Lahan</option>');
+                        @foreach ($lahans as $lahan)
+                            lahanSelect.append(`<option value="{{ $lahan->kode_lahan }}">{{ $lahan->kode_lahan }}</option>`);
+                        @endforeach
+                        lahanSelect.val('Semua Lahan').trigger('change.select2');
+                    @endif
                     reloadDataTable();
                     if (typeof KTMenu !== 'undefined') {
                         KTMenu.dismissMenu(document.querySelector('#kt_menu_filter'));
@@ -721,42 +756,44 @@
                 };
 
                 // Event listener untuk dropdown TPU
-                $('#q_tpu').on('change', function() {
-                    var q_tpu = $(this).val();
-                    reloadDataTable();
-                    // Populate lahan options based on TPU
-                    if (q_tpu !== 'Semua TPU') {
-                        $.ajax({
-                            url: "{{ route('tpu.makam.lahan-by-tpu') }}",
-                            type: 'GET',
-                            data: {
-                                tpu: q_tpu
-                            },
-                            success: function(res) {
-                                let lahanSelect = $('#q_lahan');
-                                lahanSelect.empty().append('<option value="Semua Lahan">Semua Lahan</option>');
-                                if (res.status && res.data) {
-                                    res.data.forEach(lahan => {
-                                        lahanSelect.append(`<option value="${lahan.kode_lahan}">${lahan.kode_lahan}</option>`);
+                @if (!in_array($user_role, ['Admin TPU', 'Petugas TPU']))
+                    $('#q_tpu').on('change', function() {
+                        var q_tpu = $(this).val();
+                        // Populate lahan options based on TPU
+                        if (q_tpu !== 'Semua TPU') {
+                            $.ajax({
+                                url: "{{ route('tpu.makam.lahan-by-tpu') }}",
+                                type: 'GET',
+                                data: {
+                                    tpu: q_tpu
+                                },
+                                success: function(res) {
+                                    let lahanSelect = $('#q_lahan');
+                                    lahanSelect.empty().append('<option value="Semua Lahan">Semua Lahan</option>');
+                                    if (res.status && res.data) {
+                                        res.data.forEach(lahan => {
+                                            lahanSelect.append(`<option value="${lahan.kode_lahan}">${lahan.kode_lahan}</option>`);
+                                        });
+                                    }
+                                    lahanSelect.val('Semua Lahan').trigger('change.select2');
+                                    reloadDataTable();
+                                },
+                                error: function() {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error!',
+                                        text: 'Gagal memuat data lahan.',
+                                        confirmButtonText: 'OK'
                                     });
+                                    reloadDataTable();
                                 }
-                                lahanSelect.val('Semua Lahan').trigger('change.select2');
-                                reloadDataTable();
-                            },
-                            error: function() {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error!',
-                                    text: 'Gagal memuat data lahan.',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        });
-                    } else {
-                        $('#q_lahan').empty().append('<option value="Semua Lahan">Semua Lahan</option>').val('Semua Lahan').trigger('change.select2');
-                        reloadDataTable();
-                    }
-                });
+                            });
+                        } else {
+                            $('#q_lahan').empty().append('<option value="Semua Lahan">Semua Lahan</option>').val('Semua Lahan').trigger('change.select2');
+                            reloadDataTable();
+                        }
+                    });
+                @endif
 
                 // Event listener untuk dropdown Lahan
                 $('#q_lahan').on('change', function() {
@@ -767,6 +804,18 @@
                 $('#q_status').on('change', function() {
                     reloadDataTable();
                 });
+
+                // Inisialisasi lahan untuk Admin TPU/Petugas TPU saat halaman dimuat
+                @if (in_array($user_role, ['Admin TPU', 'Petugas TPU']))
+                    $(document).ready(function() {
+                        let lahanSelect = $('#q_lahan');
+                        lahanSelect.empty().append('<option value="Semua Lahan">Semua Lahan</option>');
+                        @foreach ($lahans as $lahan)
+                            lahanSelect.append(`<option value="{{ $lahan->kode_lahan }}">{{ $lahan->kode_lahan }}</option>`);
+                        @endforeach
+                        lahanSelect.val('Semua Lahan').trigger('change.select2');
+                    });
+                @endif
             }
 
             // Bulk actions

@@ -21,40 +21,57 @@ class TpuLahanController extends Controller
     {
         $auth = Auth::user();
 
+        // Inisialisasi filter dari session atau default
+        $filter_tpu = $request->session()->get('filter_tpu_lahan', 'Semua TPU');
+
         if ($request->ajax()) {
             $query = TpuLahan::query()->with(['Tpu']);
 
             // Filter berdasarkan role
-            if ($auth->role === 'Admin TPU') {
-                $query->whereHas('Tpu', function ($q) use ($auth) {
-                    $q->where('uuid_created', $auth->uuid);
-                });
-            }
-
-            // Filter berdasarkan TPU
-            if (isset($_GET['filter']['tpu']) && $_GET['filter']['tpu'] !== 'Semua TPU') {
-                $query->whereHas('Tpu', function ($q) use ($request) {
-                    $q->where('nama', $request->input('filter.tpu'));
-                });
+            if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+                if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                    $query->whereHas('Tpu', function ($q) use ($auth) {
+                        $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+                    });
+                } else {
+                    // Jika tidak ada relasi TPU, kembalikan data kosong
+                    $query->whereNull('uuid');
+                }
+            } else {
+                // Super Admin dan Admin bisa melihat semua data
+                if (isset($_GET['filter']['tpu']) && $_GET['filter']['tpu'] !== 'Semua TPU') {
+                    $query->whereHas('Tpu', function ($q) use ($request) {
+                        $q->where('nama', $request->input('filter.tpu'));
+                    });
+                    $request->session()->put('filter_tpu_lahan', $_GET['filter']['tpu']);
+                }
             }
 
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->setRowId('uuid')
                 ->addColumn('kode_lahan', function ($data) {
-                    $uuid_enc = Helper::encode($data->uuid);
-                    $edit_url = route('tpu.lahan.edit', $uuid_enc);
+                    $jenis_tpu = $data->Tpu ? $data->Tpu->jenis_tpu : '';
+                    switch ($jenis_tpu) {
+                        case 'muslim':
+                            $jenis_color = 'primary';
+                            break;
+                        case 'non_muslim':
+                            $jenis_color = 'warning';
+                            break;
+                        case 'gabungan':
+                            $jenis_color = 'success';
+                            break;
+                        default:
+                            $jenis_color = 'secondary';
+                    }
+
                     return '
-                    <div class="d-flex align-items-center">
-                        <div class="d-flex flex-column">
-                            <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . $data->kode_lahan . '</a>
-                            <span class="text-muted fw-semibold d-block fs-7">' . Str::slug($data->kode_lahan) . '</span>
-                        </div>
-                    </div>
-                ';
-                })
-                ->addColumn('nama_tpu', function ($data) {
-                    return '<span class="badge badge-light-primary fw-bold fs-7 px-3 py-2">' . ($data->Tpu ? $data->Tpu->nama : '-') . '</span>';
+                    <div class="d-flex flex-column">
+                        <span class="text-gray-800 fw-bold fs-6">' . $data->kode_lahan . '</span>
+                        <span class="text-muted fw-semibold fs-7">' . ($data->Tpu ? $data->Tpu->nama : '-') . '</span>
+                        <span class="badge badge-light-' . $jenis_color . ' fw-bold fs-8 mt-1">' . ucfirst(str_replace('_', ' ', $jenis_tpu)) . '</span>
+                    </div>';
                 })
                 ->addColumn('luas_m2', function ($data) {
                     return '<span class="text-gray-600 fw-semibold d-block fs-7">' . number_format($data->luas_m2, 2) . ' m²</span>';
@@ -85,7 +102,7 @@ class TpuLahanController extends Controller
                     if ($role == 'Super Admin' || $role == 'Admin') {
                         $status = '
                         <div class="form-check form-switch form-check-custom form-check-success">
-                            <input class="form-check-input" type="checkbox" role="switch"
+                            <input class="form-check-input toggle-status" type="checkbox" role="switch"
                                 id="status_' . $data->uuid . '"
                                 data-status="' . $uuid . '"
                                 data-status-value="' . $data->status . '" ' . $checked . '>
@@ -93,7 +110,25 @@ class TpuLahanController extends Controller
                                 for="status_' . $data->uuid . '">' . $text . '</label>
                         </div>
                     ';
+                    } elseif ($role == 'Admin TPU') {
+                        $disabled = '';
+                        // Admin TPU hanya bisa mengubah status lahan di TPU mereka
+                        if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                            $disabled = 'disabled';
+                        }
+
+                        $status = '
+                        <div class="form-check form-switch form-check-custom form-check-success">
+                            <input class="form-check-input toggle-status" type="checkbox" role="switch"
+                                id="status_' . $data->uuid . '"
+                                data-status="' . $uuid . '"
+                                data-status-value="' . $data->status . '" ' . $checked . ' ' . $disabled . '>
+                            <label class="form-check-label fw-semibold text-' . $color . ' ms-3"
+                                for="status_' . $data->uuid . '">' . $text . '</label>
+                        </div>
+                    ';
                     } else {
+                        // Petugas TPU hanya read-only
                         $status = '<span class="badge badge-light-' . $color . ' fw-bold">' . $text . '</span>';
                     }
                     return $status;
@@ -101,10 +136,20 @@ class TpuLahanController extends Controller
                 ->addColumn('actions', function ($data) use ($auth) {
                     $uuid_enc = Helper::encode($data->uuid);
                     $edit_url = route('tpu.lahan.edit', $uuid_enc);
+                    $role     = $auth->role;
 
-                    $role = $auth->role;
+                    // Logika untuk aksi buttons
+                    $canEditDelete = false;
                     if ($role == 'Super Admin' || $role == 'Admin') {
-                        $actions = '
+                        $canEditDelete = true;
+                    } elseif ($role == 'Admin TPU') {
+                        $isSameTPU     = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canEditDelete = $isSameTPU;
+                    }
+                    // Petugas TPU hanya read-only, tidak bisa edit/delete
+
+                    if ($canEditDelete) {
+                        return '
                         <div class="d-flex justify-content-center">
                             <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
                                 <i class="ki-outline ki-pencil fs-2"></i>
@@ -115,39 +160,37 @@ class TpuLahanController extends Controller
                         </div>
                     ';
                     } else {
-                        if (isset($data->Tpu->uuid_created) && $data->Tpu->uuid_created == $auth->uuid) {
-                            $actions = '
-                            <div class="d-flex justify-content-center">
-                                <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
-                                    <i class="ki-outline ki-pencil fs-2"></i>
-                                </a>
-                                <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete" data-uuid="' . $uuid_enc . '" data-name="' . $data->kode_lahan . '" data-bs-toggle="tooltip" title="Hapus">
-                                    <i class="ki-outline ki-trash fs-2"></i>
-                                </a>
-                            </div>
-                        ';
-                        } else {
-                            $actions = '
-                            <div class="d-flex justify-content-center">
-                                <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
-                                    <i class="ki-outline ki-pencil fs-2 text-muted"></i>
-                                </span>
-                                <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
-                                    <i class="ki-outline ki-trash fs-2 text-muted"></i>
-                                </span>
-                            </div>
-                        ';
-                        }
+                        return '
+                        <div class="d-flex justify-content-center">
+                            <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                            </span>
+                            <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                            </span>
+                        </div>
+                    ';
                     }
-                    return $actions;
                 })
-                ->rawColumns(['kode_lahan', 'nama_tpu', 'luas_m2', 'koordinat', 'total_makam', 'status', 'actions'])
+                ->rawColumns(['kode_lahan', 'luas_m2', 'koordinat', 'total_makam', 'status', 'actions'])
                 ->make(true);
         }
 
+        // Prepare data untuk filter TPU
+        $tpuList       = [];
+        $showTpuFilter = false;
+
+        // Hanya Super Admin dan Admin yang bisa melihat filter TPU
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $showTpuFilter = true;
+            $tpuList       = TpuDatas::select('uuid', 'nama')->orderBy('nama', 'ASC')->get();
+        }
+
         $data = [
-            'title' => 'Data Lahan',
-            'tpus'  => TpuDatas::orderBy('nama', 'ASC')->get(),
+            'title'         => 'Data Lahan',
+            'tpus'          => $tpuList,
+            'showTpuFilter' => $showTpuFilter,
+            'filter_tpu'    => $filter_tpu,
         ];
 
         return view('admin.tpu.lahan.index', $data);
@@ -159,10 +202,22 @@ class TpuLahanController extends Controller
     public function create()
     {
         $auth = Auth::user();
+
+        // Petugas TPU tidak diizinkan mengakses create
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk menambah data lahan.');
+            return redirect()->route('tpu.lahan.index');
+        }
+
         $tpus = TpuDatas::where('status', 'Aktif');
 
         if ($auth->role === 'Admin TPU') {
-            $tpus->where('uuid_created', $auth->uuid);
+            if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                $tpus->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+            } else {
+                alert()->error('Error', 'Tidak ada TPU yang terkait dengan akun Anda.');
+                return redirect()->route('tpu.lahan.index');
+            }
         }
 
         $data = [
@@ -180,6 +235,12 @@ class TpuLahanController extends Controller
     public function store(Request $request)
     {
         $auth = Auth::user();
+
+        // Petugas TPU tidak diizinkan menyimpan data
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk menambah data lahan.');
+            return redirect()->route('tpu.lahan.index');
+        }
 
         $request->validate([
             'uuid_tpu'   => 'required|exists:tpu_datas,uuid',
@@ -199,6 +260,14 @@ class TpuLahanController extends Controller
             'latitude.between'    => 'Latitude harus antara -90 dan 90',
             'longitude.between'   => 'Longitude harus antara -180 dan 180',
         ]);
+
+        // Cek hak akses untuk Admin TPU
+        if ($auth->role === 'Admin TPU') {
+            if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk menambahkan lahan pada TPU ini.');
+                return back()->withInput();
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -253,21 +322,30 @@ class TpuLahanController extends Controller
      */
     public function edit($uuid_enc)
     {
+        $auth     = Auth::user();
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuLahan::findOrFail($uuid_dec);
 
-        $auth = Auth::user();
-
-        // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Tpu->uuid_created !== $auth->uuid) {
-            alert()->error('Error', 'Unauthorized action.');
+        // Petugas TPU tidak diizinkan mengakses edit
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit data lahan.');
             return redirect()->route('tpu.lahan.index');
+        }
+
+        // Check permission untuk Admin TPU
+        if ($auth->role === 'Admin TPU') {
+            if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit lahan ini.');
+                return redirect()->route('tpu.lahan.index');
+            }
         }
 
         $tpus = TpuDatas::where('status', 'Aktif');
 
         if ($auth->role === 'Admin TPU') {
-            $tpus->where('uuid_created', $auth->uuid);
+            if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                $tpus->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+            }
         }
 
         $view_data = [
@@ -290,10 +368,18 @@ class TpuLahanController extends Controller
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuLahan::findOrFail($uuid_dec);
 
-        // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Tpu->uuid_created !== $auth->uuid) {
-            alert()->error('Error', 'Unauthorized action.');
+        // Petugas TPU tidak diizinkan mengupdate
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit data lahan.');
             return redirect()->route('tpu.lahan.index');
+        }
+
+        // Check permission untuk Admin TPU
+        if ($auth->role === 'Admin TPU') {
+            if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit lahan ini.');
+                return redirect()->route('tpu.lahan.index');
+            }
         }
 
         $request->validate([
@@ -319,6 +405,14 @@ class TpuLahanController extends Controller
             'latitude.between'    => 'Latitude harus antara -90 dan 90',
             'longitude.between'   => 'Longitude harus antara -180 dan 180',
         ]);
+
+        // Cek hak akses untuk Admin TPU pada update
+        if ($auth->role === 'Admin TPU') {
+            if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk mengubah lahan pada TPU ini.');
+                return back()->withInput();
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -372,6 +466,14 @@ class TpuLahanController extends Controller
     {
         $auth = Auth::user();
 
+        // Petugas TPU tidak diizinkan menghapus
+        if ($auth->role === 'Petugas TPU') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Anda tidak memiliki izin untuk menghapus data lahan.',
+            ], 403);
+        }
+
         $request->validate([
             'uuid' => 'required|string',
         ]);
@@ -382,21 +484,23 @@ class TpuLahanController extends Controller
             $uuid_dec = Helper::decode($request->uuid);
             $data     = TpuLahan::findOrFail($uuid_dec);
 
-            // Check permission
-            if ($auth->role === 'Admin TPU' && $data->Tpu->uuid_created !== $auth->uuid) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Unauthorized action.',
-                ], 403);
+            // Check permission untuk Admin TPU
+            if ($auth->role === 'Admin TPU') {
+                if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Anda tidak memiliki izin untuk menghapus lahan ini.',
+                    ], 403);
+                }
             }
 
             // Check if there are related makam
-            if ($data->Makams()->count() > 0) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Tidak dapat menghapus lahan yang memiliki data makam.',
-                ], 422);
-            }
+            // if ($data->Makams()->count() > 0) {
+            //     return response()->json([
+            //         'status'  => false,
+            //         'message' => 'Tidak dapat menghapus lahan yang memiliki data makam.',
+            //     ], 422);
+            // }
 
             $value = $data->toArray();
             $save  = $data->delete();
@@ -444,6 +548,14 @@ class TpuLahanController extends Controller
     {
         $auth = Auth::user();
 
+        // Petugas TPU tidak diizinkan menghapus
+        if ($auth->role === 'Petugas TPU') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Anda tidak memiliki izin untuk menghapus data lahan.',
+            ], 403);
+        }
+
         $request->validate([
             'uuids'   => 'required|array|min:1',
             'uuids.*' => 'required|string',
@@ -455,22 +567,23 @@ class TpuLahanController extends Controller
             $deletedCount = 0;
             $failedItems  = [];
 
-            foreach ($request->uuids as $uuid_enc) {
+            foreach ($request->uuids as $uuid) {
                 try {
-                    $uuid_dec = $uuid_enc;
-                    $data     = TpuLahan::findOrFail($uuid_dec);
+                    $data = TpuLahan::findOrFail($uuid);
 
-                    // Check permission
-                    if ($auth->role === 'Admin TPU' && $data->Tpu->uuid_created !== $auth->uuid) {
-                        $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->kode_lahan;
-                        continue;
+                    // Check permission untuk Admin TPU
+                    if ($auth->role === 'Admin TPU') {
+                        if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                            $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->kode_lahan;
+                            continue;
+                        }
                     }
 
                     // Check if there are related makam
-                    if ($data->Makams()->count() > 0) {
-                        $failedItems[] = 'Lahan ' . $data->kode_lahan . ' memiliki data makam dan tidak dapat dihapus';
-                        continue;
-                    }
+                    // if ($data->Makams()->count() > 0) {
+                    //     $failedItems[] = 'Lahan ' . $data->kode_lahan . ' memiliki data makam dan tidak dapat dihapus';
+                    //     continue;
+                    // }
 
                     $value = $data->toArray();
                     if ($data->delete()) {
@@ -479,12 +592,12 @@ class TpuLahanController extends Controller
                         // Create log
                         $aktifitas = [
                             'tabel' => ['tpu_lahans'],
-                            'uuid'  => [$uuid_dec],
+                            'uuid'  => [$uuid],
                             'value' => [$value],
                         ];
                         $log = [
                             'apps'      => 'TPU Admin',
-                            'subjek'    => 'Menghapus Data Lahan (Bulk): ' . $data->kode_lahan . ' - ' . $uuid_dec,
+                            'subjek'    => 'Menghapus Data Lahan (Bulk): ' . $data->kode_lahan . ' - ' . $uuid,
                             'aktifitas' => $aktifitas,
                             'device'    => 'web',
                         ];
@@ -493,7 +606,7 @@ class TpuLahanController extends Controller
                         $failedItems[] = 'Gagal menghapus: ' . $data->kode_lahan;
                     }
                 } catch (\Exception $e) {
-                    $failedItems[] = 'Error pada ID ' . $uuid_enc . ': ' . $e->getMessage();
+                    $failedItems[] = 'Error pada ID ' . $uuid . ': ' . $e->getMessage();
                     continue;
                 }
             }

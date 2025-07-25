@@ -25,14 +25,33 @@ class TpuPetugasController extends Controller
     {
         $auth = Auth::user();
 
+        // Inisialisasi filter dari session atau default
+        $filter_tpu = $request->session()->get('filter_tpu_petugas', 'Semua TPU');
+
         if ($request->ajax()) {
+            // Ambil filter dari GET jika ada
+            if (isset($_GET['filter']) && isset($_GET['filter']['tpu'])) {
+                $filter_tpu = $_GET['filter']['tpu'];
+                $request->session()->put('filter_tpu_petugas', $filter_tpu);
+            }
+
             $query = TpuPetugas::query()->with(['Tpu', 'User']);
 
-            // Filter berdasarkan role
-            if ($auth->role === 'Admin TPU') {
-                $query->whereHas('Tpu', function ($q) use ($auth) {
-                    $q->where('uuid_created', $auth->uuid);
-                });
+            // Filter berdasarkan role dan relasi TPU
+            if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+                // Filter menggunakan relasi TPU yang terkait dengan user
+                if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                    $query->where('uuid_tpu', $auth->RelPetugasTpu->uuid_tpu);
+                } else {
+                                               // Jika tidak ada relasi TPU, kembalikan data kosong
+                    $query->whereNull('uuid'); // This will return empty result
+                }
+            } else {
+                // Super Admin dan Admin bisa melihat semua petugas
+                // Apply filter TPU jika dipilih
+                if ($filter_tpu != 'Semua TPU') {
+                    $query->where('uuid_tpu', $filter_tpu);
+                }
             }
 
             return DataTables::of($query)
@@ -59,21 +78,48 @@ class TpuPetugasController extends Controller
                 ->addColumn('email', function ($data) {
                     return '<span class="text-gray-600 fw-semibold d-block fs-7">' . ($data->email ?: '-') . '</span>';
                 })
-                ->addColumn('status', function ($data) {
+                ->addColumn('status', function ($data) use ($auth) {
                     $status   = $data->User ? ($data->User->status == 1 ? 'Aktif' : 'Nonaktif') : 'Nonaktif';
                     $color    = $data->User && $data->User->status == 1 ? 'success' : 'danger';
                     $uuid_enc = Helper::encode($data->uuid);
                     $checked  = $data->User && $data->User->status == 1 ? 'checked' : '';
-                    $disabled = ($data->uuid_user == Auth::user()->uuid && Auth::user()->role == 'Admin TPU') ? 'disabled' : '';
+
+                    // Logika disable status toggle
+                    $disabled = '';
+                    $role     = $auth->role;
+
+                    // Admin TPU tidak bisa mengubah status akun mereka sendiri
+                    if ($data->uuid_user == $auth->uuid && $role == 'Admin TPU') {
+                        $disabled = 'disabled';
+                    }
+                    // Petugas TPU tidak bisa mengubah status siapa pun
+                    elseif ($role == 'Petugas TPU') {
+                        $disabled = 'disabled';
+                    }
+
                     return '<div class="form-check form-switch form-check-custom form-check-solid">
                             <input class="form-check-input toggle-status" type="checkbox" data-status="' . $uuid_enc . '" ' . $checked . ' ' . $disabled . '>
                         </div>';
                 })
                 ->addColumn('aksi', function ($data) use ($auth) {
-                    $uuid_enc      = Helper::encode($data->uuid);
-                    $edit_url      = route('tpu.petugas.edit', $uuid_enc);
-                    $isOwnAccount  = ($data->uuid_user == $auth->uuid && $auth->role == 'Admin TPU');
-                    $canEditDelete = ($auth->role == 'Super Admin' || $auth->role == 'Admin' || ($auth->role == 'Admin TPU' && ! $isOwnAccount));
+                    $uuid_enc = Helper::encode($data->uuid);
+                    $edit_url = route('tpu.petugas.edit', $uuid_enc);
+                    $role     = $auth->role;
+
+                    // Logic untuk aksi buttons
+                    $canEditDelete = false;
+
+                    // Super Admin dan Admin memiliki akses penuh
+                    if ($role == 'Super Admin' || $role == 'Admin') {
+                        $canEditDelete = true;
+                    }
+                    // Admin TPU bisa edit/delete petugas di TPU mereka, tapi tidak akun sendiri
+                    elseif ($role == 'Admin TPU') {
+                        $isOwnAccount  = ($data->uuid_user == $auth->uuid);
+                        $isSameTPU     = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canEditDelete = $isSameTPU && ! $isOwnAccount;
+                    }
+                    // Petugas TPU tidak bisa edit/delete siapa pun
 
                     if ($canEditDelete) {
                         return '<div class="d-flex justify-content-center">
@@ -99,7 +145,21 @@ class TpuPetugasController extends Controller
                 ->make(true);
         }
 
-        return view('admin.tpu.petugas.index');
+        // Prepare data untuk filter TPU
+        $tpuList       = [];
+        $showTpuFilter = false;
+
+        // Hanya Super Admin dan Admin yang bisa melihat filter TPU
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $showTpuFilter = true;
+            $tpuList       = TpuDatas::select('uuid', 'nama')->orderBy('nama', 'ASC')->get();
+        }
+
+        return view('admin.tpu.petugas.index', compact(
+            'filter_tpu',
+            'tpuList',
+            'showTpuFilter'
+        ));
     }
 
     /**
@@ -119,12 +179,11 @@ class TpuPetugasController extends Controller
             $tpus = TpuDatas::select('uuid', 'nama')->get();
         }
 
-        // Jika Admin TPU, ambil uuid_tpu dari data terkait
+        // Jika Admin TPU, ambil uuid_tpu dari relasi petugas
         $uuid_tpu = null;
         if ($auth->role === 'Admin TPU') {
-            $tpu = TpuDatas::where('uuid_created', $auth->uuid)->first();
-            if ($tpu) {
-                $uuid_tpu = $tpu->uuid;
+            if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
+                $uuid_tpu = $auth->RelPetugasTpu->uuid_tpu;
             } else {
                 alert()->error('Error!', 'Tidak ada TPU yang terkait dengan akun Anda!');
                 return redirect()->route('tpu.petugas.index');
@@ -164,10 +223,10 @@ class TpuPetugasController extends Controller
             ],
         ]);
 
-        // Cek hak akses
+        // Cek hak akses untuk Admin TPU
         if ($auth->role === 'Admin TPU') {
-            $tpu = TpuDatas::where('uuid', $request->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-            if (! $tpu) {
+            // Pastikan Admin TPU hanya bisa menambah petugas di TPU mereka sendiri
+            if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
                 alert()->error('Error!', 'Anda tidak memiliki izin untuk menambahkan petugas pada TPU ini!');
                 return back()->withInput($request->all());
             }
@@ -262,12 +321,20 @@ class TpuPetugasController extends Controller
         $data = TpuPetugas::findOrFail($uuid);
 
         // Cek hak akses
-        if ($auth->role !== 'Super Admin' && $auth->role !== 'Admin') {
-            $tpu = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-            if (! $tpu || ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid)) {
-                alert()->error('Error!', 'Anda tidak memiliki izin untuk mengedit petugas ini!');
-                return redirect()->route('tpu.petugas.index');
-            }
+        $canEdit = false;
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $canEdit = true;
+        } elseif ($auth->role === 'Admin TPU') {
+            // Admin TPU bisa edit petugas di TPU mereka, tapi tidak akun sendiri
+            $isOwnAccount = ($data->uuid_user == $auth->uuid);
+            $isSameTPU    = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+            $canEdit      = $isSameTPU && ! $isOwnAccount;
+        }
+        // Petugas TPU tidak bisa edit siapa pun
+
+        if (! $canEdit) {
+            alert()->error('Error!', 'Anda tidak memiliki izin untuk mengedit petugas ini!');
+            return redirect()->route('tpu.petugas.index');
         }
 
         $title  = 'Edit Data Petugas';
@@ -298,13 +365,21 @@ class TpuPetugasController extends Controller
         $uuid = Helper::decode($uuid_enc);
         $data = TpuPetugas::findOrFail($uuid);
 
-        // Cek hak akses
-        if ($auth->role !== 'Super Admin' && $auth->role !== 'Admin') {
-            $tpu = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-            if (! $tpu || ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid)) {
-                alert()->error('Error!', 'Anda tidak memiliki izin untuk mengedit petugas ini!');
-                return redirect()->route('tpu.petugas.index');
-            }
+        // Cek hak akses (sama seperti di edit method)
+        $canEdit = false;
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $canEdit = true;
+        } elseif ($auth->role === 'Admin TPU') {
+            // Admin TPU bisa edit petugas di TPU mereka, tapi tidak akun sendiri
+            $isOwnAccount = ($data->uuid_user == $auth->uuid);
+            $isSameTPU    = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+            $canEdit      = $isSameTPU && ! $isOwnAccount;
+        }
+        // Petugas TPU tidak bisa edit siapa pun
+
+        if (! $canEdit) {
+            alert()->error('Error!', 'Anda tidak memiliki izin untuk mengedit petugas ini!');
+            return redirect()->route('tpu.petugas.index');
         }
 
         // Validasi input
@@ -419,22 +494,29 @@ class TpuPetugasController extends Controller
     /**
      * Update the status of the specified resource.
      */
-
     public function status(Request $request)
     {
         $auth = Auth::user();
         $uuid = Helper::decode($request->uuid);
         $data = TpuPetugas::findOrFail($uuid);
 
-        // Cek hak akses
-        if ($auth->role !== 'Super Admin' && $auth->role !== 'Admin') {
-            $tpu = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-            if (! $tpu || ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid)) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Anda tidak memiliki izin untuk mengubah status petugas ini!',
-                ], 403);
-            }
+        // Cek hak akses untuk mengubah status
+        $canUpdateStatus = false;
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $canUpdateStatus = true;
+        } elseif ($auth->role === 'Admin TPU') {
+            // Admin TPU bisa mengubah status petugas di TPU mereka, tapi tidak akun sendiri
+            $isOwnAccount    = ($data->uuid_user == $auth->uuid);
+            $isSameTPU       = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+            $canUpdateStatus = $isSameTPU && ! $isOwnAccount;
+        }
+        // Petugas TPU tidak bisa mengubah status siapa pun
+
+        if (! $canUpdateStatus) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Anda tidak memiliki izin untuk mengubah status petugas ini!',
+            ], 403);
         }
 
         $user      = User::whereUuid($data->uuid_user)->firstOrFail();
@@ -479,15 +561,23 @@ class TpuPetugasController extends Controller
         $uuid = Helper::decode($request->uuid);
         $data = TpuPetugas::findOrFail($uuid);
 
-        // Cek hak akses
-        if ($auth->role !== 'Super Admin' && $auth->role !== 'Admin') {
-            $tpu = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-            if (! $tpu || ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid)) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Anda tidak memiliki izin untuk menghapus petugas ini!',
-                ], 403);
-            }
+        // Cek hak akses untuk menghapus (sama seperti edit)
+        $canDelete = false;
+        if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+            $canDelete = true;
+        } elseif ($auth->role === 'Admin TPU') {
+            // Admin TPU bisa hapus petugas di TPU mereka, tapi tidak akun sendiri
+            $isOwnAccount = ($data->uuid_user == $auth->uuid);
+            $isSameTPU    = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+            $canDelete    = $isSameTPU && ! $isOwnAccount;
+        }
+        // Petugas TPU tidak bisa hapus siapa pun
+
+        if (! $canDelete) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Anda tidak memiliki izin untuk menghapus petugas ini!',
+            ], 403);
         }
 
         // Save
@@ -543,11 +633,16 @@ class TpuPetugasController extends Controller
                     $data = TpuPetugas::findOrFail($uuid);
 
                     // Cek hak akses
-                    $canDelete = ($auth->role == 'Super Admin' || $auth->role == 'Admin');
-                    if (! $canDelete) {
-                        $tpu       = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-                        $canDelete = $tpu && ! ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid);
+                    $canDelete = false;
+                    if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+                        $canDelete = true;
+                    } elseif ($auth->role === 'Admin TPU') {
+                        // Admin TPU bisa hapus petugas di TPU mereka, tapi tidak akun sendiri
+                        $isOwnAccount = ($data->uuid_user == $auth->uuid);
+                        $isSameTPU    = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canDelete    = $isSameTPU && ! $isOwnAccount;
                     }
+                    // Petugas TPU tidak bisa hapus siapa pun
 
                     if (! $canDelete) {
                         $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->nama_lengkap;
@@ -642,11 +737,16 @@ class TpuPetugasController extends Controller
                     $data = TpuPetugas::findOrFail($uuid);
 
                     // Cek hak akses
-                    $canUpdate = ($auth->role == 'Super Admin' || $auth->role == 'Admin');
-                    if (! $canUpdate) {
-                        $tpu       = TpuDatas::where('uuid', $data->uuid_tpu)->where('uuid_created', $auth->uuid)->first();
-                        $canUpdate = $tpu && ! ($auth->role == 'Admin TPU' && $data->uuid_user == $auth->uuid);
+                    $canUpdate = false;
+                    if ($auth->role === 'Super Admin' || $auth->role === 'Admin') {
+                        $canUpdate = true;
+                    } elseif ($auth->role === 'Admin TPU') {
+                        // Admin TPU bisa update status petugas di TPU mereka, tapi tidak akun sendiri
+                        $isOwnAccount = ($data->uuid_user == $auth->uuid);
+                        $isSameTPU    = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canUpdate    = $isSameTPU && ! $isOwnAccount;
                     }
+                    // Petugas TPU tidak bisa update status siapa pun
 
                     if (! $canUpdate) {
                         $failedItems[] = 'Tidak memiliki izin untuk mengubah status: ' . $data->nama_lengkap;

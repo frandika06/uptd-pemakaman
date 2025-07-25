@@ -25,14 +25,14 @@ class TpuMakamController extends Controller
             $query = TpuMakam::query()->with(['Lahan.Tpu', 'StatusMakam']);
 
             // Filter berdasarkan role
-            if ($auth->role === 'Admin TPU') {
+            if (in_array($auth->role, ['Admin TPU', 'Petugas TPU'])) {
                 $query->whereHas('Lahan.Tpu', function ($q) use ($auth) {
-                    $q->where('uuid_created', $auth->uuid);
+                    $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
                 });
             }
 
             // Filter berdasarkan TPU
-            if ($request->filled('filter.tpu') && $request->input('filter.tpu') !== 'Semua TPU') {
+            if ($request->filled('filter.tpu') && $request->input('filter.tpu') !== 'Semua TPU' && ! in_array($auth->role, ['Admin TPU', 'Petugas TPU'])) {
                 $query->whereHas('Lahan.Tpu', function ($q) use ($request) {
                     $q->where('nama', $request->input('filter.tpu'));
                 });
@@ -53,16 +53,17 @@ class TpuMakamController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->setRowId('uuid')
-                ->addColumn('action', function ($data) {
-                    $uuid_enc = Helper::encode($data->uuid);
-                    $editUrl  = route('tpu.makam.edit', $uuid_enc);
+                ->addColumn('action', function ($data) use ($auth) {
+                    $uuid_enc   = Helper::encode($data->uuid);
+                    $editUrl    = route('tpu.makam.edit', $uuid_enc);
+                    $isReadOnly = $auth->role === 'Petugas TPU';
 
                     return '
                     <div class="d-flex align-items-center">
-                        <a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1">
+                        <a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1' . ($isReadOnly ? ' disabled' : '') . '">
                             <i class="ki-outline ki-pencil fs-5"></i>
                         </a>
-                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete"
+                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete' . ($isReadOnly ? ' disabled' : '') . '"
                                 data-kt-delete-url="' . route('tpu.makam.destroy') . '"
                                 data-kt-delete-id="' . $uuid_enc . '">
                             <i class="ki-outline ki-trash fs-5"></i>
@@ -151,12 +152,36 @@ class TpuMakamController extends Controller
                 ->make(true);
         }
 
-        $tpus     = TpuLahan::with('Tpu')->get()->pluck('Tpu')->unique();
+        // Mengambil data tpus dan lahans berdasarkan role
+        $tpus   = collect();
+        $lahans = collect();
+
+        if (in_array($auth->role, ['Admin TPU', 'Petugas TPU'])) {
+            $tpus = TpuLahan::with('Tpu')
+                ->whereHas('Tpu', function ($q) use ($auth) {
+                    $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+                })
+                ->get()
+                ->pluck('Tpu')
+                ->unique();
+
+            $lahans = TpuLahan::whereHas('Tpu', function ($q) use ($auth) {
+                $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+            })
+                ->get(['uuid', 'kode_lahan']);
+        } else {
+            $tpus   = TpuLahan::with('Tpu')->get()->pluck('Tpu')->unique();
+            $lahans = TpuLahan::get(['uuid', 'kode_lahan']);
+        }
+
         $stsmakam = TpuRefStatusMakam::where('status', '1')->orderBy('nama', 'ASC')->get();
-        $data     = [
-            'title'    => 'Data Makam',
-            'tpus'     => $tpus,
-            'stsmakam' => $stsmakam,
+
+        $data = [
+            'title'     => 'Data Makam',
+            'tpus'      => $tpus,
+            'lahans'    => $lahans,
+            'stsmakam'  => $stsmakam,
+            'user_role' => $auth->role,
         ];
 
         return view('admin.tpu.makam.index', $data);
@@ -169,12 +194,18 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
+        // Cek akses untuk Petugas TPU
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Unauthorized action.');
+            return redirect()->route('tpu.makam.index');
+        }
+
         // Get available lahan
         $lahans = TpuLahan::with('Tpu');
 
         if ($auth->role === 'Admin TPU') {
             $lahans->whereHas('Tpu', function ($q) use ($auth) {
-                $q->where('uuid_created', $auth->uuid);
+                $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             });
         }
 
@@ -197,6 +228,12 @@ class TpuMakamController extends Controller
     public function store(Request $request)
     {
         $auth = Auth::user();
+
+        // Cek akses untuk Petugas TPU
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Unauthorized action.');
+            return redirect()->route('tpu.makam.index');
+        }
 
         $request->validate([
             'uuid_lahan'   => 'required|exists:tpu_lahans,uuid',
@@ -226,7 +263,7 @@ class TpuMakamController extends Controller
 
             // Check permission for lahan
             $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-            if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid_created !== $auth->uuid) {
+            if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
                 alert()->error('Error', 'Unauthorized action.');
                 return back()->withInput();
             }
@@ -290,13 +327,19 @@ class TpuMakamController extends Controller
      */
     public function edit($uuid_enc)
     {
+        $auth = Auth::user();
+
+        // Cek akses untuk Petugas TPU
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Unauthorized action.');
+            return redirect()->route('tpu.makam.index');
+        }
+
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-        $auth = Auth::user();
-
         // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid_created !== $auth->uuid) {
+        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
             alert()->error('Error', 'Unauthorized action.');
             return redirect()->route('tpu.makam.index');
         }
@@ -306,7 +349,7 @@ class TpuMakamController extends Controller
 
         if ($auth->role === 'Admin TPU') {
             $lahans->whereHas('Tpu', function ($q) use ($auth) {
-                $q->where('uuid_created', $auth->uuid);
+                $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             });
         }
 
@@ -330,12 +373,19 @@ class TpuMakamController extends Controller
      */
     public function update(Request $request, $uuid_enc)
     {
-        $auth     = Auth::user();
+        $auth = Auth::user();
+
+        // Cek akses untuk Petugas TPU
+        if ($auth->role === 'Petugas TPU') {
+            alert()->error('Error', 'Unauthorized action.');
+            return redirect()->route('tpu.makam.index');
+        }
+
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
         // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid_created !== $auth->uuid) {
+        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
             alert()->error('Error', 'Unauthorized action.');
             return back()->withInput();
         }
@@ -369,7 +419,7 @@ class TpuMakamController extends Controller
             // Check permission for new lahan if changed
             if ($request->uuid_lahan !== $data->uuid_lahan) {
                 $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-                if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid_created !== $auth->uuid) {
+                if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
                     alert()->error('Error', 'Unauthorized action.');
                     return back()->withInput();
                 }
@@ -438,6 +488,14 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
+        // Cek akses untuk Petugas TPU
+        if ($auth->role === 'Petugas TPU') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Unauthorized action.',
+            ], 403);
+        }
+
         $request->validate([
             'uuid' => 'required|string',
         ]);
@@ -449,7 +507,7 @@ class TpuMakamController extends Controller
             $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
             // Check permission
-            if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid_created !== $auth->uuid) {
+            if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Unauthorized action.',
@@ -486,6 +544,108 @@ class TpuMakamController extends Controller
                     'message' => 'Data Makam Gagal Dihapus!',
                 ], 422);
             }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status'  => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove multiple resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $auth = Auth::user();
+
+        // Petugas TPU tidak diizinkan menghapus
+        if ($auth->role === 'Petugas TPU') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Anda tidak memiliki izin untuk menghapus data makam.',
+            ], 403);
+        }
+
+        $request->validate([
+            'uuids'   => 'required|array|min:1',
+            'uuids.*' => 'required|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $decodedUuids = $request->uuids;
+            $deletedCount = 0;
+            $failedItems  = [];
+
+            foreach ($decodedUuids as $index => $uuid) {
+                try {
+                    $data = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid);
+
+                    // Check permission untuk Admin TPU
+                    if ($auth->role === 'Admin TPU') {
+                        if (! $auth->RelPetugasTpu || ($data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu)) {
+                            $failedItems[] = 'Tidak memiliki izin untuk menghapus makam ID: ' . $request->uuids[$index];
+                            continue;
+                        }
+                    }
+
+                    $value = $data->toArray();
+                    if ($data->delete()) {
+                        $deletedCount++;
+
+                        // Create log per item
+                        $aktifitas = [
+                            'tabel' => ['tpu_makams'],
+                            'uuid'  => [$uuid],
+                            'value' => [$value],
+                        ];
+                        $log = [
+                            'apps'      => 'TPU Admin',
+                            'subjek'    => 'Menghapus Data Makam (Bulk): ' . $uuid,
+                            'aktifitas' => $aktifitas,
+                            'device'    => 'web',
+                        ];
+                        Helper::addToLogAktifitas($request, $log);
+                    } else {
+                        $failedItems[] = 'Gagal menghapus makam ID: ' . $request->uuids[$index];
+                    }
+                } catch (\Exception $e) {
+                    $failedItems[] = 'Error pada ID ' . $request->uuids[$index] . ': ' . $e->getMessage();
+                    continue;
+                }
+            }
+
+            $message = 'Berhasil menghapus ' . $deletedCount . ' makam';
+            if (! empty($failedItems)) {
+                $message .= '. Gagal menghapus ' . count($failedItems) . ' item';
+            }
+
+            // Create summary log
+            $summaryLog = [
+                'apps'      => 'TPU Admin',
+                'subjek'    => 'Bulk Delete Data Makam - Berhasil: ' . $deletedCount . ', Gagal: ' . count($failedItems),
+                'aktifitas' => [
+                    'tabel'         => ['tpu_makams'],
+                    'total_request' => count($request->uuids),
+                    'total_deleted' => $deletedCount,
+                    'total_failed'  => count($failedItems),
+                    'failed_items'  => $failedItems,
+                ],
+                'device'    => 'web',
+            ];
+            Helper::addToLogAktifitas($request, $summaryLog);
+
+            DB::commit();
+            return response()->json([
+                'status'        => true,
+                'message'       => $message,
+                'deleted_count' => $deletedCount,
+                'failed_count'  => count($failedItems),
+                'failed_items'  => $failedItems,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -610,9 +770,16 @@ class TpuMakamController extends Controller
      */
     public function getLahanByTpu(Request $request)
     {
-        $lahans = TpuLahan::whereHas('Tpu', function ($q) use ($request) {
-            $q->where('nama', $request->tpu);
+        $auth = Auth::user();
+
+        $lahans = TpuLahan::whereHas('Tpu', function ($q) use ($request, $auth) {
+            if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+                $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
+            } else {
+                $q->where('nama', $request->tpu);
+            }
         })->get(['uuid', 'kode_lahan']);
+
         return response()->json(['status' => true, 'data' => $lahans]);
     }
 }

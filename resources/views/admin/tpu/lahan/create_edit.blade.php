@@ -158,9 +158,9 @@
                         <label class="required form-label">TPU</label>
                         <select class="form-select mb-2 @error('uuid_tpu') is-invalid @enderror" data-control="select2" data-placeholder="Pilih TPU" name="uuid_tpu" id="kt_lahan_tpu"
                             required>
-                            <option></option>
+                            <option value="" disabled {{ !old('uuid_tpu') && !isset($data) ? 'selected' : '' }}>Pilih TPU</option>
                             @foreach ($tpus as $tpu)
-                                <option value="{{ $tpu->uuid }}" {{ old('uuid_tpu', isset($data) ? $data->uuid_tpu : '') == $tpu->uuid ? 'selected' : '' }}>
+                                <option value="{{ $tpu->uuid }}" {{ old('uuid_tpu', isset($data) ? $data->uuid_tpu : '') === $tpu->uuid ? 'selected' : '' }}>
                                     {{ $tpu->nama }}
                                 </option>
                             @endforeach

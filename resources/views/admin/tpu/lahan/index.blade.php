@@ -122,38 +122,41 @@
         {{-- begin::Actions --}}
         <div class="d-flex align-self-center flex-center flex-shrink-0">
             {{-- begin::Filter dropdown --}}
-            <div class="me-3">
-                <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
-                    data-kt-menu-placement="bottom-end">
-                    <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
-                    Filter: <span id="filter-text" class="ms-1">Semua TPU</span>
-                </a>
-                {{-- begin::Menu --}}
-                <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
-                    <div class="px-7 py-5">
-                        <div class="fs-5 text-dark fw-bold">Filter Options</div>
-                    </div>
-                    <div class="separator border-gray-200"></div>
-                    <div class="px-7 py-5">
-                        <div class="mb-10">
-                            <label class="form-label fw-semibold">TPU:</label>
-                            <div>
-                                <select class="form-select form-select-solid" name="q_tpu" id="q_tpu" data-control="select2" data-placeholder="Pilih TPU" data-allow-clear="true">
-                                    <option value="Semua TPU">Semua TPU</option>
-                                    @foreach ($tpus as $tpu)
-                                        <option value="{{ $tpu->nama }}">{{ $tpu->nama }}</option>
-                                    @endforeach
-                                </select>
+            @if ($showTpuFilter)
+                <div class="me-3">
+                    <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
+                        data-kt-menu-placement="bottom-end">
+                        <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
+                        Filter: <span id="filter-text" class="ms-1">{{ $filter_tpu }}</span>
+                    </a>
+                    {{-- begin::Menu --}}
+                    <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
+                        <div class="px-7 py-5">
+                            <div class="fs-5 text-dark fw-bold">Filter Options</div>
+                        </div>
+                        <div class="separator border-gray-200"></div>
+                        <div class="px-7 py-5">
+                            <div class="mb-10">
+                                <label class="form-label fw-semibold">TPU:</label>
+                                <div>
+                                    <select class="form-select form-select-solid" name="q_tpu" id="q_tpu" data-control="select2" data-placeholder="Pilih TPU"
+                                        data-allow-clear="true">
+                                        <option value="Semua TPU">Semua TPU</option>
+                                        @foreach ($tpus as $tpu)
+                                            <option value="{{ $tpu->nama }}" {{ $filter_tpu == $tpu->nama ? 'selected' : '' }}>{{ $tpu->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
+                                <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
-                            <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
-                        </div>
                     </div>
+                    {{-- end::Menu --}}
                 </div>
-                {{-- end::Menu --}}
-            </div>
+            @endif
             {{-- end::Filter dropdown --}}
             {{-- begin::Export button --}}
             <button type="button" class="btn btn-sm btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
@@ -189,10 +192,12 @@
             <div id="kt_datatable_example_buttons" class="d-none"></div>
             {{-- end::Export button --}}
             {{-- begin::Primary button --}}
-            <a href="{{ route('tpu.lahan.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
-                <i class="ki-outline ki-plus fs-2"></i>
-                <span>Tambah Data Lahan</span>
-            </a>
+            @if (Auth::user()->role === 'Super Admin' || Auth::user()->role === 'Admin' || Auth::user()->role === 'Admin TPU')
+                <a href="{{ route('tpu.lahan.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
+                    <i class="ki-outline ki-plus fs-2"></i>
+                    <span>Tambah Data Lahan</span>
+                </a>
+            @endif
             {{-- end::Primary button --}}
         </div>
         {{-- end::Actions --}}
@@ -207,7 +212,16 @@
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
                     <span class="card-label fw-bold fs-3 mb-1">Data Lahan</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan TPU: <strong id="titleType">Semua TPU</strong></span>
+                    <span class="text-muted mt-1 fw-semibold fs-7">
+                        Menampilkan TPU:
+                        <strong id="titleType">
+                            @if ($showTpuFilter)
+                                {{ $filter_tpu }}
+                            @else
+                                {{ Auth::user()->RelPertugasTpu->Tpu->nama ?? 'TPU Anda' }}
+                            @endif
+                        </strong>
+                    </span>
                 </h4>
             </div>
             <div class="card-toolbar">
@@ -218,22 +232,25 @@
             </div>
         </div>
         <div class="card-body py-4">
-            <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-lahan-table-toolbar="selected">
-                <div class="fw-bold text-primary">
-                    <i class="ki-outline ki-check-square fs-2 me-2"></i>
-                    <span data-kt-lahan-table-select="selected_count"></span> item dipilih
+            {{-- Bulk Actions Toolbar --}}
+            @if (Auth::user()->role !== 'Petugas TPU')
+                <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-lahan-table-toolbar="selected">
+                    <div class="fw-bold text-primary">
+                        <i class="ki-outline ki-check-square fs-2 me-2"></i>
+                        <span data-kt-lahan-table-select="selected_count"></span> item dipilih
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-lahan-table-select="delete_selected" data-bs-toggle="tooltip"
+                            title="Hapus yang dipilih">
+                            <i class="ki-outline ki-trash fs-6 me-1"></i>
+                            Hapus
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light" data-kt-lahan-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
+                            <i class="ki-outline ki-cross fs-6"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-lahan-table-select="delete_selected" data-bs-toggle="tooltip"
-                        title="Hapus yang dipilih">
-                        <i class="ki-outline ki-trash fs-6 me-1"></i>
-                        Hapus
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light" data-kt-lahan-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
-                        <i class="ki-outline ki-cross fs-6"></i>
-                    </button>
-                </div>
-            </div>
+            @endif
             <div class="table-responsive position-relative">
                 <div id="datatable_processing" style="display: none;">
                     <div class="d-flex align-items-center">
@@ -244,14 +261,16 @@
                 <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_lahan_table">
                     <thead>
                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                            <th class="w-10px pe-2">
-                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                    <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_lahan_table .form-check-input" value="1" />
-                                </div>
-                            </th>
+                            @if (Auth::user()->role !== 'Petugas TPU')
+                                <th class="w-10px pe-2">
+                                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                        <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_lahan_table .form-check-input"
+                                            value="1" />
+                                    </div>
+                                </th>
+                            @endif
                             <th width="30px">#</th>
-                            <th width="20%">Kode Lahan</th>
-                            <th width="20%">TPU</th>
+                            <th width="20%">Lahan</th>
                             <th width="15%">Luas (m²)</th>
                             <th width="20%">Koordinat</th>
                             <th width="15%">Total Makam</th>
@@ -262,10 +281,11 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th class="w-10px pe-2"></th>
+                            @if (Auth::user()->role !== 'Petugas TPU')
+                                <th class="w-10px pe-2"></th>
+                            @endif
                             <th width="30px">#</th>
-                            <th width="20%">Kode Lahan</th>
-                            <th width="20%">TPU</th>
+                            <th width="20%">Lahan</th>
                             <th width="15%">Luas (m²)</th>
                             <th width="20%">Koordinat</th>
                             <th width="15%">Total Makam</th>
@@ -287,10 +307,73 @@
         var KTLahanList = function() {
             var datatable;
             var table;
+            var isPetugasTPU = @json(Auth::user()->role === 'Petugas TPU');
 
             var initLahanTable = function() {
                 table = document.querySelector('#kt_lahan_table');
                 if (!table) return;
+
+                var columns = [];
+
+                // Add checkbox column only if not Petugas TPU
+                if (!isPetugasTPU) {
+                    columns.push({
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        exportable: false,
+                        render: function(data, type, row) {
+                            return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' +
+                                row.uuid + '" /></div>';
+                        }
+                    });
+                }
+
+                // Add other columns
+                columns = columns.concat([{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'kode_lahan',
+                        name: 'kode_lahan'
+                    },
+                    {
+                        data: 'luas_m2',
+                        name: 'luas_m2'
+                    },
+                    {
+                        data: 'koordinat',
+                        name: 'koordinat',
+                        orderable: false
+                    },
+                    {
+                        data: 'total_makam',
+                        name: 'total_makam',
+                        orderable: false
+                    },
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]);
+
+                var columnDefs = [];
+                if (!isPetugasTPU) {
+                    columnDefs.push({
+                        className: "text-center",
+                        targets: [0, 1, 3, 5, 6]
+                    });
+                } else {
+                    columnDefs.push({
+                        className: "text-center",
+                        targets: [0, 2, 4, 5]
+                    });
+                }
 
                 datatable = $(table).DataTable({
                     responsive: true,
@@ -298,14 +381,14 @@
                     processing: true,
                     serverSide: false,
                     order: [
-                        [1, 'asc']
+                        [isPetugasTPU ? 0 : 1, 'asc']
                     ],
                     stateSave: false,
-                    select: {
+                    select: !isPetugasTPU ? {
                         style: 'multi',
                         selector: 'td:first-child .form-check-input',
                         className: 'row-selected'
-                    },
+                    } : false,
                     language: {
                         searchPlaceholder: 'Cari data lahan...',
                         sSearch: '',
@@ -328,9 +411,11 @@
                         url: "{{ route('tpu.lahan.index') }}",
                         type: 'GET',
                         data: function(d) {
-                            d.filter = {
-                                tpu: $('[name="q_tpu"]').val() || 'Semua TPU'
-                            };
+                            @if ($showTpuFilter)
+                                d.filter = {
+                                    tpu: $('[name="q_tpu"]').val() || 'Semua TPU'
+                                };
+                            @endif
                         },
                         beforeSend: function() {
                             $('#datatable_processing').show();
@@ -348,65 +433,22 @@
                             });
                         }
                     },
-                    columns: [{
-                            data: null,
-                            orderable: false,
-                            searchable: false,
-                            exportable: false,
-                            render: function(data, type, row) {
-                                return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' +
-                                    row.uuid + '" /></div>';
-                            }
-                        },
-                        {
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            orderable: false,
-                            searchable: false
-                        },
-                        {
-                            data: 'kode_lahan',
-                            name: 'kode_lahan'
-                        },
-                        {
-                            data: 'nama_tpu',
-                            name: 'nama_tpu'
-                        },
-                        {
-                            data: 'luas_m2',
-                            name: 'luas_m2'
-                        },
-                        {
-                            data: 'koordinat',
-                            name: 'koordinat',
-                            orderable: false
-                        },
-                        {
-                            data: 'total_makam',
-                            name: 'total_makam',
-                            orderable: false
-                        },
-                        {
-                            data: 'actions',
-                            name: 'actions',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ],
-                    columnDefs: [{
-                        className: "text-center",
-                        targets: [0, 1, 4, 6, 7]
-                    }],
+                    columns: columns,
+                    columnDefs: columnDefs,
                     drawCallback: function(settings) {
                         $('#datatable_processing').hide();
                         if (typeof KTApp !== 'undefined' && KTApp.initBootstrapTooltips) {
                             KTApp.initBootstrapTooltips();
                         }
-                        handleBulkActions();
+                        if (!isPetugasTPU) {
+                            handleBulkActions();
+                        }
                     },
                     initComplete: function(settings, json) {
                         $('#datatable_processing').hide();
-                        handleBulkActions();
+                        if (!isPetugasTPU) {
+                            handleBulkActions();
+                        }
                     }
                 });
 
@@ -414,113 +456,115 @@
             }
 
             var exportButtons = function() {
-                const documentTitle = 'Data Lahan';
+                @if ($showTpuFilter)
+                    const documentTitle = 'Data Lahan';
 
-                var buttons = new $.fn.dataTable.Buttons(datatable, {
-                    buttons: [{
-                            extend: 'copyHtml5',
-                            title: function() {
-                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
-                                return documentTitle + ' - ' + currentFilter;
-                            },
-                            exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
-                            }
-                        },
-                        {
-                            extend: 'excelHtml5',
-                            title: function() {
-                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
-                                return documentTitle + ' - ' + currentFilter;
-                            },
-                            filename: function() {
-                                const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
-                                return `data-lahan-${filter}-${date}`;
-                            },
-                            exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
-                            }
-                        },
-                        {
-                            extend: 'csvHtml5',
-                            title: function() {
-                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
-                                return documentTitle + ' - ' + currentFilter;
-                            },
-                            filename: function() {
-                                const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
-                                return `data-lahan-${filter}-${date}`;
-                            },
-                            exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
-                            }
-                        },
-                        {
-                            extend: 'pdfHtml5',
-                            title: function() {
-                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
-                                return documentTitle + ' - ' + currentFilter;
-                            },
-                            filename: function() {
-                                const date = new Date().toISOString().slice(0, 10);
-                                const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
-                                return `data-lahan-${filter}-${date}`;
-                            },
-                            orientation: 'landscape',
-                            pageSize: 'A4',
-                            exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6]
-                            },
-                            customize: function(doc) {
-                                doc.content[1].table.widths = ['10%', '20%', '20%', '15%', '20%', '15%'];
-                                doc.styles.tableHeader.fontSize = 9;
-                                doc.styles.tableBodyOdd.fontSize = 8;
-                                doc.styles.tableBodyEven.fontSize = 8;
-                                doc.defaultStyle.fontSize = 8;
-                            }
-                        }
-                    ]
-                }).container().appendTo($('#kt_datatable_example_buttons'));
-
-                const exportButtons = document.querySelectorAll('#kt_datatable_example_export_menu [data-kt-export]');
-                exportButtons.forEach(exportButton => {
-                    exportButton.addEventListener('click', e => {
-                        e.preventDefault();
-                        const exportValue = e.target.getAttribute('data-kt-export');
-                        const target = document.querySelector('.dt-buttons .buttons-' + exportValue);
-                        if (target) {
-                            Swal.fire({
-                                title: `Exporting ${exportValue.toUpperCase()}...`,
-                                text: 'Mohon tunggu',
-                                allowOutsideClick: false,
-                                timer: 1500,
-                                didOpen: () => {
-                                    Swal.showLoading();
+                    var buttons = new $.fn.dataTable.Buttons(datatable, {
+                        buttons: [{
+                                extend: 'copyHtml5',
+                                title: function() {
+                                    const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                    return documentTitle + ' - ' + currentFilter;
+                                },
+                                exportOptions: {
+                                    columns: isPetugasTPU ? [0, 1, 2, 3, 4] : [1, 2, 3, 4, 5]
                                 }
-                            });
-                            setTimeout(() => {
-                                target.click();
+                            },
+                            {
+                                extend: 'excelHtml5',
+                                title: function() {
+                                    const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                    return documentTitle + ' - ' + currentFilter;
+                                },
+                                filename: function() {
+                                    const date = new Date().toISOString().slice(0, 10);
+                                    const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                    return `data-lahan-${filter}-${date}`;
+                                },
+                                exportOptions: {
+                                    columns: isPetugasTPU ? [0, 1, 2, 3, 4] : [1, 2, 3, 4, 5]
+                                }
+                            },
+                            {
+                                extend: 'csvHtml5',
+                                title: function() {
+                                    const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                    return documentTitle + ' - ' + currentFilter;
+                                },
+                                filename: function() {
+                                    const date = new Date().toISOString().slice(0, 10);
+                                    const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                    return `data-lahan-${filter}-${date}`;
+                                },
+                                exportOptions: {
+                                    columns: isPetugasTPU ? [0, 1, 2, 3, 4] : [1, 2, 3, 4, 5]
+                                }
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                title: function() {
+                                    const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                    return documentTitle + ' - ' + currentFilter;
+                                },
+                                filename: function() {
+                                    const date = new Date().toISOString().slice(0, 10);
+                                    const filter = ($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                    return `data-lahan-${filter}-${date}`;
+                                },
+                                orientation: 'landscape',
+                                pageSize: 'A4',
+                                exportOptions: {
+                                    columns: isPetugasTPU ? [0, 1, 2, 3, 4] : [1, 2, 3, 4, 5]
+                                },
+                                customize: function(doc) {
+                                    doc.content[1].table.widths = isPetugasTPU ? ['10%', '20%', '20%', '15%', '20%'] : ['10%', '20%', '20%', '15%', '20%'];
+                                    doc.styles.tableHeader.fontSize = 9;
+                                    doc.styles.tableBodyOdd.fontSize = 8;
+                                    doc.styles.tableBodyEven.fontSize = 8;
+                                    doc.defaultStyle.fontSize = 8;
+                                }
+                            }
+                        ]
+                    }).container().appendTo($('#kt_datatable_example_buttons'));
+
+                    const exportButtons = document.querySelectorAll('#kt_datatable_example_export_menu [data-kt-export]');
+                    exportButtons.forEach(exportButton => {
+                        exportButton.addEventListener('click', e => {
+                            e.preventDefault();
+                            const exportValue = e.target.getAttribute('data-kt-export');
+                            const target = document.querySelector('.dt-buttons .buttons-' + exportValue);
+                            if (target) {
+                                Swal.fire({
+                                    title: `Exporting ${exportValue.toUpperCase()}...`,
+                                    text: 'Mohon tunggu',
+                                    allowOutsideClick: false,
+                                    timer: 1500,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
                                 setTimeout(() => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Export Berhasil!',
-                                        text: `Data berhasil di-export ke ${exportValue.toUpperCase()}`,
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-                                }, 300);
-                            }, 100);
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Export Gagal!',
-                                text: 'Terjadi kesalahan saat melakukan export',
-                            });
-                        }
+                                    target.click();
+                                    setTimeout(() => {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Export Berhasil!',
+                                            text: `Data berhasil di-export ke ${exportValue.toUpperCase()}`,
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        });
+                                    }, 300);
+                                }, 100);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Export Gagal!',
+                                    text: 'Terjadi kesalahan saat melakukan export',
+                                });
+                            }
+                        });
                     });
-                });
+                @endif
             }
 
             var handleSearchDatatable = function() {
@@ -531,37 +575,41 @@
             }
 
             var handleFilter = function() {
-                $('#q_tpu').select2();
-                window.applyFilter = function() {
-                    var selectedTpu = document.getElementById('q_tpu').value;
-                    document.getElementById('filter-text').textContent = selectedTpu;
-                    $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                        $('#titleType').html(selectedTpu);
-                    }, false);
-                }
-                window.resetFilter = function() {
-                    document.getElementById('q_tpu').value = 'Semua TPU';
-                    document.getElementById('filter-text').textContent = 'Semua TPU';
-                    $('#datatable_processing').show();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                        $('#titleType').html('Semua TPU');
-                    }, false);
-                }
-                $('[name="q_tpu"]').change(function() {
-                    var q_tpu = $(this).val();
-                    $('#datatable_processing').show();
-                    $('#kt_lahan_table tbody').empty();
-                    datatable.ajax.reload(function(json) {
-                        $('#datatable_processing').hide();
-                    }, false);
-                    $('#titleType').html(q_tpu);
-                });
+                @if ($showTpuFilter)
+                    $('#q_tpu').select2();
+                    window.applyFilter = function() {
+                        var selectedTpu = document.getElementById('q_tpu').value;
+                        document.getElementById('filter-text').textContent = selectedTpu;
+                        $('#datatable_processing').show();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                            $('#titleType').html(selectedTpu);
+                        }, false);
+                    }
+                    window.resetFilter = function() {
+                        document.getElementById('q_tpu').value = 'Semua TPU';
+                        document.getElementById('filter-text').textContent = 'Semua TPU';
+                        $('#datatable_processing').show();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                            $('#titleType').html('Semua TPU');
+                        }, false);
+                    }
+                    $('[name="q_tpu"]').change(function() {
+                        var q_tpu = $(this).val();
+                        $('#datatable_processing').show();
+                        $('#kt_lahan_table tbody').empty();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                        }, false);
+                        $('#titleType').html(q_tpu);
+                    });
+                @endif
             }
 
             var handleBulkActions = function() {
+                if (isPetugasTPU) return;
+
                 const checkboxes = document.querySelectorAll('#kt_lahan_table .row-checkbox');
                 const bulkToolbar = document.querySelector('[data-kt-lahan-table-toolbar="selected"]');
                 const countElement = document.querySelector('[data-kt-lahan-table-select="selected_count"]');
@@ -583,80 +631,83 @@
             }
 
             var handleEvents = function() {
-                $(document).on('change', '.row-checkbox', function() {
-                    handleBulkActions();
-                });
-                $(document).on('change', '[data-kt-check="true"]', function() {
-                    const isChecked = $(this).is(':checked');
-                    $('.row-checkbox').prop('checked', isChecked);
-                    handleBulkActions();
-                });
-                $(document).on('click', '[data-kt-lahan-table-select="cancel_selection"]', function() {
-                    $('.row-checkbox').prop('checked', false);
-                    $('[data-kt-check="true"]').prop('checked', false);
-                    const bulkToolbar = document.querySelector('[data-kt-lahan-table-toolbar="selected"]');
-                    bulkToolbar.classList.add('d-none');
-                });
-                $(document).on('click', '[data-kt-lahan-table-select="delete_selected"]', function() {
-                    const checkedBoxes = document.querySelectorAll('#kt_lahan_table .row-checkbox:checked');
-                    if (checkedBoxes.length === 0) {
-                        Swal.fire({
-                            title: "Peringatan",
-                            text: "Pilih minimal satu item untuk dihapus",
-                            icon: "warning"
-                        });
-                        return;
-                    }
-                    const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
-                    Swal.fire({
-                        title: "Hapus Data Terpilih",
-                        text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} data lahan yang dipilih?`,
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#f1416c",
-                        cancelButtonColor: "#7e8299",
-                        confirmButtonText: "Ya, hapus semua!",
-                        cancelButtonText: "Batal"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            Swal.fire({
-                                title: 'Menghapus data...',
-                                text: 'Mohon tunggu',
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            $.ajax({
-                                url: "{{ route('tpu.lahan.destroy.bulk') }}",
-                                type: 'POST',
-                                data: {
-                                    uuids: selectedIds,
-                                    _token: "{{ csrf_token() }}"
-                                },
-                                success: function(res) {
-                                    datatable.ajax.reload(null, false);
-                                    const bulkToolbar = document.querySelector('[data-kt-lahan-table-toolbar="selected"]');
-                                    bulkToolbar.classList.add('d-none');
-                                    $('[data-kt-check="true"]').prop('checked', false);
-                                    Swal.fire({
-                                        title: "Success",
-                                        text: res.message,
-                                        icon: "success",
-                                    });
-                                },
-                                error: function(xhr) {
-                                    datatable.ajax.reload(null, false);
-                                    Swal.fire({
-                                        title: "Error",
-                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data',
-                                        icon: "error",
-                                    });
-                                }
-                            });
-                        }
+                if (!isPetugasTPU) {
+                    $(document).on('change', '.row-checkbox', function() {
+                        handleBulkActions();
                     });
-                });
+                    $(document).on('change', '[data-kt-check="true"]', function() {
+                        const isChecked = $(this).is(':checked');
+                        $('.row-checkbox').prop('checked', isChecked);
+                        handleBulkActions();
+                    });
+                    $(document).on('click', '[data-kt-lahan-table-select="cancel_selection"]', function() {
+                        $('.row-checkbox').prop('checked', false);
+                        $('[data-kt-check="true"]').prop('checked', false);
+                        const bulkToolbar = document.querySelector('[data-kt-lahan-table-toolbar="selected"]');
+                        bulkToolbar.classList.add('d-none');
+                    });
+                    $(document).on('click', '[data-kt-lahan-table-select="delete_selected"]', function() {
+                        const checkedBoxes = document.querySelectorAll('#kt_lahan_table .row-checkbox:checked');
+                        if (checkedBoxes.length === 0) {
+                            Swal.fire({
+                                title: "Peringatan",
+                                text: "Pilih minimal satu item untuk dihapus",
+                                icon: "warning"
+                            });
+                            return;
+                        }
+                        const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+                        Swal.fire({
+                            title: "Hapus Data Terpilih",
+                            text: `Apakah Anda yakin ingin menghapus ${selectedIds.length} data lahan yang dipilih?`,
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#f1416c",
+                            cancelButtonColor: "#7e8299",
+                            confirmButtonText: "Ya, hapus semua!",
+                            cancelButtonText: "Batal"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                Swal.fire({
+                                    title: 'Menghapus data...',
+                                    text: 'Mohon tunggu',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+                                $.ajax({
+                                    url: "{{ route('tpu.lahan.destroy.bulk') }}",
+                                    type: 'POST',
+                                    data: {
+                                        uuids: selectedIds,
+                                        _token: "{{ csrf_token() }}"
+                                    },
+                                    success: function(res) {
+                                        datatable.ajax.reload(null, false);
+                                        const bulkToolbar = document.querySelector('[data-kt-lahan-table-toolbar="selected"]');
+                                        bulkToolbar.classList.add('d-none');
+                                        $('[data-kt-check="true"]').prop('checked', false);
+                                        Swal.fire({
+                                            title: "Success",
+                                            text: res.message,
+                                            icon: "success",
+                                        });
+                                    },
+                                    error: function(xhr) {
+                                        datatable.ajax.reload(null, false);
+                                        Swal.fire({
+                                            title: "Error",
+                                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data',
+                                            icon: "error",
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+
                 $(document).on('click', ".btn-delete", function() {
                     let uuid = $(this).attr('data-uuid');
                     let name = $(this).attr('data-name');

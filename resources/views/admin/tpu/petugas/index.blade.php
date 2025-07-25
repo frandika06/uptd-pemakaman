@@ -85,15 +85,18 @@
 @extends('layouts.admin')
 
 @section('title', 'Data Petugas TPU')
-
 @section('toolbar')
     <div class="d-flex flex-stack flex-row-fluid">
+        {{-- begin::Toolbar container --}}
         <div class="d-flex flex-column flex-row-fluid">
+            {{-- begin::Page title --}}
             <div class="page-title d-flex align-items-center me-3">
                 <h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bold fs-lg-2x gap-2">
                     <span>Data Petugas TPU</span>
                 </h1>
             </div>
+            {{-- end::Page title --}}
+            {{-- begin::Breadcrumb --}}
             <ul class="breadcrumb breadcrumb-separatorless fw-semibold mb-3 fs-7">
                 <li class="breadcrumb-item text-gray-700 fw-bold lh-1">
                     <a href="{{ route('auth.home') }}" class="text-gray-700 text-hover-primary">
@@ -109,12 +112,55 @@
                 </li>
                 <li class="breadcrumb-item text-gray-700">Data Petugas</li>
             </ul>
+            {{-- end::Breadcrumb --}}
         </div>
+        {{-- end::Toolbar container --}}
+        {{-- begin::Actions --}}
         <div class="d-flex align-self-center flex-center flex-shrink-0">
+            {{-- begin::Filter dropdown --}}
+            @if ($showTpuFilter)
+                <div class="me-3">
+                    <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
+                        data-kt-menu-placement="bottom-end">
+                        <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
+                        Filter: <span id="filter-text"
+                            class="ms-1">{{ $filter_tpu == 'Semua TPU' ? 'Semua TPU' : $tpuList->firstWhere('uuid', $filter_tpu)->nama ?? 'Semua TPU' }}</span>
+                    </a>
+                    {{-- begin::Menu --}}
+                    <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
+                        <div class="px-7 py-5">
+                            <div class="fs-5 text-dark fw-bold">Filter Options</div>
+                        </div>
+                        <div class="separator border-gray-200"></div>
+                        <div class="px-7 py-5">
+                            <div class="mb-10">
+                                <label class="form-label fw-semibold">TPU:</label>
+                                <div>
+                                    <select class="form-select form-select-solid" name="q_tpu" id="q_tpu" data-control="select2" data-placeholder="Pilih TPU"
+                                        data-allow-clear="true">
+                                        <option value="Semua TPU" {{ $filter_tpu == 'Semua TPU' ? 'selected' : '' }}>Semua TPU</option>
+                                        @foreach ($tpuList as $tpu)
+                                            <option value="{{ $tpu->uuid }}" {{ $filter_tpu == $tpu->uuid ? 'selected' : '' }}>{{ $tpu->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="reset" class="btn btn-sm btn-light btn-active-light-primary me-2" data-kt-menu-dismiss="true" onclick="resetFilter()">Reset</button>
+                                <button type="submit" class="btn btn-sm btn-primary" data-kt-menu-dismiss="true" onclick="applyFilter()">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- end::Menu --}}
+                </div>
+            @endif
+            {{-- end::Filter dropdown --}}
+            {{-- begin::Export button --}}
             <button type="button" class="btn btn-sm btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                 <i class="ki-outline ki-exit-down fs-2"></i>
                 Export Report
             </button>
+            {{-- begin::Export Menu --}}
             <div id="kt_datatable_example_export_menu"
                 class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
                 <div class="menu-item px-3">
@@ -138,21 +184,28 @@
                     </a>
                 </div>
             </div>
+            {{-- end::Export Menu --}}
             <div id="kt_datatable_example_buttons" class="d-none"></div>
+            {{-- end::Export button --}}
+            {{-- begin::Primary button --}}
             <a href="{{ route('tpu.petugas.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
                 <i class="ki-outline ki-plus fs-2"></i>
                 <span>Tambah Data Petugas</span>
             </a>
+            {{-- end::Primary button --}}
         </div>
+        {{-- end::Actions --}}
     </div>
 @endsection
+
 @section('content')
     <div class="card">
         <div class="card-header border-0 pt-6">
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
                     <span class="card-label fw-bold fs-3 mb-1">Data Petugas TPU</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Daftar petugas TPU</span>
+                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan TPU: <strong
+                            id="titleType">{{ $filter_tpu == 'Semua TPU' ? 'Semua TPU' : $tpuList->firstWhere('uuid', $filter_tpu)->nama ?? 'Semua TPU' }}</strong></span>
                 </h4>
             </div>
             <div class="card-toolbar">
@@ -169,7 +222,8 @@
                     <span data-kt-tpu-table-select="selected_count"></span> item dipilih
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-light-success me-2" data-kt-tpu-table-select="status_active" data-bs-toggle="tooltip" title="Aktifkan yang dipilih">
+                    <button type="button" class="btn btn-sm btn-light-success me-2" data-kt-tpu-table-select="status_active" data-bs-toggle="tooltip"
+                        title="Aktifkan yang dipilih">
                         <i class="ki-outline ki-check fs-6 me-1"></i>
                         Aktifkan
                     </button>
@@ -237,6 +291,7 @@
         var KTDatatablesPetugasTPU = function() {
             var table;
             var datatable;
+            var tpuList = @json($tpuList); // Mengambil daftar TPU dari backend
 
             var initDatatable = function() {
                 datatable = $('#datatable').DataTable({
@@ -278,6 +333,14 @@
                     "ajax": {
                         "url": "{{ route('tpu.petugas.index') }}",
                         "type": 'GET',
+                        "data": function(d) {
+                            // Add filter parameters
+                            @if ($showTpuFilter)
+                                d.filter = {
+                                    tpu: $('[name="q_tpu"]').val() || 'Semua TPU'
+                                };
+                            @endif
+                        },
                         "dataSrc": function(json) {
                             return json.data;
                         },
@@ -366,17 +429,24 @@
                 var buttons = new $.fn.dataTable.Buttons(datatable, {
                     buttons: [{
                             extend: 'copyHtml5',
-                            title: documentTitle,
+                            title: function() {
+                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                return documentTitle + ' - ' + getTpuName(currentFilter);
+                            },
                             exportOptions: {
                                 columns: [1, 2, 3, 4, 5]
                             }
                         },
                         {
                             extend: 'excelHtml5',
-                            title: documentTitle,
+                            title: function() {
+                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                return documentTitle + ' - ' + getTpuName(currentFilter);
+                            },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                return `data-petugas-tpu-${date}`;
+                                const filter = getTpuName($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                return `data-petugas-tpu-${filter}-${date}`;
                             },
                             exportOptions: {
                                 columns: [1, 2, 3, 4, 5]
@@ -384,10 +454,14 @@
                         },
                         {
                             extend: 'csvHtml5',
-                            title: documentTitle,
+                            title: function() {
+                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                return documentTitle + ' - ' + getTpuName(currentFilter);
+                            },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                return `data-petugas-tpu-${date}`;
+                                const filter = getTpuName($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                return `data-petugas-tpu-${filter}-${date}`;
                             },
                             exportOptions: {
                                 columns: [1, 2, 3, 4, 5]
@@ -395,10 +469,14 @@
                         },
                         {
                             extend: 'pdfHtml5',
-                            title: documentTitle,
+                            title: function() {
+                                const currentFilter = $('[name="q_tpu"]').val() || 'Semua TPU';
+                                return documentTitle + ' - ' + getTpuName(currentFilter);
+                            },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                return `data-petugas-tpu-${date}`;
+                                const filter = getTpuName($('[name="q_tpu"]').val() || 'Semua TPU').toLowerCase().replace(/\s+/g, '-');
+                                return `data-petugas-tpu-${filter}-${date}`;
                             },
                             orientation: 'landscape',
                             pageSize: 'A4',
@@ -457,6 +535,48 @@
                     });
                 }
             }
+
+            @if ($showTpuFilter)
+                var handleFilter = function() {
+                    $('#q_tpu').select2();
+                    window.applyFilter = function() {
+                        var selectedTpuUuid = document.getElementById('q_tpu').value;
+                        var selectedTpuName = getTpuName(selectedTpuUuid);
+                        document.getElementById('filter-text').textContent = selectedTpuName;
+                        $('#datatable_processing').show();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                            $('#titleType').html(selectedTpuName);
+                        }, false);
+                    }
+                    window.resetFilter = function() {
+                        document.getElementById('q_tpu').value = 'Semua TPU';
+                        document.getElementById('filter-text').textContent = 'Semua TPU';
+                        $('#datatable_processing').show();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                            $('#titleType').html('Semua TPU');
+                        }, false);
+                    }
+                    $('[name="q_tpu"]').change(function() {
+                        var q_tpu = $(this).val();
+                        var q_tpu_name = getTpuName(q_tpu);
+                        $('#datatable_processing').show();
+                        $('#datatable tbody').empty();
+                        datatable.ajax.reload(function(json) {
+                            $('#datatable_processing').hide();
+                        }, false);
+                        $('#titleType').html(q_tpu_name);
+                    });
+                }
+
+                // Fungsi untuk mendapatkan nama TPU berdasarkan UUID
+                function getTpuName(uuid) {
+                    if (uuid === 'Semua TPU') return 'Semua TPU';
+                    var tpu = tpuList.find(item => item.uuid === uuid);
+                    return tpu ? tpu.nama : 'Semua TPU';
+                }
+            @endif
 
             var handleBulkActions = function() {
                 const checkboxes = document.querySelectorAll('#datatable .row-checkbox');
@@ -784,6 +904,9 @@
                     initDatatable();
                     exportButtons();
                     handleSearchDatatable();
+                    @if ($showTpuFilter)
+                        handleFilter();
+                    @endif
                     handleEvents();
                 }
             };

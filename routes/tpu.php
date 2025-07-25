@@ -139,6 +139,7 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::put('/edit/{uuid}', [TpuSarprasController::class, 'update'])->name('tpu.sarpras.update');
             Route::post('/delete', [TpuSarprasController::class, 'destroy'])->name('tpu.sarpras.destroy');
             Route::post('/bulk-destroy', [TpuSarprasController::class, 'bulkDestroy'])->name('tpu.sarpras.destroy.bulk');
+            Route::get('/lahans', [TpuSarprasController::class, 'getLahansByTpu'])->name('tpu.sarpras.lahans');
         });
 
         // Manajemen Statistik Kapasitas

@@ -119,17 +119,6 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::post('/bulk-status', [TpuPetugasController::class, 'bulkStatus'])->name('tpu.petugas.status.bulk');
         });
 
-        // Manajemen Dokumen
-        Route::group(['prefix' => 'dokumen'], function () {
-            Route::get('/', [TpuDokumenController::class, 'index'])->name('tpu.dokumen.index');
-            Route::get('/create', [TpuDokumenController::class, 'create'])->name('tpu.dokumen.create');
-            Route::post('/create', [TpuDokumenController::class, 'store'])->name('tpu.dokumen.store');
-            Route::get('/edit/{uuid}', [TpuDokumenController::class, 'edit'])->name('tpu.dokumen.edit');
-            Route::put('/edit/{uuid}', [TpuDokumenController::class, 'update'])->name('tpu.dokumen.update');
-            Route::post('/delete', [TpuDokumenController::class, 'destroy'])->name('tpu.dokumen.destroy');
-            Route::post('/bulk-destroy', [TpuDokumenController::class, 'bulkDestroy'])->name('tpu.dokumen.destroy.bulk');
-        });
-
         // Manajemen Sarpras
         Route::group(['prefix' => 'sarpras'], function () {
             Route::get('/', [TpuSarprasController::class, 'index'])->name('tpu.sarpras.index');
@@ -140,6 +129,18 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::post('/delete', [TpuSarprasController::class, 'destroy'])->name('tpu.sarpras.destroy');
             Route::post('/bulk-destroy', [TpuSarprasController::class, 'bulkDestroy'])->name('tpu.sarpras.destroy.bulk');
             Route::get('/lahans', [TpuSarprasController::class, 'getLahansByTpu'])->name('tpu.sarpras.lahans');
+        });
+
+        // Data Pendukung TPU - Dokumen
+        Route::group(['prefix' => 'dokumen'], function () {
+            Route::get('/{nama_modul}', [TpuDokumenController::class, 'index'])->name('tpu.dokumen.index');
+            Route::get('/{nama_modul}/create', [TpuDokumenController::class, 'create'])->name('tpu.dokumen.create');
+            Route::post('/{nama_modul}/create', [TpuDokumenController::class, 'store'])->name('tpu.dokumen.store');
+            Route::get('/{nama_modul}/edit/{uuid}', [TpuDokumenController::class, 'edit'])->name('tpu.dokumen.edit');
+            Route::put('/{nama_modul}/edit/{uuid}', [TpuDokumenController::class, 'update'])->name('tpu.dokumen.update');
+            Route::post('/delete', [TpuDokumenController::class, 'destroy'])->name('tpu.dokumen.destroy');
+            Route::post('/bulk-destroy', [TpuDokumenController::class, 'bulkDestroy'])->name('tpu.dokumen.destroy.bulk');
+            Route::get('/download/{uuid}', [TpuDokumenController::class, 'download'])->name('tpu.dokumen.download');
         });
 
         // Manajemen Statistik Kapasitas

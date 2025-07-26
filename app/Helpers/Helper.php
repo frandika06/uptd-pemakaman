@@ -163,6 +163,22 @@ class Helper
         return $bytes;
     }
 
+    /**
+     * Format file size to human readable format
+     */
+    public static function formatFileSize($bytes, $precision = 2)
+    {
+        if ($bytes == 0) {
+            return '0 Bytes';
+        }
+
+        $k     = 1024;
+        $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        $i     = floor(log($bytes) / log($k));
+
+        return round($bytes / pow($k, $i), $precision) . ' ' . $sizes[$i];
+    }
+
     // penyebut untuk terbilang
     public static function penyebut($nilai)
     {

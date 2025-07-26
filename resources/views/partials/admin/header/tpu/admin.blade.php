@@ -159,41 +159,6 @@ $auth = \Auth::user();
                                     </div>
                                 </div>
 
-                                {{-- ===================== Data Pendukung TPU ===================== --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion mt-2">
-                                    <span class="menu-link">
-                                        <span class="menu-icon"><i class="fa-solid fa-folder-open fs-4"></i></span>
-                                        <span class="menu-title">Data Pendukung TPU</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-
-                                        {{-- Dokumen TPU --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'TPU']) }}">
-                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                                <span class="menu-title">Dokumen TPU</span>
-                                            </a>
-                                        </div>
-
-                                        {{-- Dokumen Lahan --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'Lahan']) }}">
-                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                                <span class="menu-title">Dokumen Lahan</span>
-                                            </a>
-                                        </div>
-
-                                        {{-- Dokumen Sarpras --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('tpu.dokumen.index', ['nama_modul' => 'Sarpras']) }}">
-                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                                <span class="menu-title">Dokumen Sarpras</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {{-- ===================== Laporan & Statistik ===================== --}}
                                 <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion mt-2">
                                     <span class="menu-link">

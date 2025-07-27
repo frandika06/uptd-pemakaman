@@ -3,12 +3,15 @@ namespace App\Http\Controllers\web\backend\tpu;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\TpuDokumen;
+use App\Models\TpuKategoriDokumen;
 use App\Models\TpuLahan;
 use App\Models\TpuRefJenisSarpras;
 use App\Models\TpuSarpras;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
 
@@ -70,11 +73,26 @@ class TpuSarprasController extends Controller
                 ->addColumn('nama', function ($data) {
                     $uuid_enc = Helper::encode($data->uuid);
                     $edit_url = route('tpu.sarpras.edit', $uuid_enc);
+
+                    // Count dokumen jika relasi tersedia (following Lahan pattern)
+                    $dokumen_count = 0;
+                    try {
+                        if (method_exists($data, 'Dokumens')) {
+                            $dokumen_count = $data->Dokumens->count();
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore error if relation doesn't exist yet
+                    }
+
+                    $dokumen_badge = $dokumen_count > 0 ?
+                    '<span class="badge badge-light-info fs-8 mt-1"><i class="ki-outline ki-document fs-8 me-1"></i>' . $dokumen_count . ' Dokumen</span>' : '';
+
                     return '
                     <div class="d-flex align-items-center">
                         <div class="d-flex flex-column">
                             <a href="' . $edit_url . '" class="text-gray-800 text-hover-primary mb-1 fw-bold fs-6">' . $data->nama . '</a>
                             <span class="badge badge-light-info fw-bold fs-7 px-3 py-2">' . ($data->JenisSarpras ? $data->JenisSarpras->nama : '-') . '</span>
+                            ' . $dokumen_badge . '
                         </div>
                     </div>
                 ';
@@ -193,11 +211,23 @@ class TpuSarprasController extends Controller
             });
         }
 
+                                      // Get kategori dokumen untuk Sarpras (optional) - following Lahan pattern
+        $kategoriDokumen = collect(); // Default empty collection
+        try {
+            $kategoriDokumen = TpuKategoriDokumen::where('status', '1')
+                ->where('tipe', 'dokumen-sarpras')
+                ->orderBy('nama', 'ASC')
+                ->get();
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist yet
+        }
+
         $data = [
-            'title'         => 'Tambah Data Sarpras',
-            'submit'        => 'Simpan',
-            'lahans'        => $lahans->get(),
-            'jenis_sarpras' => TpuRefJenisSarpras::where('status', '1')->orderBy('nama', 'ASC')->get(),
+            'title'           => 'Tambah Data Sarpras',
+            'submit'          => 'Simpan',
+            'lahans'          => $lahans->get(),
+            'jenis_sarpras'   => TpuRefJenisSarpras::where('status', '1')->orderBy('nama', 'ASC')->get(),
+            'kategoriDokumen' => $kategoriDokumen,
         ];
 
         return view('admin.tpu.sarpras.create_edit', $data);
@@ -232,6 +262,19 @@ class TpuSarprasController extends Controller
             'luas_m2.min'          => 'Luas tidak boleh kurang dari 0',
         ]);
 
+        // Validate dokumen if any (optional) - following Lahan pattern
+        if ($request->has('dokumen_kategori')) {
+            foreach ($request->dokumen_kategori as $index => $kategori) {
+                if (! empty($kategori)) {
+                    $request->validate([
+                        "dokumen_file.$index"      => 'required|file|max:10240', // 10MB
+                        "dokumen_nama.$index"      => 'required|string|max:100',
+                        "dokumen_deskripsi.$index" => 'nullable|string|max:500',
+                    ]);
+                }
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -257,6 +300,11 @@ class TpuSarprasController extends Controller
             $save = TpuSarpras::create($value);
 
             if ($save) {
+                // Process dokumen uploads if any (optional) - following Lahan pattern
+                if ($request->has('dokumen_kategori')) {
+                    $this->processDokumenUploads($request, $uuid, 'Sarpras');
+                }
+
                 // Create log
                 $aktifitas = [
                     'tabel' => ['tpu_sarpras'],
@@ -316,13 +364,32 @@ class TpuSarprasController extends Controller
             });
         }
 
+        // Get kategori dokumen untuk Sarpras (optional) - following Lahan pattern
+        $kategoriDokumen = collect();
+        $existingDokumen = collect();
+        try {
+            $kategoriDokumen = TpuKategoriDokumen::where('status', '1')
+                ->where('tipe', 'dokumen-sarpras')
+                ->orderBy('nama', 'ASC')
+                ->get();
+
+            // Get existing dokumen
+            if (method_exists($data, 'Dokumens')) {
+                $existingDokumen = $data->Dokumens;
+            }
+        } catch (\Exception $e) {
+            // Ignore if table/relation doesn't exist yet
+        }
+
         $view_data = [
-            'title'         => 'Edit Data Sarpras',
-            'submit'        => 'Simpan',
-            'data'          => $data,
-            'uuid_enc'      => $uuid_enc,
-            'lahans'        => $lahans->get(),
-            'jenis_sarpras' => TpuRefJenisSarpras::where('status', '1')->orderBy('nama', 'ASC')->get(),
+            'title'           => 'Edit Data Sarpras',
+            'submit'          => 'Simpan',
+            'data'            => $data,
+            'uuid_enc'        => $uuid_enc,
+            'lahans'          => $lahans->get(),
+            'jenis_sarpras'   => TpuRefJenisSarpras::where('status', '1')->orderBy('nama', 'ASC')->get(),
+            'kategoriDokumen' => $kategoriDokumen,
+            'existingDokumen' => $existingDokumen,
         ];
 
         return view('admin.tpu.sarpras.create_edit', $view_data);
@@ -370,6 +437,21 @@ class TpuSarprasController extends Controller
             'luas_m2.min'          => 'Luas tidak boleh kurang dari 0',
         ]);
 
+        // Validate dokumen if any (optional) - following Lahan pattern
+        if ($request->has('dokumen_kategori')) {
+            foreach ($request->dokumen_kategori as $index => $kategori) {
+                if (! empty($kategori)) {
+                    // File is required only for new uploads (when no existing_dokumen_id)
+                    $fileRequired = empty($request->existing_dokumen_id[$index] ?? '') ? 'required|' : 'nullable|';
+                    $request->validate([
+                        "dokumen_file.$index"      => $fileRequired . 'file|max:10240',
+                        "dokumen_nama.$index"      => 'required|string|max:100',
+                        "dokumen_deskripsi.$index" => 'nullable|string|max:500',
+                    ]);
+                }
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -394,6 +476,16 @@ class TpuSarprasController extends Controller
             $save = $data->update($value);
 
             if ($save) {
+                // Process dokumen updates/uploads (optional) - following Lahan pattern
+                if ($request->has('dokumen_kategori')) {
+                    $this->processDokumenUploads($request, $uuid_dec, 'Sarpras');
+                }
+
+                // Process dokumen deletions (optional) - following Lahan pattern
+                if ($request->has('deleted_dokumen_ids')) {
+                    $this->processDeletedDokumen($request->deleted_dokumen_ids, $uuid_dec);
+                }
+
                 // Create log
                 $aktifitas = [
                     'tabel' => ['tpu_sarpras'],
@@ -456,12 +548,18 @@ class TpuSarprasController extends Controller
                 ], 403);
             }
 
-            // Check if there are related documents
-            if ($data->Dokumens()->count() > 0) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Tidak dapat menghapus sarpras yang memiliki dokumen terkait.',
-                ], 422);
+            // Delete associated dokumen files (optional) - following Lahan pattern
+            try {
+                if (method_exists($data, 'Dokumens')) {
+                    $dokumens = $data->Dokumens;
+                    foreach ($dokumens as $dokumen) {
+                        if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                            Storage::disk('public')->delete($dokumen->url);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore if relation doesn't exist
             }
 
             $value = $data->toArray();
@@ -526,13 +624,12 @@ class TpuSarprasController extends Controller
         try {
             DB::beginTransaction();
 
-            $decodedUuids = $request->uuids;
             $deletedCount = 0;
             $failedItems  = [];
 
-            foreach ($decodedUuids as $index => $uuid_dec) {
+            foreach ($request->uuids as $uuid) {
                 try {
-                    $data = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
+                    $data = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid);
 
                     // Check permission untuk Admin TPU
                     if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
@@ -540,10 +637,18 @@ class TpuSarprasController extends Controller
                         continue;
                     }
 
-                    // Check if there are related documents
-                    if ($data->Dokumens()->count() > 0) {
-                        $failedItems[] = 'Sarpras ' . $data->nama . ' memiliki dokumen terkait dan tidak dapat dihapus';
-                        continue;
+                    // Delete associated dokumen files (optional) - following Lahan pattern
+                    try {
+                        if (method_exists($data, 'Dokumens')) {
+                            $dokumens = $data->Dokumens;
+                            foreach ($dokumens as $dokumen) {
+                                if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                                    Storage::disk('public')->delete($dokumen->url);
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore if relation doesn't exist
                     }
 
                     $value = $data->toArray();
@@ -553,12 +658,12 @@ class TpuSarprasController extends Controller
                         // Create log
                         $aktifitas = [
                             'tabel' => ['tpu_sarpras'],
-                            'uuid'  => [$uuid_dec],
+                            'uuid'  => [$uuid],
                             'value' => [$value],
                         ];
                         $log = [
                             'apps'      => 'TPU Admin',
-                            'subjek'    => 'Menghapus Data Sarpras (Bulk): ' . $data->nama . ' - ' . $uuid_dec,
+                            'subjek'    => 'Menghapus Data Sarpras (Bulk): ' . $data->nama . ' - ' . $uuid,
                             'aktifitas' => $aktifitas,
                             'device'    => 'web',
                         ];
@@ -567,7 +672,7 @@ class TpuSarprasController extends Controller
                         $failedItems[] = 'Gagal menghapus: ' . $data->nama;
                     }
                 } catch (\Exception $e) {
-                    $failedItems[] = 'Error pada ID ' . $request->uuids[$index] . ': ' . $e->getMessage();
+                    $failedItems[] = 'Error pada ID ' . $uuid . ': ' . $e->getMessage();
                     continue;
                 }
             }
@@ -633,5 +738,123 @@ class TpuSarprasController extends Controller
             'status' => true,
             'data'   => $lahans,
         ]);
+    }
+
+    /**
+     * Process dokumen uploads (optional method) - following Lahan pattern exactly
+     */
+    private function processDokumenUploads($request, $uuid_modul, $nama_modul)
+    {
+        // Only process if TpuDokumen model exists
+        if (! class_exists('App\Models\TpuDokumen')) {
+            return;
+        }
+
+        $auth = Auth::user();
+
+        if (! $request->has('dokumen_kategori')) {
+            return;
+        }
+
+        foreach ($request->dokumen_kategori as $index => $kategori_uuid) {
+            if (empty($kategori_uuid)) {
+                continue;
+            }
+
+            $existing_id = $request->existing_dokumen_id[$index] ?? null;
+            $nama_file   = $request->dokumen_nama[$index] ?? '';
+            $deskripsi   = $request->dokumen_deskripsi[$index] ?? '';
+            $file        = $request->file("dokumen_file.$index");
+
+            // Skip if no file and no existing dokumen (invalid entry)
+            if (! $file && ! $existing_id) {
+                continue;
+            }
+
+            try {
+                if ($existing_id) {
+                    // Update existing dokumen
+                    $dokumen = TpuDokumen::find($existing_id);
+                    if ($dokumen && $dokumen->uuid_modul == $uuid_modul) {
+                        $updateData = [
+                            'kategori'     => $kategori_uuid,
+                            'nama_file'    => $nama_file,
+                            'deskripsi'    => $deskripsi,
+                            'uuid_updated' => $auth->uuid,
+                        ];
+
+                        // If new file uploaded, replace the old one
+                        if ($file) {
+                            // Delete old file
+                            if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                                Storage::disk('public')->delete($dokumen->url);
+                            }
+
+                            // Upload new file - using sarpras specific path
+                            $uploadResult = Helper::UpFileUnduhan($request, "dokumen_file.$index", "tpu/sarpras/dokumen");
+                            if ($uploadResult !== "0" && is_array($uploadResult)) {
+                                $updateData['url']  = $uploadResult['url'];
+                                $updateData['tipe'] = $uploadResult['tipe'];
+                                $updateData['size'] = $uploadResult['size'];
+                            }
+                        }
+
+                        $dokumen->update($updateData);
+                    }
+                } else {
+                    // Create new dokumen
+                    if ($file) {
+                        $uploadResult = Helper::UpFileUnduhan($request, "dokumen_file.$index", "tpu/sarpras/dokumen");
+                        if ($uploadResult !== "0" && is_array($uploadResult)) {
+                            TpuDokumen::create([
+                                'uuid'         => Str::uuid(),
+                                'uuid_modul'   => $uuid_modul,
+                                'nama_modul'   => $nama_modul,
+                                'kategori'     => $kategori_uuid,
+                                'nama_file'    => $nama_file,
+                                'deskripsi'    => $deskripsi,
+                                'url'          => $uploadResult['url'],
+                                'tipe'         => $uploadResult['tipe'],
+                                'size'         => $uploadResult['size'],
+                                'uuid_created' => $auth->uuid,
+                                'uuid_updated' => $auth->uuid,
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                \Log::error('Error processing dokumen upload for sarpras: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Process deleted dokumen (optional method) - following Lahan pattern exactly
+     */
+    private function processDeletedDokumen($deletedIds, $uuid_modul)
+    {
+        if (! class_exists('App\Models\TpuDokumen') || empty($deletedIds)) {
+            return;
+        }
+
+        try {
+            $deletedIdsArray = explode(',', $deletedIds);
+            foreach ($deletedIdsArray as $deletedId) {
+                if (! empty($deletedId)) {
+                    $dokumen = TpuDokumen::find($deletedId);
+                    if ($dokumen && $dokumen->uuid_modul == $uuid_modul) {
+                        // Delete file from storage
+                        if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                            Storage::disk('public')->delete($dokumen->url);
+                        }
+                        $dokumen->delete();
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but don't stop the process
+            \Log::error('Error processing deleted dokumen for sarpras: ' . $e->getMessage());
+        }
     }
 }

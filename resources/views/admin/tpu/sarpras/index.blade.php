@@ -115,7 +115,13 @@
                 <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
                     data-kt-menu-placement="bottom-end">
                     <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
-                    Filter
+                    Filter: <span id="filter-text" class="ms-1">
+                        @if ($hide_tpu_filter && $tpus->first())
+                            {{ $tpus->first()->nama }}
+                        @else
+                            {{ $filter_tpu }}
+                        @endif
+                    </span>
                 </a>
                 <div class="menu menu-sub menu-sub-dropdown w-250px w-md-300px" data-kt-menu="true" id="kt_menu_filter">
                     <div class="px-7 py-5">
@@ -204,13 +210,16 @@
             <div class="card-title">
                 <h4 class="card-title align-items-start flex-column">
                     <span class="card-label fw-bold fs-3 mb-1">Data Sarpras</span>
-                    <span class="text-muted mt-1 fw-semibold fs-7">Menampilkan: <strong id="titleType">
-                            @if ($hide_tpu_filter)
-                                {{ $tpus->first()->nama ?? 'TPU' }} - {{ $filter_lahan }} - {{ $filter_jenis_sarpras }}
+                    <span class="text-muted mt-1 fw-semibold fs-7">
+                        Menampilkan TPU:
+                        <strong id="titleType">
+                            @if ($hide_tpu_filter && $tpus->first())
+                                {{ $tpus->first()->nama }}
                             @else
-                                {{ $filter_tpu }} - {{ $filter_lahan }} - {{ $filter_jenis_sarpras }}
+                                {{ $filter_tpu }}
                             @endif
-                        </strong></span>
+                        </strong>
+                    </span>
                 </h4>
             </div>
             <div class="card-toolbar">
@@ -331,7 +340,7 @@
                         type: 'GET',
                         data: function(d) {
                             d.filter = {
-                                tpu: $('[name="q_tpu"]').val() || 'Semua TPU',
+                                tpu: $('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU'),
                                 lahan: $('[name="q_lahan"]').val() || 'Semua Lahan',
                                 jenis_sarpras: $('[name="q_jenis_sarpras"]').val() || 'Semua Jenis Sarpras'
                             };
@@ -417,10 +426,8 @@
                     buttons: [{
                             extend: 'copyHtml5',
                             title: function() {
-                                const currentTpu = $('[name="q_tpu"]').val() || '{{ $filter_tpu }}';
-                                const currentLahan = $('[name="q_lahan"]').val() || '{{ $filter_lahan }}';
-                                const currentJenis = $('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}';
-                                return documentTitle + ' - ' + currentTpu + ' - ' + currentLahan + ' - ' + currentJenis;
+                                const currentTpu = $('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                                return documentTitle + ' - ' + currentTpu;
                             },
                             exportOptions: {
                                 columns: [1, 2, 3, 4]
@@ -429,17 +436,13 @@
                         {
                             extend: 'excelHtml5',
                             title: function() {
-                                const currentTpu = $('[name="q_tpu"]').val() || '{{ $filter_tpu }}';
-                                const currentLahan = $('[name="q_lahan"]').val() || '{{ $filter_lahan }}';
-                                const currentJenis = $('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}';
-                                return documentTitle + ' - ' + currentTpu + ' - ' + currentLahan + ' - ' + currentJenis;
+                                const currentTpu = $('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                                return documentTitle + ' - ' + currentTpu;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const tpu = ($('[name="q_tpu"]').val() || '{{ $filter_tpu }}').toLowerCase().replace(/\s+/g, '-');
-                                const lahan = ($('[name="q_lahan"]').val() || '{{ $filter_lahan }}').toLowerCase().replace(/\s+/g, '-');
-                                const jenis = ($('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}').toLowerCase().replace(/\s+/g, '-');
-                                return `data-sarpras-${tpu}-${lahan}-${jenis}-${date}`;
+                                const tpu = ($('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
+                                return `data-sarpras-${tpu}-${date}`;
                             },
                             exportOptions: {
                                 columns: [1, 2, 3, 4]
@@ -448,17 +451,13 @@
                         {
                             extend: 'csvHtml5',
                             title: function() {
-                                const currentTpu = $('[name="q_tpu"]').val() || '{{ $filter_tpu }}';
-                                const currentLahan = $('[name="q_lahan"]').val() || '{{ $filter_lahan }}';
-                                const currentJenis = $('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}';
-                                return documentTitle + ' - ' + currentTpu + ' - ' + currentLahan + ' - ' + currentJenis;
+                                const currentTpu = $('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                                return documentTitle + ' - ' + currentTpu;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const tpu = ($('[name="q_tpu"]').val() || '{{ $filter_tpu }}').toLowerCase().replace(/\s+/g, '-');
-                                const lahan = ($('[name="q_lahan"]').val() || '{{ $filter_lahan }}').toLowerCase().replace(/\s+/g, '-');
-                                const jenis = ($('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}').toLowerCase().replace(/\s+/g, '-');
-                                return `data-sarpras-${tpu}-${lahan}-${jenis}-${date}`;
+                                const tpu = ($('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
+                                return `data-sarpras-${tpu}-${date}`;
                             },
                             exportOptions: {
                                 columns: [1, 2, 3, 4]
@@ -467,17 +466,13 @@
                         {
                             extend: 'pdfHtml5',
                             title: function() {
-                                const currentTpu = $('[name="q_tpu"]').val() || '{{ $filter_tpu }}';
-                                const currentLahan = $('[name="q_lahan"]').val() || '{{ $filter_lahan }}';
-                                const currentJenis = $('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}';
-                                return documentTitle + ' - ' + currentTpu + ' - ' + currentLahan + ' - ' + currentJenis;
+                                const currentTpu = $('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                                return documentTitle + ' - ' + currentTpu;
                             },
                             filename: function() {
                                 const date = new Date().toISOString().slice(0, 10);
-                                const tpu = ($('[name="q_tpu"]').val() || '{{ $filter_tpu }}').toLowerCase().replace(/\s+/g, '-');
-                                const lahan = ($('[name="q_lahan"]').val() || '{{ $filter_lahan }}').toLowerCase().replace(/\s+/g, '-');
-                                const jenis = ($('[name="q_jenis_sarpras"]').val() || '{{ $filter_jenis_sarpras }}').toLowerCase().replace(/\s+/g, '-');
-                                return `data-sarpras-${tpu}-${lahan}-${jenis}-${date}`;
+                                const tpu = ($('[name="q_tpu"]').val() || @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU')).toLowerCase().replace(/\s+/g, '-');
+                                return `data-sarpras-${tpu}-${date}`;
                             },
                             orientation: 'landscape',
                             pageSize: 'A4',
@@ -546,7 +541,6 @@
                 $('#q_lahan').select2();
                 $('#q_jenis_sarpras').select2();
 
-                // Update dropdown lahan berdasarkan TPU yang dipilih
                 @if (!$hide_tpu_filter)
                     $('#q_tpu').on('change', function() {
                         var tpu = $(this).val();
@@ -565,12 +559,10 @@
                                         lahanSelect.append('<option value="' + lahan.kode_lahan + '">' + lahan.kode_lahan + '</option>');
                                     });
                                     lahanSelect.val('Semua Lahan').trigger('change');
+                                    document.getElementById('filter-text').textContent = tpu;
+                                    document.getElementById('titleType').textContent = tpu;
                                     datatable.ajax.reload(function(json) {
                                         $('#datatable_processing').hide();
-                                        var selectedTpu = tpu || '{{ $filter_tpu }}';
-                                        var selectedLahan = lahanSelect.val() || '{{ $filter_lahan }}';
-                                        var selectedJenis = $('#q_jenis_sarpras').val() || '{{ $filter_jenis_sarpras }}';
-                                        $('#titleType').html(selectedTpu + ' - ' + selectedLahan + ' - ' + selectedJenis);
                                     }, false);
                                 }
                             },
@@ -586,13 +578,15 @@
                 @endif
 
                 window.applyFilter = function() {
-                    var selectedTpu = document.getElementById('q_tpu') ? document.getElementById('q_tpu').value : '{{ $filter_tpu }}';
-                    var selectedLahan = document.getElementById('q_lahan').value;
-                    var selectedJenis = document.getElementById('q_jenis_sarpras').value;
+                    var selectedTpu = document.getElementById('q_tpu') ? document.getElementById('q_tpu').value : @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                    document.getElementById('filter-text').textContent = selectedTpu;
+                    document.getElementById('titleType').textContent = selectedTpu;
+                    if (typeof KTMenu !== 'undefined') {
+                        KTMenu.dismissMenu(document.querySelector('#kt_menu_filter'));
+                    }
                     $('#datatable_processing').show();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
-                        $('#titleType').html(selectedTpu + ' - ' + selectedLahan + ' - ' + selectedJenis);
                     }, false);
                 }
 
@@ -605,22 +599,19 @@
                     document.getElementById('q_jenis_sarpras').value = 'Semua Jenis Sarpras';
                     $('#q_lahan').trigger('change');
                     $('#q_jenis_sarpras').trigger('change');
+                    document.getElementById('filter-text').textContent = @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
+                    document.getElementById('titleType').textContent = @json($hide_tpu_filter && $tpus->first() ? $tpus->first()->nama : 'Semua TPU');
                     $('#datatable_processing').show();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
-                        $('#titleType').html('{{ $hide_tpu_filter ? $tpus->first()->nama ?? 'TPU' : 'Semua TPU' }} - Semua Lahan - Semua Jenis Sarpras');
                     }, false);
                 }
 
                 $('[name="q_lahan"], [name="q_jenis_sarpras"]').change(function() {
-                    var selectedTpu = document.getElementById('q_tpu') ? document.getElementById('q_tpu').value : '{{ $filter_tpu }}';
-                    var selectedLahan = document.getElementById('q_lahan').value;
-                    var selectedJenis = document.getElementById('q_jenis_sarpras').value;
                     $('#datatable_processing').show();
                     $('#kt_sarpras_table tbody').empty();
                     datatable.ajax.reload(function(json) {
                         $('#datatable_processing').hide();
-                        $('#titleType').html(selectedTpu + ' - ' + selectedLahan + ' - ' + selectedJenis);
                     }, false);
                 });
             }

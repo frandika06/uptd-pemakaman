@@ -140,6 +140,12 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::post('/delete', [TpuSarprasController::class, 'destroy'])->name('tpu.sarpras.destroy');
             Route::post('/bulk-destroy', [TpuSarprasController::class, 'bulkDestroy'])->name('tpu.sarpras.destroy.bulk');
             Route::get('/lahans', [TpuSarprasController::class, 'getLahansByTpu'])->name('tpu.sarpras.lahans');
+            // Route dokumen pendukung
+            Route::group(['prefix' => '{uuid}/dokumen'], function () {
+                Route::post('/upload', [TpuSarprasController::class, 'uploadDokumen'])->name('tpu.sarpras.dokumen.upload');
+                Route::delete('/{dokumen_uuid}', [TpuSarprasController::class, 'deleteDokumen'])->name('tpu.sarpras.dokumen.delete');
+                Route::get('/download/{dokumen_uuid}', [TpuSarprasController::class, 'downloadDokumen'])->name('tpu.sarpras.dokumen.download');
+            });
         });
 
         // Manajemen Statistik Kapasitas

@@ -63,11 +63,16 @@
 
 @section('content')
     <form id="kt_sarpras_form" class="form d-flex flex-column flex-lg-row" action="{{ isset($data) ? route('tpu.sarpras.update', $uuid_enc) : route('tpu.sarpras.store') }}"
-        method="POST">
+        method="POST" enctype="multipart/form-data">
         @csrf
         @isset($data)
             @method('PUT')
         @endisset
+
+        {{-- Hidden field for deleted dokumen IDs (only if dokumen feature enabled) --}}
+        @if (isset($kategoriDokumen) && $kategoriDokumen->count() > 0)
+            <input type="hidden" name="deleted_dokumen_ids" id="deleted_dokumen_ids" value="">
+        @endif
 
         <!-- begin::Aside column -->
         <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
@@ -91,6 +96,18 @@
                                 <span class="fw-bold text-gray-600">Diperbarui:</span><br />
                                 <span class="text-gray-800 fw-bold">{{ $data->updated_at->format('d M Y H:i') }}</span>
                             </div>
+
+                            {{-- Show dokumen count if available --}}
+                            @if (isset($existingDokumen))
+                                <div class="m-0 p-0">
+                                    <span class="fw-bold text-gray-600">Total Dokumen:</span><br />
+                                    <span class="text-gray-800 fw-bold">
+                                        <span class="badge badge-light-info" id="dokumen_count">
+                                            {{ $existingDokumen->count() ?? 0 }} Dokumen
+                                        </span>
+                                    </span>
+                                </div>
+                            @endif
                         @endisset
                     </div>
                 </div>
@@ -113,23 +130,27 @@
                     <div class="mb-10 fv-row">
                         <label class="required form-label">Lahan</label>
                         @if (isset($data))
-                            <input type="text" class="form-control mb-2" value="{{ $data->Lahan->kode_lahan }} ({{ $data->Lahan->Tpu->nama ?? '-' }})" readonly />
-                            <input type="hidden" name="uuid_lahan" value="{{ $data->uuid_lahan }}" />
+                            <!-- Display Lahan as text in edit mode -->
+                            <input type="hidden" name="uuid_lahan" value="{{ old('uuid_lahan', $data->uuid_lahan) }}">
+                            <div class="form-control form-control-solid">
+                                {{ $data->Lahan ? $data->Lahan->kode_lahan . ' (' . ($data->Lahan->Tpu ? $data->Lahan->Tpu->nama : '-') . ')' : '-' }}
+                            </div>
                         @else
+                            <!-- Show select dropdown in create mode -->
                             <select class="form-select mb-2 @error('uuid_lahan') is-invalid @enderror" data-control="select2" data-placeholder="Pilih Lahan" name="uuid_lahan"
                                 id="kt_sarpras_lahan" required>
-                                <option value="">Pilih Lahan</option>
+                                <option value="" disabled {{ !old('uuid_lahan') ? 'selected' : '' }}>Pilih Lahan</option>
                                 @foreach ($lahans as $lahan)
                                     <option value="{{ $lahan->uuid }}" {{ old('uuid_lahan') === $lahan->uuid ? 'selected' : '' }}>
                                         {{ $lahan->kode_lahan }} ({{ $lahan->Tpu->nama ?? '-' }})
                                     </option>
                                 @endforeach
                             </select>
-                            @error('uuid_lahan')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         @endif
                         <div class="text-muted fs-7">Pilih lahan tempat sarpras berada.</div>
+                        @error('uuid_lahan')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <!-- end::Input group - Lahan -->
 
@@ -202,6 +223,125 @@
             </div>
             <!-- end::Deskripsi -->
 
+            {{-- begin::Dokumen Pendukung (Optional) --}}
+            @if (isset($kategoriDokumen) && $kategoriDokumen->count() > 0)
+                <div class="card card-flush py-4">
+                    {{-- begin::Card header --}}
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h2>Dokumen Pendukung</h2>
+                        </div>
+                        <div class="card-toolbar">
+                            <button type="button" class="btn btn-sm btn-light-primary" id="add_dokumen_btn">
+                                <i class="ki-outline ki-plus fs-2"></i>Tambah Dokumen
+                            </button>
+                        </div>
+                    </div>
+                    {{-- end::Card header --}}
+                    {{-- begin::Card body --}}
+                    <div class="card-body pt-0">
+                        <div class="text-muted fs-7 mb-5">
+                            Upload dokumen pendukung untuk sarpras ini. Format yang didukung: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG, dll.
+                            Maksimal ukuran file: 10MB per file.
+                        </div>
+
+                        {{-- Existing Dokumen --}}
+                        @if (isset($existingDokumen) && $existingDokumen->count() > 0)
+                            @foreach ($existingDokumen as $index => $dokumen)
+                                <div class="dokumen-item border border-gray-300 rounded p-4 mb-4" data-existing-id="{{ $dokumen->uuid }}">
+                                    <input type="hidden" name="existing_dokumen_id[]" value="{{ $dokumen->uuid }}">
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required">Kategori Dokumen</label>
+                                            <select class="form-select form-select-solid" name="dokumen_kategori[]" required>
+                                                <option value="">Pilih Kategori...</option>
+                                                @foreach ($kategoriDokumen as $kategori)
+                                                    <option value="{{ $kategori->uuid }}" {{ $dokumen->kategori == $kategori->uuid ? 'selected' : '' }}>
+                                                        {{ $kategori->nama }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8 mb-3">
+                                            <label class="form-label required">Nama Dokumen</label>
+                                            <input type="text" class="form-control" name="dokumen_nama[]" value="{{ $dokumen->nama_file }}" placeholder="Nama dokumen..."
+                                                maxlength="100" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">File Dokumen</label>
+                                            <input type="file" class="form-control" name="dokumen_file[]"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar">
+                                            <div class="text-muted fs-8 mt-1">
+                                                File saat ini: <a href="{{ asset('storage/' . $dokumen->url) }}" target="_blank" class="text-primary">
+                                                    {{ $dokumen->nama_file }}.{{ $dokumen->tipe }}
+                                                </a> ({{ number_format($dokumen->size / 1024, 2) }} KB)
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Deskripsi</label>
+                                            <textarea class="form-control" name="dokumen_deskripsi[]" rows="2" placeholder="Deskripsi dokumen..." maxlength="500">{{ $dokumen->deskripsi }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-light-danger remove_dokumen_btn">
+                                            <i class="ki-outline ki-trash fs-4"></i>Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                        {{-- Container for new dokumen --}}
+                        <div id="dokumen_container">
+                            {{-- Dynamic dokumen items will be added here --}}
+                        </div>
+
+                        {{-- Template for new dokumen item --}}
+                        <div id="dokumen_template" style="display: none;">
+                            <div class="dokumen-item border border-gray-300 rounded p-4 mb-4">
+                                <input type="hidden" name="existing_dokumen_id[]" value="">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label required">Kategori Dokumen</label>
+                                        <select class="form-select form-select-solid" name="dokumen_kategori[]" required>
+                                            <option value="">Pilih Kategori...</option>
+                                            @foreach ($kategoriDokumen as $kategori)
+                                                <option value="{{ $kategori->uuid }}">{{ $kategori->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label required">Nama Dokumen</label>
+                                        <input type="text" class="form-control" name="dokumen_nama[]" placeholder="Nama dokumen..." maxlength="100" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">File Dokumen</label>
+                                        <input type="file" class="form-control" name="dokumen_file[]"
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar" required>
+                                        <div class="text-muted fs-8 mt-1">Maksimal 10MB. Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, JPEG, PNG, GIF, ZIP, RAR</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Deskripsi</label>
+                                        <textarea class="form-control" name="dokumen_deskripsi[]" rows="2" placeholder="Deskripsi dokumen..." maxlength="500"></textarea>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-sm btn-light-danger remove_dokumen_btn">
+                                        <i class="ki-outline ki-trash fs-4"></i>Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- end::Card body --}}
+                </div>
+            @endif
+            {{-- end::Dokumen Pendukung --}}
+
             <!-- begin::Actions -->
             <div class="d-flex justify-content-end">
                 <a href="{{ route('tpu.sarpras.index') }}" id="kt_sarpras_cancel" class="btn btn-light me-5">
@@ -209,7 +349,7 @@
                 </a>
                 <button type="submit" id="kt_sarpras_submit" class="btn btn-primary">
                     <span class="indicator-label">
-                        <i class="ki-outline ki-check-circle fs-2 me-2"></i>{{ isset($data) ? 'Perbarui' : 'Simpan' }}
+                        <i class="fa-solid fa-save me-2"></i>{{ isset($data) ? 'Perbarui' : 'Simpan' }}
                     </span>
                     <span class="indicator-progress">
                         Please wait...
@@ -233,6 +373,8 @@
                 var submitButton;
                 var cancelButton;
                 var validator;
+                var dokumenCounter = 0;
+                var deletedDokumenIds = [];
 
                 var initForm = function() {
                     form = document.querySelector('#kt_sarpras_form');
@@ -247,33 +389,29 @@
                 }
 
                 var initValidation = function() {
+                    // Simple validation without FormValidation dependency
                     validator = {
                         validate: function() {
                             return new Promise(function(resolve) {
                                 var isValid = true;
                                 var errors = [];
 
-                                // Validate Lahan (only for create mode)
-                                @if (!isset($data))
-                                    var lahanSelect = document.querySelector('select[name="uuid_lahan"]');
-                                    if (!lahanSelect.value) {
-                                        isValid = false;
-                                        errors.push('Lahan harus dipilih');
-                                        lahanSelect.classList.add('is-invalid');
-                                    } else {
-                                        lahanSelect.classList.remove('is-invalid');
-                                    }
-                                @endif
+                                // Validate Lahan
+                                var lahanSelect = document.querySelector('select[name="uuid_lahan"]') || document.querySelector(
+                                    'input[name="uuid_lahan"]');
+                                if (!lahanSelect || !lahanSelect.value) {
+                                    isValid = false;
+                                    errors.push('Lahan harus dipilih');
+                                    if (lahanSelect) lahanSelect.classList.add('is-invalid');
+                                } else {
+                                    if (lahanSelect) lahanSelect.classList.remove('is-invalid');
+                                }
 
                                 // Validate Nama Sarpras
                                 var namaInput = document.querySelector('input[name="nama"]');
                                 if (!namaInput.value.trim()) {
                                     isValid = false;
                                     errors.push('Nama sarpras harus diisi');
-                                    namaInput.classList.add('is-invalid');
-                                } else if (namaInput.value.length > 255) {
-                                    isValid = false;
-                                    errors.push('Nama sarpras maksimal 255 karakter');
                                     namaInput.classList.add('is-invalid');
                                 } else {
                                     namaInput.classList.remove('is-invalid');
@@ -292,19 +430,6 @@
                                     }
                                 }
 
-                                // Validate Jenis Sarpras (optional, but check if valid if selected)
-                                var jenisSelect = document.querySelector('select[name="jenis_sarpras"]');
-                                if (jenisSelect.value) {
-                                    var validOptions = Array.from(jenisSelect.options).map(opt => opt.value);
-                                    if (!validOptions.includes(jenisSelect.value)) {
-                                        isValid = false;
-                                        errors.push('Jenis sarpras tidak valid');
-                                        jenisSelect.classList.add('is-invalid');
-                                    } else {
-                                        jenisSelect.classList.remove('is-invalid');
-                                    }
-                                }
-
                                 if (!isValid && errors.length > 0) {
                                     showError('Validasi gagal: ' + errors.join(', '));
                                 }
@@ -314,6 +439,61 @@
                         }
                     };
                 }
+
+                // Initialize dokumen management (only if enabled)
+                var initDokumenManagement = function() {
+                    // Add dokumen button
+                    var addBtn = document.getElementById('add_dokumen_btn');
+                    if (addBtn) {
+                        addBtn.addEventListener('click', function() {
+                            addDokumenItem();
+                        });
+                    }
+
+                    // Handle remove buttons
+                    document.addEventListener('click', function(e) {
+                        if (e.target.closest('.remove_dokumen_btn')) {
+                            removeDokumenItem(e.target.closest('.remove_dokumen_btn'));
+                        }
+                    });
+                };
+
+                // Add new dokumen item
+                var addDokumenItem = function() {
+                    var template = document.getElementById('dokumen_template');
+                    var container = document.getElementById('dokumen_container');
+                    if (!template || !container) return;
+
+                    var newItem = template.cloneNode(true);
+                    newItem.id = 'dokumen_item_' + dokumenCounter;
+                    newItem.style.display = 'block';
+                    container.appendChild(newItem);
+                    dokumenCounter++;
+                    updateDokumenCount();
+                };
+
+                // Remove dokumen item
+                var removeDokumenItem = function(button) {
+                    var dokumenItem = button.closest('.dokumen-item');
+                    var existingId = dokumenItem.getAttribute('data-existing-id');
+
+                    if (existingId) {
+                        // Add to deleted list if it's an existing dokumen
+                        deletedDokumenIds.push(existingId);
+                    }
+
+                    dokumenItem.remove();
+                    updateDokumenCount();
+                };
+
+                // Update dokumen count
+                var updateDokumenCount = function() {
+                    var count = document.querySelectorAll('.dokumen-item').length;
+                    var countElement = document.getElementById('dokumen_count');
+                    if (countElement) {
+                        countElement.textContent = count + ' Dokumen';
+                    }
+                };
 
                 var showError = function(message) {
                     if (typeof Swal !== 'undefined') {
@@ -329,7 +509,22 @@
                     }
                 }
 
+                var showSuccess = function(message) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        alert(message);
+                    }
+                }
+
                 var handleSubmit = function() {
+                    // Remove any existing event listeners
                     submitButton.onclick = null;
 
                     submitButton.addEventListener('click', function(e) {
@@ -341,6 +536,13 @@
                                 console.log('Validation status:', status);
                                 if (status === 'Valid') {
                                     console.log('Form is valid, submitting...');
+
+                                    // Update deleted dokumen ids if feature is enabled
+                                    var deletedField = document.getElementById('deleted_dokumen_ids');
+                                    if (deletedField) {
+                                        deletedField.value = deletedDokumenIds.join(',');
+                                    }
+
                                     submitButton.setAttribute('data-kt-indicator', 'on');
                                     submitButton.disabled = true;
                                     form.submit();
@@ -350,6 +552,7 @@
                             });
                         } else {
                             console.log('No validator, submitting directly...');
+                            // Fallback if validator is not available
                             submitButton.setAttribute('data-kt-indicator', 'on');
                             submitButton.disabled = true;
                             form.submit();
@@ -395,6 +598,12 @@
                             initValidation();
                             handleSubmit();
                             handleCancel();
+
+                            // Initialize dokumen management (only if dokumen feature is enabled)
+                            @if (isset($kategoriDokumen) && $kategoriDokumen->count() > 0)
+                                initDokumenManagement();
+                            @endif
+
                             console.log('KTSarprasForm initialized successfully');
                         } catch (error) {
                             console.error('Error initializing KTSarprasForm:', error);
@@ -403,6 +612,7 @@
                 };
             }();
 
+            // Initialize the form
             KTSarprasForm.init();
         });
     </script>

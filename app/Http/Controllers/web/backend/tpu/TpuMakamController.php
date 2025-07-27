@@ -21,6 +21,11 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
+        // Inisialisasi filter dari session atau default
+        $filter_tpu    = $request->session()->get('filter_makam_tpu', 'Semua TPU');
+        $filter_lahan  = $request->session()->get('filter_makam_lahan', 'Semua Lahan');
+        $filter_status = $request->session()->get('filter_makam_status', 'Semua Status');
+
         if ($request->ajax()) {
             $query = TpuMakam::query()->with(['Lahan.Tpu', 'StatusMakam']);
 
@@ -36,6 +41,9 @@ class TpuMakamController extends Controller
                 $query->whereHas('Lahan.Tpu', function ($q) use ($request) {
                     $q->where('nama', $request->input('filter.tpu'));
                 });
+                $request->session()->put('filter_makam_tpu', $request->input('filter.tpu'));
+            } elseif ($request->input('filter.tpu') === 'Semua TPU') {
+                $request->session()->put('filter_makam_tpu', 'Semua TPU');
             }
 
             // Filter berdasarkan Lahan
@@ -43,11 +51,17 @@ class TpuMakamController extends Controller
                 $query->whereHas('Lahan', function ($q) use ($request) {
                     $q->where('kode_lahan', $request->input('filter.lahan'));
                 });
+                $request->session()->put('filter_makam_lahan', $request->input('filter.lahan'));
+            } elseif ($request->input('filter.lahan') === 'Semua Lahan') {
+                $request->session()->put('filter_makam_lahan', 'Semua Lahan');
             }
 
             // Filter berdasarkan Status
             if ($request->filled('filter.status') && $request->input('filter.status') !== 'Semua Status') {
                 $query->where('status_makam', $request->input('filter.status'));
+                $request->session()->put('filter_makam_status', $request->input('filter.status'));
+            } elseif ($request->input('filter.status') === 'Semua Status') {
+                $request->session()->put('filter_makam_status', 'Semua Status');
             }
 
             return DataTables::of($query)
@@ -59,16 +73,16 @@ class TpuMakamController extends Controller
                     $isReadOnly = $auth->role === 'Petugas TPU';
 
                     return '
-                    <div class="d-flex align-items-center">
-                        <a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1' . ($isReadOnly ? ' disabled' : '') . '">
-                            <i class="ki-outline ki-pencil fs-5"></i>
-                        </a>
-                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete' . ($isReadOnly ? ' disabled' : '') . '"
-                                data-kt-delete-url="' . route('tpu.makam.destroy') . '"
-                                data-kt-delete-id="' . $uuid_enc . '">
-                            <i class="ki-outline ki-trash fs-5"></i>
-                        </button>
-                    </div>';
+                <div class="d-flex align-items-center">
+                    <a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1' . ($isReadOnly ? ' disabled' : '') . '">
+                        <i class="ki-outline ki-pencil fs-5"></i>
+                    </a>
+                    <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete' . ($isReadOnly ? ' disabled' : '') . '"
+                            data-kt-delete-url="' . route('tpu.makam.destroy') . '"
+                            data-kt-delete-id="' . $uuid_enc . '">
+                        <i class="ki-outline ki-trash fs-5"></i>
+                    </button>
+                </div>';
                 })
                 ->addColumn('lahan_info', function ($data) {
                     if ($data->Lahan) {
@@ -88,20 +102,20 @@ class TpuMakamController extends Controller
                         }
 
                         return '
-                        <div class="d-flex flex-column">
-                            <span class="text-gray-800 fw-bold fs-6">' . $data->Lahan->kode_lahan . '</span>
-                            <span class="text-muted fw-semibold fs-7">' . ($data->Lahan->Tpu ? $data->Lahan->Tpu->nama : '-') . '</span>
-                            <span class="badge badge-light-' . $jenis_color . ' fw-bold fs-8 mt-1">' . ucfirst(str_replace('_', ' ', $jenis_tpu)) . '</span>
-                        </div>';
+                    <div class="d-flex flex-column">
+                        <span class="text-gray-800 fw-bold fs-6">' . $data->Lahan->kode_lahan . '</span>
+                        <span class="text-muted fw-semibold fs-7">' . ($data->Lahan->Tpu ? $data->Lahan->Tpu->nama : '-') . '</span>
+                        <span class="badge badge-light-' . $jenis_color . ' fw-bold fs-8 mt-1">' . ucfirst(str_replace('_', ' ', $jenis_tpu)) . '</span>
+                    </div>';
                     }
                     return '<span class="text-muted">-</span>';
                 })
                 ->addColumn('dimensi', function ($data) {
                     return '
-                    <div class="d-flex flex-column">
-                        <span class="text-gray-800 fw-semibold fs-6">' . number_format($data->panjang_m, 2) . ' × ' . number_format($data->lebar_m, 2) . ' m</span>
-                        <span class="text-muted fw-semibold fs-7">Luas: ' . number_format($data->luas_m2, 2) . ' m²</span>
-                    </div>';
+                <div class="d-flex flex-column">
+                    <span class="text-gray-800 fw-semibold fs-6">' . number_format($data->panjang_m, 2) . ' × ' . number_format($data->lebar_m, 2) . ' m</span>
+                    <span class="text-muted fw-semibold fs-7">Luas: ' . number_format($data->luas_m2, 2) . ' m²</span>
+                </div>';
                 })
                 ->addColumn('kapasitas', function ($data) {
                     if ($data->kapasitas) {
@@ -177,11 +191,15 @@ class TpuMakamController extends Controller
         $stsmakam = TpuRefStatusMakam::where('status', '1')->orderBy('nama', 'ASC')->get();
 
         $data = [
-            'title'     => 'Data Makam',
-            'tpus'      => $tpus,
-            'lahans'    => $lahans,
-            'stsmakam'  => $stsmakam,
-            'user_role' => $auth->role,
+            'title'           => 'Data Makam',
+            'tpus'            => $tpus,
+            'lahans'          => $lahans,
+            'stsmakam'        => $stsmakam,
+            'user_role'       => $auth->role,
+            'hide_tpu_filter' => in_array($auth->role, ['Admin TPU', 'Petugas TPU']),
+            'filter_tpu'      => $filter_tpu,
+            'filter_lahan'    => $filter_lahan,
+            'filter_status'   => $filter_status,
         ];
 
         return view('admin.tpu.makam.index', $data);

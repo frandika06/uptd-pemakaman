@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-class DummyTPUKategoriDokumenSeeder extends Seeder
+class TpuKategoriDokumenSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -32,9 +32,6 @@ class DummyTPUKategoriDokumenSeeder extends Seeder
                 'Foto Fasilitas TPU',
                 'Foto Lahan',
                 'Foto Sarpras',
-                'Foto Kegiatan Pemakaman',
-                'Foto Upacara Pemakaman',
-                'Foto Kondisi Makam',
             ],
             'dokumen-tpu'     => [
                 'Surat Izin Mendirikan Bangunan (IMB)',
@@ -49,42 +46,18 @@ class DummyTPUKategoriDokumenSeeder extends Seeder
                 'Laporan Keuangan',
                 'SOP (Standard Operating Procedure)',
                 'Denah Lokasi TPU',
-                'Izin Pemakaian Tanah Makam',
-                'Laporan Kegiatan Pemakaman',
-                'Data Inventarisasi Makam',
-                'Regulasi Pemakaman',
-                'Dokumen Perizinan TPU',
-                'Laporan Audit TPU',
-                'Surat Pernyataan Pengelolaan',
-                'Dokumen Kerjasama Pihak Ketiga',
             ],
             'dokumen-lahan'   => [
                 'Sertifikat Lahan',
                 'Denah Lahan',
                 'Surat Ukur Tanah',
                 'Peta Lahan',
-                'Dokumen Perencanaan Lahan',
-                'Izin Pemanfaatan Lahan',
-                'Laporan Survei Lahan',
-                'Dokumen Pembebasan Lahan',
-                'Surat Persetujuan Penggunaan Lahan',
-                'Rencana Tata Ruang Lahan',
-                'Dokumen Analisis Tanah',
-                'Sertifikat Hak Guna Pakai',
             ],
             'dokumen-sarpras' => [
                 'Spesifikasi Sarpras',
                 'Manual Penggunaan',
                 'Sertifikat Sarpras',
                 'Jadwal Pemeliharaan',
-                'Laporan Kondisi Sarpras',
-                'Dokumen Pengadaan Sarpras',
-                'Warranty dan Garansi',
-                'Panduan Operasional',
-                'Checklist Pemeliharaan',
-                'Laporan Perbaikan',
-                'Dokumen Inventarisasi Sarpras',
-                'Rencana Anggaran Pemeliharaan',
             ],
         ];
 
@@ -113,6 +86,8 @@ class DummyTPUKategoriDokumenSeeder extends Seeder
                         'status'       => '1', // Aktif
                         'uuid_created' => $user->uuid,
                         'uuid_updated' => $user->uuid,
+                        'created_at'   => now(),
+                        'updated_at'   => now(),
                     ];
 
                     try {

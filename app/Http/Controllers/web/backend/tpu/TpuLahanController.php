@@ -4,10 +4,13 @@ namespace App\Http\Controllers\web\backend\tpu;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\TpuDatas;
+use App\Models\TpuDokumen;
+use App\Models\TpuKategoriDokumen;
 use App\Models\TpuLahan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
@@ -39,11 +42,16 @@ class TpuLahanController extends Controller
                 }
             } else {
                 // Super Admin dan Admin bisa melihat semua data
-                if (isset($_GET['filter']['tpu']) && $_GET['filter']['tpu'] !== 'Semua TPU') {
-                    $query->whereHas('Tpu', function ($q) use ($request) {
-                        $q->where('nama', $request->input('filter.tpu'));
+                $tpuFilter = $request->input('filter.tpu', $filter_tpu);
+                if ($tpuFilter && $tpuFilter !== 'Semua TPU') {
+                    $query->whereHas('Tpu', function ($q) use ($tpuFilter) {
+                        $q->where('nama', $tpuFilter);
                     });
-                    $request->session()->put('filter_tpu_lahan', $_GET['filter']['tpu']);
+                    // Simpan filter ke session
+                    $request->session()->put('filter_tpu_lahan', $tpuFilter);
+                } else {
+                    // Pastikan session direset ke default jika filter dihapus
+                    $request->session()->put('filter_tpu_lahan', 'Semua TPU');
                 }
             }
 
@@ -66,11 +74,25 @@ class TpuLahanController extends Controller
                             $jenis_color = 'secondary';
                     }
 
+                    // Count dokumen jika relasi tersedia
+                    $dokumen_count = 0;
+                    try {
+                        if (method_exists($data, 'Dokumens')) {
+                            $dokumen_count = $data->Dokumens->count();
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore error if relation doesn't exist yet
+                    }
+
+                    $dokumen_badge = $dokumen_count > 0 ?
+                    '<span class="badge badge-light-info fs-8 mt-1"><i class="ki-outline ki-document fs-8 me-1"></i>' . $dokumen_count . ' Dokumen</span>' : '';
+
                     return '
                     <div class="d-flex flex-column">
                         <span class="text-gray-800 fw-bold fs-6">' . $data->kode_lahan . '</span>
                         <span class="text-muted fw-semibold fs-7">' . ($data->Tpu ? $data->Tpu->nama : '-') . '</span>
                         <span class="badge badge-light-' . $jenis_color . ' fw-bold fs-8 mt-1">' . ucfirst(str_replace('_', ' ', $jenis_tpu)) . '</span>
+                        ' . $dokumen_badge . '
                     </div>';
                 })
                 ->addColumn('luas_m2', function ($data) {
@@ -220,10 +242,22 @@ class TpuLahanController extends Controller
             }
         }
 
+                                      // Get kategori dokumen untuk Lahan (optional)
+        $kategoriDokumen = collect(); // Default empty collection
+        try {
+            $kategoriDokumen = TpuKategoriDokumen::where('status', '1')
+                ->where('tipe', 'dokumen-lahan')
+                ->orderBy('nama', 'ASC')
+                ->get();
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist yet
+        }
+
         $data = [
-            'title'  => 'Tambah Data Lahan',
-            'submit' => 'Simpan',
-            'tpus'   => $tpus->get(),
+            'title'           => 'Tambah Data Lahan',
+            'submit'          => 'Simpan',
+            'tpus'            => $tpus->get(),
+            'kategoriDokumen' => $kategoriDokumen,
         ];
 
         return view('admin.tpu.lahan.create_edit', $data);
@@ -261,6 +295,19 @@ class TpuLahanController extends Controller
             'longitude.between'   => 'Longitude harus antara -180 dan 180',
         ]);
 
+        // Validate dokumen if any (optional)
+        if ($request->has('dokumen_kategori')) {
+            foreach ($request->dokumen_kategori as $index => $kategori) {
+                if (! empty($kategori)) {
+                    $request->validate([
+                        "dokumen_file.$index"      => 'required|file|max:10240', // 10MB
+                        "dokumen_nama.$index"      => 'required|string|max:100',
+                        "dokumen_deskripsi.$index" => 'nullable|string|max:500',
+                    ]);
+                }
+            }
+        }
+
         // Cek hak akses untuk Admin TPU
         if ($auth->role === 'Admin TPU') {
             if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
@@ -288,6 +335,11 @@ class TpuLahanController extends Controller
             $save = TpuLahan::create($value);
 
             if ($save) {
+                // Process dokumen uploads if any (optional)
+                if ($request->has('dokumen_kategori')) {
+                    $this->processDokumenUploads($request, $uuid, 'Lahan');
+                }
+
                 // Create log
                 $aktifitas = [
                     'tabel' => ['tpu_lahans'],
@@ -348,12 +400,31 @@ class TpuLahanController extends Controller
             }
         }
 
+        // Get kategori dokumen untuk Lahan (optional)
+        $kategoriDokumen = collect();
+        $existingDokumen = collect();
+        try {
+            $kategoriDokumen = TpuKategoriDokumen::where('status', '1')
+                ->where('tipe', 'dokumen-lahan')
+                ->orderBy('nama', 'ASC')
+                ->get();
+
+            // Get existing dokumen
+            if (method_exists($data, 'Dokumens')) {
+                $existingDokumen = $data->Dokumens;
+            }
+        } catch (\Exception $e) {
+            // Ignore if table/relation doesn't exist yet
+        }
+
         $view_data = [
-            'title'    => 'Edit Data Lahan',
-            'submit'   => 'Simpan',
-            'data'     => $data,
-            'uuid_enc' => $uuid_enc,
-            'tpus'     => $tpus->get(),
+            'title'           => 'Edit Data Lahan',
+            'submit'          => 'Simpan',
+            'data'            => $data,
+            'uuid_enc'        => $uuid_enc,
+            'tpus'            => $tpus->get(),
+            'kategoriDokumen' => $kategoriDokumen,
+            'existingDokumen' => $existingDokumen,
         ];
 
         return view('admin.tpu.lahan.create_edit', $view_data);
@@ -406,6 +477,21 @@ class TpuLahanController extends Controller
             'longitude.between'   => 'Longitude harus antara -180 dan 180',
         ]);
 
+        // Validate dokumen if any (optional)
+        if ($request->has('dokumen_kategori')) {
+            foreach ($request->dokumen_kategori as $index => $kategori) {
+                if (! empty($kategori)) {
+                    // File is required only for new uploads (when no existing_dokumen_id)
+                    $fileRequired = empty($request->existing_dokumen_id[$index] ?? '') ? 'required|' : 'nullable|';
+                    $request->validate([
+                        "dokumen_file.$index"      => $fileRequired . 'file|max:10240',
+                        "dokumen_nama.$index"      => 'required|string|max:100',
+                        "dokumen_deskripsi.$index" => 'nullable|string|max:500',
+                    ]);
+                }
+            }
+        }
+
         // Cek hak akses untuk Admin TPU pada update
         if ($auth->role === 'Admin TPU') {
             if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
@@ -430,6 +516,16 @@ class TpuLahanController extends Controller
             $save = $data->update($value);
 
             if ($save) {
+                // Process dokumen updates/uploads (optional)
+                if ($request->has('dokumen_kategori')) {
+                    $this->processDokumenUploads($request, $uuid_dec, 'Lahan');
+                }
+
+                // Process dokumen deletions (optional)
+                if ($request->has('deleted_dokumen_ids')) {
+                    $this->processDeletedDokumen($request->deleted_dokumen_ids, $uuid_dec);
+                }
+
                 // Create log
                 $aktifitas = [
                     'tabel' => ['tpu_lahans'],
@@ -494,13 +590,19 @@ class TpuLahanController extends Controller
                 }
             }
 
-            // Check if there are related makam
-            // if ($data->Makams()->count() > 0) {
-            //     return response()->json([
-            //         'status'  => false,
-            //         'message' => 'Tidak dapat menghapus lahan yang memiliki data makam.',
-            //     ], 422);
-            // }
+            // Delete associated dokumen files (optional)
+            try {
+                if (method_exists($data, 'Dokumens')) {
+                    $dokumens = $data->Dokumens;
+                    foreach ($dokumens as $dokumen) {
+                        if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                            Storage::disk('public')->delete($dokumen->url);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore if relation doesn't exist
+            }
 
             $value = $data->toArray();
             $save  = $data->delete();
@@ -579,11 +681,19 @@ class TpuLahanController extends Controller
                         }
                     }
 
-                    // Check if there are related makam
-                    // if ($data->Makams()->count() > 0) {
-                    //     $failedItems[] = 'Lahan ' . $data->kode_lahan . ' memiliki data makam dan tidak dapat dihapus';
-                    //     continue;
-                    // }
+                    // Delete associated dokumen files (optional)
+                    try {
+                        if (method_exists($data, 'Dokumens')) {
+                            $dokumens = $data->Dokumens;
+                            foreach ($dokumens as $dokumen) {
+                                if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                                    Storage::disk('public')->delete($dokumen->url);
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore if relation doesn't exist
+                    }
 
                     $value = $data->toArray();
                     if ($data->delete()) {
@@ -645,6 +755,124 @@ class TpuLahanController extends Controller
                 'status'  => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Process dokumen uploads (optional method)
+     */
+    private function processDokumenUploads($request, $uuid_modul, $nama_modul)
+    {
+        // Only process if TpuDokumen model exists
+        if (! class_exists('App\Models\TpuDokumen')) {
+            return;
+        }
+
+        $auth = Auth::user();
+
+        if (! $request->has('dokumen_kategori')) {
+            return;
+        }
+
+        foreach ($request->dokumen_kategori as $index => $kategori_uuid) {
+            if (empty($kategori_uuid)) {
+                continue;
+            }
+
+            $existing_id = $request->existing_dokumen_id[$index] ?? null;
+            $nama_file   = $request->dokumen_nama[$index] ?? '';
+            $deskripsi   = $request->dokumen_deskripsi[$index] ?? '';
+            $file        = $request->file("dokumen_file.$index");
+
+            // Skip if no file and no existing dokumen (invalid entry)
+            if (! $file && ! $existing_id) {
+                continue;
+            }
+
+            try {
+                if ($existing_id) {
+                    // Update existing dokumen
+                    $dokumen = TpuDokumen::find($existing_id);
+                    if ($dokumen && $dokumen->uuid_modul == $uuid_modul) {
+                        $updateData = [
+                            'kategori'     => $kategori_uuid,
+                            'nama_file'    => $nama_file,
+                            'deskripsi'    => $deskripsi,
+                            'uuid_updated' => $auth->uuid,
+                        ];
+
+                        // If new file uploaded, replace the old one
+                        if ($file) {
+                            // Delete old file
+                            if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                                Storage::disk('public')->delete($dokumen->url);
+                            }
+
+                            // Upload new file
+                            $uploadResult = Helper::UpFileUnduhan($request, "dokumen_file.$index", "tpu/lahan/dokumen");
+                            if ($uploadResult !== "0" && is_array($uploadResult)) {
+                                $updateData['url']  = $uploadResult['url'];
+                                $updateData['tipe'] = $uploadResult['tipe'];
+                                $updateData['size'] = $uploadResult['size'];
+                            }
+                        }
+
+                        $dokumen->update($updateData);
+                    }
+                } else {
+                    // Create new dokumen
+                    if ($file) {
+                        $uploadResult = Helper::UpFileUnduhan($request, "dokumen_file.$index", "tpu/lahan/dokumen");
+                        if ($uploadResult !== "0" && is_array($uploadResult)) {
+                            TpuDokumen::create([
+                                'uuid'         => Str::uuid(),
+                                'uuid_modul'   => $uuid_modul,
+                                'nama_modul'   => $nama_modul,
+                                'kategori'     => $kategori_uuid,
+                                'nama_file'    => $nama_file,
+                                'deskripsi'    => $deskripsi,
+                                'url'          => $uploadResult['url'],
+                                'tipe'         => $uploadResult['tipe'],
+                                'size'         => $uploadResult['size'],
+                                'uuid_created' => $auth->uuid,
+                                'uuid_updated' => $auth->uuid,
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                \Log::error('Error processing dokumen upload for lahan: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Process deleted dokumen (optional method)
+     */
+    private function processDeletedDokumen($deletedIds, $uuid_modul)
+    {
+        if (! class_exists('App\Models\TpuDokumen') || empty($deletedIds)) {
+            return;
+        }
+
+        try {
+            $deletedIdsArray = explode(',', $deletedIds);
+            foreach ($deletedIdsArray as $deletedId) {
+                if (! empty($deletedId)) {
+                    $dokumen = TpuDokumen::find($deletedId);
+                    if ($dokumen && $dokumen->uuid_modul == $uuid_modul) {
+                        // Delete file from storage
+                        if ($dokumen->url && Storage::disk('public')->exists($dokumen->url)) {
+                            Storage::disk('public')->delete($dokumen->url);
+                        }
+                        $dokumen->delete();
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but don't stop the process
+            \Log::error('Error processing deleted dokumen for lahan: ' . $e->getMessage());
         }
     }
 }

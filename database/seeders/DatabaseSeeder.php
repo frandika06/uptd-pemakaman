@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DummyTPUKategoriDokumenSeeder::class);
         $this->call(DummyTPURefStatusMakamSeeder::class);
         $this->call(DummyTPURefJenisSarprasSeeder::class);
+        $this->call(TpuKategoriDokumenSeeder::class);
         $this->call(DummyTpuDatasSeeder::class);
         $this->call(DummyTpuPetugasSeeder::class);
         $this->call(DummyTpuLahanSeeder::class);

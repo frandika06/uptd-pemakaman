@@ -76,6 +76,12 @@ Route::group(['prefix' => 'tpu'], function () {
                 Route::put('/edit/{uuid}', [TpuDatasController::class, 'update'])->name('tpu.datas.update');
                 Route::post('/delete', [TpuDatasController::class, 'destroy'])->name('tpu.datas.destroy');
                 Route::post('/bulk-destroy', [TpuDatasController::class, 'bulkDestroy'])->name('tpu.datas.destroy.bulk');
+                // Route dokumen pendukung
+                Route::group(['prefix' => '{uuid}/dokumen'], function () {
+                    Route::post('/upload', [TpuDatasController::class, 'uploadDokumen'])->name('tpu.datas.dokumen.upload');
+                    Route::delete('/{dokumen_uuid}', [TpuDatasController::class, 'deleteDokumen'])->name('tpu.datas.dokumen.delete');
+                    Route::get('/download/{dokumen_uuid}', [TpuDatasController::class, 'downloadDokumen'])->name('tpu.datas.dokumen.download');
+                });
             });
         });
 
@@ -88,6 +94,12 @@ Route::group(['prefix' => 'tpu'], function () {
             Route::put('/edit/{uuid}', [TpuLahanController::class, 'update'])->name('tpu.lahan.update');
             Route::post('/delete', [TpuLahanController::class, 'destroy'])->name('tpu.lahan.destroy');
             Route::post('/bulk-destroy', [TpuLahanController::class, 'bulkDestroy'])->name('tpu.lahan.destroy.bulk');
+            // Route dokumen pendukung
+            Route::group(['prefix' => '{uuid}/dokumen'], function () {
+                Route::post('/upload', [TpuLahanController::class, 'uploadDokumen'])->name('tpu.lahan.dokumen.upload');
+                Route::delete('/{dokumen_uuid}', [TpuLahanController::class, 'deleteDokumen'])->name('tpu.lahan.dokumen.delete');
+                Route::get('/download/{dokumen_uuid}', [TpuLahanController::class, 'downloadDokumen'])->name('tpu.lahan.dokumen.download');
+            });
         });
 
         // Manajemen Makam

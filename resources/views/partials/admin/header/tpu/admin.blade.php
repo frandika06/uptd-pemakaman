@@ -158,26 +158,6 @@ $auth = \Auth::user();
                                         </div>
                                     </div>
                                 </div>
-
-                                {{-- ===================== Laporan & Statistik ===================== --}}
-                                <div data-kt-menu-trigger="{default:'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion mt-2">
-                                    <span class="menu-link">
-                                        <span class="menu-icon"><i class="fa-solid fa-chart-column fs-4"></i></span>
-                                        <span class="menu-title">Laporan & Statistik</span>
-                                        <span class="menu-arrow"></span>
-                                    </span>
-                                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-
-                                        {{-- Statistik Kapasitas --}}
-                                        <div class="menu-item">
-                                            <a class="menu-link" href="{{ route('tpu.statistik-kapasitas.index') }}">
-                                                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                                                <span class="menu-title">Statistik Kapasitas</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                             {{-- end:Menu sub --}}
                         </div>

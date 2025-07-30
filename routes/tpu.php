@@ -9,7 +9,6 @@ use App\Http\Controllers\web\backend\tpu\TpuPetugasController;
 use App\Http\Controllers\web\backend\tpu\TpuRefJenisSarprasController;
 use App\Http\Controllers\web\backend\tpu\TpuRefStatusMakamController;
 use App\Http\Controllers\web\backend\tpu\TpuSarprasController;
-use App\Http\Controllers\web\backend\tpu\TpuStatistikKapasitasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -146,17 +145,6 @@ Route::group(['prefix' => 'tpu'], function () {
                 Route::delete('/{dokumen_uuid}', [TpuSarprasController::class, 'deleteDokumen'])->name('tpu.sarpras.dokumen.delete');
                 Route::get('/download/{dokumen_uuid}', [TpuSarprasController::class, 'downloadDokumen'])->name('tpu.sarpras.dokumen.download');
             });
-        });
-
-        // Manajemen Statistik Kapasitas
-        Route::group(['prefix' => 'statistik-kapasitas'], function () {
-            Route::get('/', [TpuStatistikKapasitasController::class, 'index'])->name('tpu.statistik-kapasitas.index');
-            Route::get('/create', [TpuStatistikKapasitasController::class, 'create'])->name('tpu.statistik-kapasitas.create');
-            Route::post('/create', [TpuStatistikKapasitasController::class, 'store'])->name('tpu.statistik-kapasitas.store');
-            Route::get('/edit/{id}', [TpuStatistikKapasitasController::class, 'edit'])->name('tpu.statistik-kapasitas.edit');
-            Route::put('/edit/{id}', [TpuStatistikKapasitasController::class, 'update'])->name('tpu.statistik-kapasitas.update');
-            Route::post('/delete', [TpuStatistikKapasitasController::class, 'destroy'])->name('tpu.statistik-kapasitas.destroy');
-            Route::post('/bulk-destroy', [TpuStatistikKapasitasController::class, 'bulkDestroy'])->name('tpu.statistik-kapasitas.destroy.bulk');
         });
     });
 });

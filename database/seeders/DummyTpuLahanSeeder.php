@@ -51,7 +51,7 @@ class DummyTpuLahanSeeder extends Seeder
                 $lahanData[] = [
                     'uuid_tpu'   => $tpu->uuid,
                     'kode_lahan' => $kodeLahan,
-                    'luas_m2'    => rand(100, 1000),                             // Luas lahan antara 100-1000 m²
+                    'luas_m2'    => rand(1000, 10000),                           // Luas lahan antara 100-1000 m²
                     'latitude'   => $tpu->latitude + (rand(-100, 100) / 10000),  // Sedikit offset dari TPU
                     'longitude'  => $tpu->longitude + (rand(-100, 100) / 10000), // Sedikit offset dari TPU
                     'catatan'    => 'Lahan ' . $i . ' untuk TPU ' . $tpu->nama,

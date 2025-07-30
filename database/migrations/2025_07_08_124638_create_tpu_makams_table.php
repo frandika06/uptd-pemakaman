@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('lebar_m', 5, 2);
             $table->decimal('luas_m2', 10, 2)->nullable();
             $table->integer('kapasitas')->nullable();
-            $table->integer('makan_terisi')->default(0);
+            $table->integer('makam_terisi')->default(0);
             $table->integer('sisa_kapasitas')->default(0);
             $table->string('status_makam', 100)->nullable();
             $table->text('keterangan')->nullable();

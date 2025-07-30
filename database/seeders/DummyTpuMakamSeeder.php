@@ -56,21 +56,25 @@ class DummyTpuMakamSeeder extends Seeder
             $jumlahMakam = rand(1, 3);
 
             for ($i = 1; $i <= $jumlahMakam; $i++) {
-                $panjang_m  = round(rand(150, 300) / 100, 2); // Panjang antara 1.5m - 3m
-                $lebar_m    = round(rand(80, 150) / 100, 2);  // Lebar antara 0.8m - 1.5m
-                $luas_m2    = $panjang_m * $lebar_m;
-                $kapasitas  = $this->calculateKapasitas($lahan, $luas_m2);
-                $status     = $statusMakam[array_rand($statusMakam)]; // Pilih status secara acak
-                $keterangan = "Makam {$i} untuk lahan {$lahan->kode_lahan}";
+                $panjang_m      = round(rand(150, 300) / 100, 2); // Panjang antara 1.5m - 3m
+                $lebar_m        = round(rand(80, 150) / 100, 2);  // Lebar antara 0.8m - 1.5m
+                $luas_m2        = $panjang_m * $lebar_m;
+                $kapasitas      = $this->calculateKapasitas($lahan, $luas_m2);
+                $makam_terisi   = rand(0, 100);
+                $sisa_kapasitas = $kapasitas - $makam_terisi;
+                $status         = $statusMakam[array_rand($statusMakam)]; // Pilih status secara acak
+                $keterangan     = "Makam {$i} untuk lahan {$lahan->kode_lahan}";
 
                 $makamData[] = [
-                    'uuid_lahan'   => $lahan->uuid,
-                    'panjang_m'    => $panjang_m,
-                    'lebar_m'      => $lebar_m,
-                    'luas_m2'      => $luas_m2,
-                    'kapasitas'    => $kapasitas,
-                    'status_makam' => $status,
-                    'keterangan'   => $keterangan,
+                    'uuid_lahan'     => $lahan->uuid,
+                    'panjang_m'      => $panjang_m,
+                    'lebar_m'        => $lebar_m,
+                    'luas_m2'        => $luas_m2,
+                    'kapasitas'      => $kapasitas,
+                    'makam_terisi'   => $makam_terisi,
+                    'sisa_kapasitas' => $sisa_kapasitas,
+                    'status_makam'   => $status,
+                    'keterangan'     => $keterangan,
                 ];
                 $totalItems++;
             }
@@ -96,16 +100,18 @@ class DummyTpuMakamSeeder extends Seeder
             if (! $cek_makam) {
                 // Jika makam belum ada, buat yang baru
                 $value_makam = [
-                    'uuid'         => Str::uuid(),
-                    'uuid_lahan'   => $makam['uuid_lahan'],
-                    'panjang_m'    => $makam['panjang_m'],
-                    'lebar_m'      => $makam['lebar_m'],
-                    'luas_m2'      => $makam['luas_m2'],
-                    'kapasitas'    => $makam['kapasitas'],
-                    'status_makam' => $makam['status_makam'],
-                    'keterangan'   => $makam['keterangan'],
-                    'uuid_created' => $user->uuid,
-                    'uuid_updated' => $user->uuid,
+                    'uuid'           => Str::uuid(),
+                    'uuid_lahan'     => $makam['uuid_lahan'],
+                    'panjang_m'      => $makam['panjang_m'],
+                    'lebar_m'        => $makam['lebar_m'],
+                    'luas_m2'        => $makam['luas_m2'],
+                    'kapasitas'      => $makam['kapasitas'],
+                    'makam_terisi'   => $makam['makam_terisi'],
+                    'sisa_kapasitas' => $makam['sisa_kapasitas'],
+                    'status_makam'   => $makam['status_makam'],
+                    'keterangan'     => $makam['keterangan'],
+                    'uuid_created'   => $user->uuid,
+                    'uuid_updated'   => $user->uuid,
                 ];
                 TpuMakam::create($value_makam);
                 $this->command->info("Data makam '{$makam['keterangan']}' berhasil dibuat.");

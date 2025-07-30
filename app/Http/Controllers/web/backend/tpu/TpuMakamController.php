@@ -118,10 +118,11 @@ class TpuMakamController extends Controller
                 </div>';
                 })
                 ->addColumn('kapasitas', function ($data) {
-                    if ($data->kapasitas) {
-                        return '<span class="text-gray-600 fw-semibold d-block fs-7">' . number_format($data->kapasitas) . ' jenazah</span>';
-                    }
-                    return '<span class="text-muted fs-7">-</span>';
+                    return '
+                <div class="d-flex flex-column">
+                    <span class="text-gray-600 fw-semibold fs-6">' . number_format($data->kapasitas) . ' jenazah</span>
+                    <span class="text-muted fw-semibold fs-7">Terisi: ' . number_format($data->makam_terisi) . ' | Sisa: ' . number_format($data->sisa_kapasitas) . '</span>
+                </div>';
                 })
                 ->addColumn('status_makam', function ($data) {
                     switch ($data->status_makam) {
@@ -258,6 +259,7 @@ class TpuMakamController extends Controller
             'panjang_m'    => 'required|numeric|min:0.01',
             'lebar_m'      => 'required|numeric|min:0.01',
             'kapasitas'    => 'nullable|integer|min:1',
+            'makam_terisi' => 'required|integer|min:0',
             'status_makam' => 'required|exists:tpu_ref_status_makam,nama',
             'keterangan'   => 'nullable|string|max:1000',
         ], [
@@ -271,6 +273,9 @@ class TpuMakamController extends Controller
             'lebar_m.min'           => 'Lebar makam minimal 0.01 meter',
             'kapasitas.integer'     => 'Kapasitas harus berupa angka',
             'kapasitas.min'         => 'Kapasitas minimal 1 jenazah',
+            'makam_terisi.required' => 'Makam terisi harus diisi',
+            'makam_terisi.integer'  => 'Makam terisi harus berupa angka bulat',
+            'makam_terisi.min'      => 'Makam terisi tidak boleh kurang dari 0',
             'status_makam.required' => 'Status makam harus dipilih',
             'status_makam.exists'   => 'Status makam yang dipilih tidak valid',
             'keterangan.max'        => 'Keterangan maksimal 1000 karakter',
@@ -295,17 +300,28 @@ class TpuMakamController extends Controller
                 $kapasitas = $this->calculateKapasitas($lahan, $luas_m2);
             }
 
+            // Validasi makam_terisi tidak melebihi kapasitas
+            $makam_terisi = $request->makam_terisi;
+            if ($makam_terisi > $kapasitas) {
+                return back()->withErrors(['makam_terisi' => 'Makam terisi tidak boleh melebihi kapasitas total'])->withInput();
+            }
+
+            // Hitung sisa kapasitas
+            $sisa_kapasitas = $kapasitas - $makam_terisi;
+
             $value = [
-                'uuid'         => $uuid,
-                'uuid_lahan'   => $request->uuid_lahan,
-                'panjang_m'    => $request->panjang_m,
-                'lebar_m'      => $request->lebar_m,
-                'luas_m2'      => $luas_m2,
-                'kapasitas'    => $kapasitas,
-                'status_makam' => $request->status_makam,
-                'keterangan'   => $request->keterangan,
-                'uuid_created' => $auth->uuid,
-                'uuid_updated' => $auth->uuid,
+                'uuid'           => $uuid,
+                'uuid_lahan'     => $request->uuid_lahan,
+                'panjang_m'      => $request->panjang_m,
+                'lebar_m'        => $request->lebar_m,
+                'luas_m2'        => $luas_m2,
+                'kapasitas'      => $kapasitas,
+                'makam_terisi'   => $makam_terisi,
+                'sisa_kapasitas' => $sisa_kapasitas,
+                'status_makam'   => $request->status_makam,
+                'keterangan'     => $request->keterangan,
+                'uuid_created'   => $auth->uuid,
+                'uuid_updated'   => $auth->uuid,
             ];
 
             $save = TpuMakam::create($value);
@@ -413,6 +429,7 @@ class TpuMakamController extends Controller
             'panjang_m'    => 'required|numeric|min:0.01',
             'lebar_m'      => 'required|numeric|min:0.01',
             'kapasitas'    => 'nullable|integer|min:1',
+            'makam_terisi' => 'required|integer|min:0',
             'status_makam' => 'required|exists:tpu_ref_status_makam,nama',
             'keterangan'   => 'nullable|string|max:1000',
         ], [
@@ -426,6 +443,9 @@ class TpuMakamController extends Controller
             'lebar_m.min'           => 'Lebar makam minimal 0.01 meter',
             'kapasitas.integer'     => 'Kapasitas harus berupa angka',
             'kapasitas.min'         => 'Kapasitas minimal 1 jenazah',
+            'makam_terisi.required' => 'Makam terisi harus diisi',
+            'makam_terisi.integer'  => 'Makam terisi harus berupa angka bulat',
+            'makam_terisi.min'      => 'Makam terisi tidak boleh kurang dari 0',
             'status_makam.required' => 'Status makam harus dipilih',
             'status_makam.exists'   => 'Status makam yang dipilih tidak valid',
             'keterangan.max'        => 'Keterangan maksimal 1000 karakter',
@@ -456,15 +476,26 @@ class TpuMakamController extends Controller
                 $kapasitas = $this->calculateKapasitas($lahan, $luas_m2);
             }
 
+            // Validasi makam_terisi tidak melebihi kapasitas
+            $makam_terisi = $request->makam_terisi;
+            if ($makam_terisi > $kapasitas) {
+                return back()->withErrors(['makam_terisi' => 'Makam terisi tidak boleh melebihi kapasitas total'])->withInput();
+            }
+
+            // Hitung sisa kapasitas
+            $sisa_kapasitas = $kapasitas - $makam_terisi;
+
             $value = [
-                'uuid_lahan'   => $request->uuid_lahan,
-                'panjang_m'    => $request->panjang_m,
-                'lebar_m'      => $request->lebar_m,
-                'luas_m2'      => $luas_m2,
-                'kapasitas'    => $kapasitas,
-                'status_makam' => $request->status_makam,
-                'keterangan'   => $request->keterangan,
-                'uuid_updated' => $auth->uuid,
+                'uuid_lahan'     => $request->uuid_lahan,
+                'panjang_m'      => $request->panjang_m,
+                'lebar_m'        => $request->lebar_m,
+                'luas_m2'        => $luas_m2,
+                'kapasitas'      => $kapasitas,
+                'makam_terisi'   => $makam_terisi,
+                'sisa_kapasitas' => $sisa_kapasitas,
+                'status_makam'   => $request->status_makam,
+                'keterangan'     => $request->keterangan,
+                'uuid_updated'   => $auth->uuid,
             ];
 
             $save = $data->update($value);
@@ -705,6 +736,12 @@ class TpuMakamController extends Controller
     public function calculateKapasitasAjax(Request $request)
     {
         try {
+            $request->validate([
+                'uuid_lahan' => 'required|exists:tpu_lahans,uuid',
+                'panjang_m'  => 'required|numeric|min:0.01',
+                'lebar_m'    => 'required|numeric|min:0.01',
+            ]);
+
             $lahan      = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
             $panjang    = (float) $request->panjang_m;
             $lebar      = (float) $request->lebar_m;

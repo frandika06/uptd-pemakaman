@@ -23,15 +23,11 @@
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                <li class="breadcrumb-item text-gray-700">Manajemen TPU</li>
+                <li class="breadcrumb-item text-gray-700">Pengaturan</li>
                 <li class="breadcrumb-item">
                     <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
                 </li>
-                <li class="breadcrumb-item text-gray-700">Data Petugas</li>
-                <li class="breadcrumb-item">
-                    <i class="ki-outline ki-right fs-7 text-gray-700 mx-n1"></i>
-                </li>
-                <li class="breadcrumb-item text-gray-700">{{ isset($data) ? 'Edit' : 'Tambah' }}</li>
+                <li class="breadcrumb-item text-gray-700">Profile TPU</li>
             </ul>
         </div>
     </div>
@@ -40,12 +36,9 @@
 
 {{-- CONTENT::BEGIN --}}
 @section('content')
-    <form id="kt_user_form" class="form d-flex flex-column flex-lg-row" action="{{ isset($data) ? route('tpu.petugas.update', $uuid_enc) : route('tpu.petugas.store') }}" method="POST"
-        enctype="multipart/form-data">
+    <form id="kt_profile_tpu_form" class="form d-flex flex-column flex-lg-row" action="{{ route('prt.apps.profile.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @isset($data)
-            @method('PUT')
-        @endisset
+        @method('PUT')
 
         <div class="d-flex flex-column gap-7 gap-lg-10 w-100 w-lg-300px mb-7 me-lg-10">
             <div class="card card-flush py-4">
@@ -79,23 +72,43 @@
             <div class="card card-flush py-4">
                 <div class="card-header">
                     <div class="card-title">
-                        <h2>Informasi</h2>
+                        <h2>Informasi TPU</h2>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="d-flex flex-column gap-5">
+                        <div class="m-0 p-0">
+                            <span class="fw-bold text-gray-600">TPU:</span><br />
+                            <span class="text-gray-800 fw-bold">{{ $tpu_data->nama ?? 'Tidak ada TPU' }}</span>
+                        </div>
+                        <div class="m-0 p-0">
+                            <span class="fw-bold text-gray-600">Alamat TPU:</span><br />
+                            <span class="text-gray-800">{{ $tpu_data->alamat ?? 'Tidak ada alamat' }}</span>
+                        </div>
+                        <div class="m-0 p-0">
+                            <span class="fw-bold text-gray-600">Role:</span><br />
+                            <span class="badge badge-light-primary">{{ $data->User->role ?? 'Tidak ada role' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-flush py-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>Informasi Akun</h2>
                     </div>
                 </div>
                 <div class="card-body pt-0">
                     <div class="d-flex flex-column gap-5">
                         <div class="m-0 p-0">
                             <span class="fw-bold text-gray-600">Dibuat:</span><br />
-                            <span class="text-gray-800 fw-bold">
-                                {{ isset($data) ? $data->created_at->format('d M Y H:i') : 'Akan diatur otomatis' }}
-                            </span>
+                            <span class="text-gray-800 fw-bold">{{ $data->created_at->format('d M Y H:i') }}</span>
                         </div>
-                        @isset($data)
-                            <div class="m-0 p-0">
-                                <span class="fw-bold text-gray-600">Diperbarui:</span><br />
-                                <span class="text-gray-800 fw-bold">{{ $data->updated_at->format('d M Y H:i') }}</span>
-                            </div>
-                        @endisset
+                        <div class="m-0 p-0">
+                            <span class="fw-bold text-gray-600">Diperbarui:</span><br />
+                            <span class="text-gray-800 fw-bold">{{ $data->updated_at->format('d M Y H:i') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -105,7 +118,7 @@
             <div class="card card-flush py-4">
                 <div class="card-header">
                     <div class="card-title">
-                        <h2>Detail Petugas</h2>
+                        <h2>Detail Profile</h2>
                     </div>
                 </div>
                 <div class="card-body pt-0">
@@ -114,7 +127,7 @@
                             <div class="mb-10 fv-row">
                                 <label class="required form-label">NIP</label>
                                 <input type="text" name="nip" class="form-control mb-2 @error('nip') is-invalid @enderror" placeholder="Masukkan NIP atau tanda (-) jika Non ASN"
-                                    value="{{ old('nip', isset($data) ? $data->nip : '') }}" autocomplete="off" maxlength="50" />
+                                    value="{{ old('nip', $data->nip) }}" autocomplete="off" maxlength="50" />
                                 <div class="text-muted fs-7">Masukkan tanda (-) jika Non ASN.</div>
                                 @error('nip')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -123,7 +136,7 @@
                             <div class="mb-10 fv-row">
                                 <label class="required form-label">Nama Lengkap</label>
                                 <input type="text" name="nama_lengkap" class="form-control mb-2 @error('nama_lengkap') is-invalid @enderror" placeholder="Masukkan nama lengkap"
-                                    value="{{ old('nama_lengkap', isset($data) ? $data->nama_lengkap : '') }}" autocomplete="off" maxlength="255" />
+                                    value="{{ old('nama_lengkap', $data->nama_lengkap) }}" autocomplete="off" maxlength="255" />
                                 @error('nama_lengkap')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -133,8 +146,8 @@
                                 <select class="form-select mb-2 @error('jenis_kelamin') is-invalid @enderror" data-control="select2" data-placeholder="Pilih Jenis Kelamin"
                                     name="jenis_kelamin" required>
                                     <option></option>
-                                    <option value="L" {{ old('jenis_kelamin', isset($data) ? $data->jenis_kelamin : '') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                    <option value="P" {{ old('jenis_kelamin', isset($data) ? $data->jenis_kelamin : '') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                                    <option value="L" {{ old('jenis_kelamin', $data->jenis_kelamin) == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                    <option value="P" {{ old('jenis_kelamin', $data->jenis_kelamin) == 'P' ? 'selected' : '' }}>Perempuan</option>
                                 </select>
                                 @error('jenis_kelamin')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -145,7 +158,7 @@
                             <div class="mb-10 fv-row">
                                 <label class="required form-label">Kontak</label>
                                 <input type="text" name="kontak" class="form-control mb-2 @error('kontak') is-invalid @enderror" placeholder="Masukkan nomor kontak"
-                                    value="{{ old('kontak', isset($data) ? $data->kontak : '') }}" autocomplete="off" maxlength="15" />
+                                    value="{{ old('kontak', $data->kontak) }}" autocomplete="off" maxlength="15" />
                                 @error('kontak')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -153,16 +166,17 @@
                             <div class="mb-10 fv-row">
                                 <label class="required form-label">Email</label>
                                 <input type="email" name="email" class="form-control mb-2 @error('email') is-invalid @enderror" placeholder="Masukkan email"
-                                    value="{{ old('email', isset($data) ? $data->email : '') }}" autocomplete="off" maxlength="100" />
+                                    value="{{ old('email', $data->email) }}" autocomplete="off" maxlength="100" />
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="mb-10 fv-row">
-                                <label class="form-label {{ !isset($data) ? 'required' : '' }}">Password</label>
-                                <input type="password" name="password" class="form-control mb-2 @error('password') is-invalid @enderror" placeholder="Masukkan password"
-                                    {{ !isset($data) ? 'required' : '' }} autocomplete="off" maxlength="100" />
-                                <div class="text-muted fs-7">Password minimal 8 karakter, harus mengandung huruf besar, huruf kecil, angka, dan simbol.</div>
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control mb-2 @error('password') is-invalid @enderror"
+                                    placeholder="Kosongkan jika tidak ingin mengubah password" autocomplete="off" maxlength="100" />
+                                <div class="text-muted fs-7">Kosongkan jika tidak ingin mengubah password. Password minimal 8 karakter, harus mengandung huruf besar, huruf kecil,
+                                    angka, dan simbol.</div>
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -172,40 +186,8 @@
                     <div class="mb-10 fv-row">
                         <label class="required form-label">Jabatan</label>
                         <input type="text" name="jabatan" class="form-control mb-2 @error('jabatan') is-invalid @enderror" placeholder="Masukkan jabatan"
-                            value="{{ old('jabatan', isset($data) ? $data->jabatan : '') }}" autocomplete="off" maxlength="255" />
+                            value="{{ old('jabatan', $data->jabatan) }}" autocomplete="off" maxlength="255" />
                         @error('jabatan')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    @if (Auth::user()->role === 'Super Admin' || Auth::user()->role === 'Admin')
-                        <div class="mb-10 fv-row">
-                            <label class="required form-label">Data TPU</label>
-                            <select class="form-select mb-2 @error('uuid_tpu') is-invalid @enderror" data-control="select2" data-placeholder="Pilih TPU" name="uuid_tpu" required>
-                                <option></option>
-                                @foreach ($tpus as $tpu)
-                                    <option value="{{ $tpu->uuid }}" {{ old('uuid_tpu', isset($data) ? $data->uuid_tpu : '') == $tpu->uuid ? 'selected' : '' }}>
-                                        {{ $tpu->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('uuid_tpu')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    @else
-                        <input type="hidden" name="uuid_tpu" value="{{ isset($uuid_tpu) ? $uuid_tpu : '' }}">
-                    @endif
-
-                    <div class="mb-10 fv-row">
-                        <label class="required form-label">Role</label>
-                        <select class="form-select mb-2 @error('role') is-invalid @enderror" data-control="select2" data-placeholder="Pilih Role" name="role" required>
-                            <option></option>
-                            <option value="Admin TPU" {{ old('role', isset($data) && $data->User ? $data->User->role : '') == 'Admin TPU' ? 'selected' : '' }}>Admin TPU</option>
-                            <option value="Petugas TPU" {{ old('role', isset($data) && $data->User ? $data->User->role : '') == 'Petugas TPU' ? 'selected' : '' }}>Petugas TPU
-                            </option>
-                        </select>
-                        @error('role')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -213,10 +195,10 @@
             </div>
 
             <div class="d-flex justify-content-end">
-                <a href="{{ route('tpu.petugas.index') }}" id="kt_user_cancel" class="btn btn-light me-5">
-                    <i class="ki-outline ki-arrow-left fs-2"></i>Batal
+                <a href="{{ route('setup.apps.index') }}" id="kt_profile_cancel" class="btn btn-light me-5">
+                    <i class="ki-outline ki-arrow-left fs-2"></i>Kembali
                 </a>
-                <button type="submit" id="kt_user_submit" class="btn btn-primary">
+                <button type="submit" id="kt_profile_submit" class="btn btn-primary">
                     <span class="indicator-label">
                         <i class="fa-solid fa-save me-2"></i>{{ $submit }}
                     </span>
@@ -247,7 +229,7 @@
     <script>
         "use strict";
 
-        var KTAppUserSave = function() {
+        var KTAppProfileTPUSave = function() {
             var form;
             var submitButton;
             var cancelButton;
@@ -263,9 +245,6 @@
                     var email = form.querySelector('input[name="email"]').value.trim();
                     var jabatan = form.querySelector('input[name="jabatan"]').value.trim();
                     var password = form.querySelector('input[name="password"]').value.trim();
-                    var uuidTpu = form.querySelector('select[name="uuid_tpu"]') ? form.querySelector('select[name="uuid_tpu"]').value : form.querySelector(
-                        'input[name="uuid_tpu"]').value;
-                    var role = form.querySelector('select[name="role"]').value;
 
                     var isValid = true;
                     var errorMessage = '';
@@ -324,31 +303,16 @@
                         errorMessage = 'Jabatan maksimal 255 karakter';
                     }
 
-                    // Validasi TPU
-                    if (!uuidTpu) {
-                        isValid = false;
-                        errorMessage = 'Data TPU wajib diisi';
-                    }
-
-                    // Validasi Role
-                    if (!role) {
-                        isValid = false;
-                        errorMessage = 'Role wajib dipilih';
-                    }
-
-                    // Validasi Password (hanya untuk create)
-                    @if (!isset($data))
-                        if (!password) {
-                            isValid = false;
-                            errorMessage = 'Password wajib diisi';
-                        } else if (password.length < 8) {
+                    // Validasi Password (jika diisi)
+                    if (password && password.length > 0) {
+                        if (password.length < 8) {
                             isValid = false;
                             errorMessage = 'Password minimal 8 karakter';
                         } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
                             isValid = false;
                             errorMessage = 'Password harus mengandung huruf besar, huruf kecil, angka, dan simbol';
                         }
-                    @endif
+                    }
 
                     if (isValid) {
                         submitButton.setAttribute('data-kt-indicator', 'on');
@@ -371,11 +335,11 @@
                     e.preventDefault();
 
                     Swal.fire({
-                        text: "Apakah Anda yakin ingin membatalkan?",
+                        text: "Apakah Anda yakin ingin kembali tanpa menyimpan perubahan?",
                         icon: "warning",
                         showCancelButton: true,
                         buttonsStyling: false,
-                        confirmButtonText: "Ya, batalkan!",
+                        confirmButtonText: "Ya, kembali!",
                         cancelButtonText: "Tidak",
                         customClass: {
                             confirmButton: "btn btn-primary",
@@ -415,9 +379,9 @@
 
             return {
                 init: function() {
-                    form = document.querySelector('#kt_user_form');
-                    submitButton = document.querySelector('#kt_user_submit');
-                    cancelButton = document.querySelector('#kt_user_cancel');
+                    form = document.querySelector('#kt_profile_tpu_form');
+                    submitButton = document.querySelector('#kt_profile_submit');
+                    cancelButton = document.querySelector('#kt_profile_cancel');
 
                     if (!form) {
                         return;
@@ -432,7 +396,7 @@
         }();
 
         KTUtil.onDOMContentLoaded(function() {
-            KTAppUserSave.init();
+            KTAppProfileTPUSave.init();
         });
     </script>
 @endpush

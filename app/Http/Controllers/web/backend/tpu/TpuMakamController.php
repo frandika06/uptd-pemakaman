@@ -68,21 +68,58 @@ class TpuMakamController extends Controller
                 ->addIndexColumn()
                 ->setRowId('uuid')
                 ->addColumn('action', function ($data) use ($auth) {
-                    $uuid_enc   = Helper::encode($data->uuid);
-                    $editUrl    = route('tpu.makam.edit', $uuid_enc);
-                    $isReadOnly = $auth->role === 'Petugas TPU';
+                    $uuid_enc = Helper::encode($data->uuid);
+                    $editUrl  = route('tpu.makam.edit', $uuid_enc);
+                    $role     = $auth->role;
 
-                    return '
-                <div class="d-flex align-items-center">
-                    <a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1' . ($isReadOnly ? ' disabled' : '') . '">
-                        <i class="ki-outline ki-pencil fs-5"></i>
-                    </a>
-                    <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete' . ($isReadOnly ? ' disabled' : '') . '"
-                            data-kt-delete-url="' . route('tpu.makam.destroy') . '"
-                            data-kt-delete-id="' . $uuid_enc . '">
-                        <i class="ki-outline ki-trash fs-5"></i>
-                    </button>
-                </div>';
+                    // Logika untuk aksi buttons
+                    $canEdit   = false;
+                    $canDelete = false;
+
+                    if ($role == 'Super Admin' || $role == 'Admin') {
+                        $canEdit   = true;
+                        $canDelete = true;
+                    } elseif ($role == 'Admin TPU') {
+                        // Admin TPU bisa edit dan delete makam di TPU mereka
+                        $isSameTPU = ($auth->RelPetugasTpu && $data->Lahan && $data->Lahan->Tpu && $auth->RelPetugasTpu->uuid_tpu === $data->Lahan->Tpu->uuid);
+                        $canEdit   = $isSameTPU;
+                        $canDelete = $isSameTPU;
+                    } elseif ($role == 'Petugas TPU') {
+                        // Petugas TPU bisa edit tapi tidak bisa delete
+                        $isSameTPU = ($auth->RelPetugasTpu && $data->Lahan && $data->Lahan->Tpu && $auth->RelPetugasTpu->uuid_tpu === $data->Lahan->Tpu->uuid);
+                        $canEdit   = $isSameTPU;
+                        $canDelete = false;
+                    }
+
+                    $actions = '<div class="d-flex align-items-center">';
+
+                    // Edit button
+                    if ($canEdit) {
+                        $actions .= '<a href="' . $editUrl . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                <i class="ki-outline ki-pencil fs-5"></i>
+                            </a>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                <i class="ki-outline ki-pencil fs-5 text-muted"></i>
+                            </span>';
+                    }
+
+                    // Delete button
+                    if ($canDelete) {
+                        $actions .= '<button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete"
+                                data-kt-delete-url="' . route('tpu.makam.destroy') . '"
+                                data-kt-delete-id="' . $uuid_enc . '" data-bs-toggle="tooltip" title="Hapus">
+                                <i class="ki-outline ki-trash fs-5"></i>
+                            </button>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                <i class="ki-outline ki-trash fs-5 text-muted"></i>
+                            </span>';
+                    }
+
+                    $actions .= '</div>';
+
+                    return $actions;
                 })
                 ->addColumn('lahan_info', function ($data) {
                     if ($data->Lahan) {
@@ -110,6 +147,13 @@ class TpuMakamController extends Controller
                     }
                     return '<span class="text-muted">-</span>';
                 })
+                ->addColumn('kategori_makam', function ($data) {
+                    $badges = [
+                        'muslim'     => '<span class="badge badge-light-primary">Muslim</span>',
+                        'non_muslim' => '<span class="badge badge-light-warning">Non Muslim</span>',
+                    ];
+                    return $badges[$data->kategori_makam] ?? '<span class="badge badge-light-secondary">Undefined</span>';
+                })
                 ->addColumn('dimensi', function ($data) {
                     return '
                 <div class="d-flex flex-column">
@@ -118,10 +162,19 @@ class TpuMakamController extends Controller
                 </div>';
                 })
                 ->addColumn('kapasitas', function ($data) {
+                    $percentage    = $data->kapasitas > 0 ? round(($data->makam_terisi / $data->kapasitas) * 100, 1) : 0;
+                    $progressClass = $percentage >= 90 ? 'danger' : ($percentage >= 70 ? 'warning' : 'success');
+
                     return '
                 <div class="d-flex flex-column">
-                    <span class="text-gray-600 fw-semibold fs-6">' . number_format($data->kapasitas) . ' jenazah</span>
-                    <span class="text-muted fw-semibold fs-7">Terisi: ' . number_format($data->makam_terisi) . ' | Sisa: ' . number_format($data->sisa_kapasitas) . '</span>
+                    <div class="d-flex align-items-center mb-1">
+                        <div class="progress h-6px w-100 me-2">
+                            <div class="progress-bar bg-' . $progressClass . '" style="width: ' . $percentage . '%"></div>
+                        </div>
+                        <span class="text-muted fs-7">' . $percentage . '%</span>
+                    </div>
+                    <span class="text-gray-600 fw-semibold fs-6">' . number_format($data->makam_terisi) . ' / ' . number_format($data->kapasitas) . ' jenazah</span>
+                    <span class="text-muted fw-semibold fs-7">Sisa: ' . number_format($data->sisa_kapasitas) . '</span>
                 </div>';
                 })
                 ->addColumn('status_makam', function ($data) {
@@ -163,7 +216,7 @@ class TpuMakamController extends Controller
                     }
                     return '<span class="text-muted fs-7">-</span>';
                 })
-                ->rawColumns(['action', 'lahan_info', 'dimensi', 'kapasitas', 'status_makam', 'keterangan'])
+                ->rawColumns(['action', 'lahan_info', 'kategori_makam', 'dimensi', 'kapasitas', 'status_makam', 'keterangan'])
                 ->make(true);
         }
 
@@ -177,6 +230,9 @@ class TpuMakamController extends Controller
                     $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
                 })
                 ->get()
+                ->sortBy(function ($item) {
+                    return $item->Tpu->nama;
+                })
                 ->pluck('Tpu')
                 ->unique();
 
@@ -185,7 +241,9 @@ class TpuMakamController extends Controller
             })
                 ->get(['uuid', 'kode_lahan']);
         } else {
-            $tpus   = TpuLahan::with('Tpu')->get()->pluck('Tpu')->unique();
+            $tpus = TpuLahan::with('Tpu')->get()->sortBy(function ($item) {
+                return $item->Tpu->nama;
+            })->pluck('Tpu')->unique();
             $lahans = TpuLahan::get(['uuid', 'kode_lahan']);
         }
 
@@ -213,9 +271,9 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
-        // Cek akses untuk Petugas TPU
+        // Petugas TPU tidak diizinkan mengakses create (tetap diblokir untuk create)
         if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
+            alert()->error('Error', 'Anda tidak memiliki izin untuk menambah data makam.');
             return redirect()->route('tpu.makam.index');
         }
 
@@ -231,14 +289,14 @@ class TpuMakamController extends Controller
         // Get status makam
         $statusMakam = TpuRefStatusMakam::where('status', '1')->get();
 
-        $data = [
+        $view_data = [
             'title'       => 'Tambah Data Makam',
             'submit'      => 'Simpan',
             'lahans'      => $lahans->get(),
             'statusMakam' => $statusMakam,
         ];
 
-        return view('admin.tpu.makam.create_edit', $data);
+        return view('admin.tpu.makam.create_edit', $view_data);
     }
 
     /**
@@ -248,75 +306,84 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
-        // Cek akses untuk Petugas TPU
+        // Petugas TPU tidak diizinkan menyimpan data baru (tetap diblokir untuk create)
         if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
+            alert()->error('Error', 'Anda tidak memiliki izin untuk menambah data makam.');
             return redirect()->route('tpu.makam.index');
         }
 
+        // Get lahan untuk validasi kategori
+        $lahan = TpuLahan::with('Tpu')->find($request->uuid_lahan);
+        if (! $lahan || ! $lahan->Tpu) {
+            alert()->error('Error', 'Lahan atau TPU tidak valid.');
+            return back()->withInput();
+        }
+
+        // Tentukan kategori_makam berdasarkan jenis TPU
+        $kategori_makam = null;
+        $jenis_tpu      = $lahan->Tpu->jenis_tpu;
+
+        switch ($jenis_tpu) {
+            case 'muslim':
+                $kategori_makam = 'muslim';
+                break;
+            case 'non_muslim':
+                $kategori_makam = 'non_muslim';
+                break;
+            case 'gabungan':
+                // Untuk TPU gabungan, kategori harus dipilih user
+                $kategori_makam = $request->kategori_makam;
+                if (! in_array($kategori_makam, ['muslim', 'non_muslim'])) {
+                    alert()->error('Error', 'Kategori makam harus dipilih untuk TPU gabungan.');
+                    return back()->withInput();
+                }
+                break;
+            default:
+                alert()->error('Error', 'Jenis TPU tidak valid.');
+                return back()->withInput();
+        }
+
+        // Basic validation (tanpa kategori_makam karena sudah dihandle di atas)
         $request->validate([
             'uuid_lahan'   => 'required|exists:tpu_lahans,uuid',
-            'panjang_m'    => 'required|numeric|min:0.01',
-            'lebar_m'      => 'required|numeric|min:0.01',
-            'kapasitas'    => 'nullable|integer|min:1',
+            'panjang_m'    => 'required|numeric|min:0.1|max:10',
+            'lebar_m'      => 'required|numeric|min:0.1|max:10',
+            'kapasitas'    => 'required|integer|min:1',
             'makam_terisi' => 'required|integer|min:0',
-            'status_makam' => 'required|exists:tpu_ref_status_makam,nama',
+            'status_makam' => 'required|string|max:100',
             'keterangan'   => 'nullable|string|max:1000',
-        ], [
-            'uuid_lahan.required'   => 'Lahan harus dipilih',
-            'uuid_lahan.exists'     => 'Lahan yang dipilih tidak valid',
-            'panjang_m.required'    => 'Panjang makam harus diisi',
-            'panjang_m.numeric'     => 'Panjang makam harus berupa angka',
-            'panjang_m.min'         => 'Panjang makam minimal 0.01 meter',
-            'lebar_m.required'      => 'Lebar makam harus diisi',
-            'lebar_m.numeric'       => 'Lebar makam harus berupa angka',
-            'lebar_m.min'           => 'Lebar makam minimal 0.01 meter',
-            'kapasitas.integer'     => 'Kapasitas harus berupa angka',
-            'kapasitas.min'         => 'Kapasitas minimal 1 jenazah',
-            'makam_terisi.required' => 'Makam terisi harus diisi',
-            'makam_terisi.integer'  => 'Makam terisi harus berupa angka bulat',
-            'makam_terisi.min'      => 'Makam terisi tidak boleh kurang dari 0',
-            'status_makam.required' => 'Status makam harus dipilih',
-            'status_makam.exists'   => 'Status makam yang dipilih tidak valid',
-            'keterangan.max'        => 'Keterangan maksimal 1000 karakter',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            // Check permission for lahan
-            $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-            if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-                alert()->error('Error', 'Unauthorized action.');
+            // Validasi bisnis rules dengan kategori yang sudah ditentukan
+            if (! TpuMakam::canAddMakamToLahan($request->uuid_lahan, $kategori_makam)) {
+                alert()->error('Error', 'Tidak dapat menambahkan makam dengan kategori ini pada lahan yang dipilih. Periksa aturan TPU dan kategori makam.');
                 return back()->withInput();
             }
 
-            $uuid    = Str::uuid();
-            $luas_m2 = $request->panjang_m * $request->lebar_m;
-
-            // Calculate kapasitas if not provided
-            $kapasitas = $request->kapasitas;
-            if (! $kapasitas) {
-                $kapasitas = $this->calculateKapasitas($lahan, $luas_m2);
+            // Validasi makam_terisi tidak boleh lebih dari kapasitas
+            if ($request->makam_terisi > $request->kapasitas) {
+                alert()->error('Error', 'Jumlah makam terisi tidak boleh lebih dari kapasitas total.');
+                return back()->withInput();
             }
 
-            // Validasi makam_terisi tidak melebihi kapasitas
-            $makam_terisi = $request->makam_terisi;
-            if ($makam_terisi > $kapasitas) {
-                return back()->withErrors(['makam_terisi' => 'Makam terisi tidak boleh melebihi kapasitas total'])->withInput();
-            }
+            // Calculate luas_m2
+            $luas_m2        = $request->panjang_m * $request->lebar_m;
+            $sisa_kapasitas = $request->kapasitas - $request->makam_terisi;
 
-            // Hitung sisa kapasitas
-            $sisa_kapasitas = $kapasitas - $makam_terisi;
+            // UUID
+            $uuid = Str::uuid();
 
-            $value = [
+            $value_makam = [
                 'uuid'           => $uuid,
                 'uuid_lahan'     => $request->uuid_lahan,
+                'kategori_makam' => $kategori_makam, // Use calculated kategori
                 'panjang_m'      => $request->panjang_m,
                 'lebar_m'        => $request->lebar_m,
                 'luas_m2'        => $luas_m2,
-                'kapasitas'      => $kapasitas,
-                'makam_terisi'   => $makam_terisi,
+                'kapasitas'      => $request->kapasitas,
+                'makam_terisi'   => $request->makam_terisi,
                 'sisa_kapasitas' => $sisa_kapasitas,
                 'status_makam'   => $request->status_makam,
                 'keterangan'     => $request->keterangan,
@@ -324,25 +391,11 @@ class TpuMakamController extends Controller
                 'uuid_updated'   => $auth->uuid,
             ];
 
-            $save = TpuMakam::create($value);
+            $save = TpuMakam::create($value_makam);
 
             if ($save) {
-                // Create log
-                $aktifitas = [
-                    'tabel' => ['tpu_makams'],
-                    'uuid'  => [$uuid],
-                    'value' => [$value],
-                ];
-                $log = [
-                    'apps'      => 'TPU Admin',
-                    'subjek'    => 'Menambahkan Data Makam: ' . $uuid,
-                    'aktifitas' => $aktifitas,
-                    'device'    => 'web',
-                ];
-                Helper::addToLogAktifitas($request, $log);
-
                 DB::commit();
-                alert()->success('Success', 'Berhasil Menambahkan Data Makam!');
+                alert()->success('Success', 'Data Makam berhasil ditambahkan!');
                 return redirect()->route('tpu.makam.index');
             } else {
                 DB::rollback();
@@ -363,25 +416,21 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
-        // Cek akses untuk Petugas TPU
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.makam.index');
-        }
-
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-        // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.makam.index');
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+            if (! $auth->RelPetugasTpu || ! $data->Lahan || ! $data->Lahan->Tpu || $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit makam ini.');
+                return redirect()->route('tpu.makam.index');
+            }
         }
 
         // Get available lahan
         $lahans = TpuLahan::with('Tpu');
 
-        if ($auth->role === 'Admin TPU') {
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             $lahans->whereHas('Tpu', function ($q) use ($auth) {
                 $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             });
@@ -409,103 +458,61 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
-        // Cek akses untuk Petugas TPU
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.makam.index');
-        }
-
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-        // Check permission
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-            alert()->error('Error', 'Unauthorized action.');
-            return back()->withInput();
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
+            if (! $auth->RelPetugasTpu || ! $data->Lahan || ! $data->Lahan->Tpu || $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit makam ini.');
+                return redirect()->route('tpu.makam.index');
+            }
         }
 
+        // Basic validation (tidak termasuk kategori_makam karena tidak bisa diubah saat edit)
         $request->validate([
             'uuid_lahan'   => 'required|exists:tpu_lahans,uuid',
-            'panjang_m'    => 'required|numeric|min:0.01',
-            'lebar_m'      => 'required|numeric|min:0.01',
-            'kapasitas'    => 'nullable|integer|min:1',
+            'panjang_m'    => 'required|numeric|min:0.1|max:10',
+            'lebar_m'      => 'required|numeric|min:0.1|max:10',
+            'kapasitas'    => 'required|integer|min:1',
             'makam_terisi' => 'required|integer|min:0',
-            'status_makam' => 'required|exists:tpu_ref_status_makam,nama',
+            'status_makam' => 'required|string|max:100',
             'keterangan'   => 'nullable|string|max:1000',
-        ], [
-            'uuid_lahan.required'   => 'Lahan harus dipilih',
-            'uuid_lahan.exists'     => 'Lahan yang dipilih tidak valid',
-            'panjang_m.required'    => 'Panjang makam harus diisi',
-            'panjang_m.numeric'     => 'Panjang makam harus berupa angka',
-            'panjang_m.min'         => 'Panjang makam minimal 0.01 meter',
-            'lebar_m.required'      => 'Lebar makam harus diisi',
-            'lebar_m.numeric'       => 'Lebar makam harus berupa angka',
-            'lebar_m.min'           => 'Lebar makam minimal 0.01 meter',
-            'kapasitas.integer'     => 'Kapasitas harus berupa angka',
-            'kapasitas.min'         => 'Kapasitas minimal 1 jenazah',
-            'makam_terisi.required' => 'Makam terisi harus diisi',
-            'makam_terisi.integer'  => 'Makam terisi harus berupa angka bulat',
-            'makam_terisi.min'      => 'Makam terisi tidak boleh kurang dari 0',
-            'status_makam.required' => 'Status makam harus dipilih',
-            'status_makam.exists'   => 'Status makam yang dipilih tidak valid',
-            'keterangan.max'        => 'Keterangan maksimal 1000 karakter',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            // Check permission for new lahan if changed
-            if ($request->uuid_lahan !== $data->uuid_lahan) {
-                $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-                if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-                    alert()->error('Error', 'Unauthorized action.');
-                    return back()->withInput();
-                }
-            } else {
-                $lahan = $data->Lahan;
+            // Validasi makam_terisi tidak boleh lebih dari kapasitas
+            if ($request->makam_terisi > $request->kapasitas) {
+                alert()->error('Error', 'Jumlah makam terisi tidak boleh lebih dari kapasitas total.');
+                return back()->withInput();
             }
 
-            $luas_m2 = $request->panjang_m * $request->lebar_m;
+            // Calculate luas_m2
+            $luas_m2        = $request->panjang_m * $request->lebar_m;
+            $sisa_kapasitas = $request->kapasitas - $request->makam_terisi;
 
-            // Calculate kapasitas if not provided or if dimensions changed
-            $kapasitas = $request->kapasitas;
-            if (! $kapasitas ||
-                $data->panjang_m != $request->panjang_m ||
-                $data->lebar_m != $request->lebar_m ||
-                $data->uuid_lahan !== $request->uuid_lahan) {
-                $kapasitas = $this->calculateKapasitas($lahan, $luas_m2);
-            }
-
-            // Validasi makam_terisi tidak melebihi kapasitas
-            $makam_terisi = $request->makam_terisi;
-            if ($makam_terisi > $kapasitas) {
-                return back()->withErrors(['makam_terisi' => 'Makam terisi tidak boleh melebihi kapasitas total'])->withInput();
-            }
-
-            // Hitung sisa kapasitas
-            $sisa_kapasitas = $kapasitas - $makam_terisi;
-
-            $value = [
-                'uuid_lahan'     => $request->uuid_lahan,
+            // For update, we don't change lahan and kategori - only update other fields
+            $value_makam = [
                 'panjang_m'      => $request->panjang_m,
                 'lebar_m'        => $request->lebar_m,
                 'luas_m2'        => $luas_m2,
-                'kapasitas'      => $kapasitas,
-                'makam_terisi'   => $makam_terisi,
+                'kapasitas'      => $request->kapasitas,
+                'makam_terisi'   => $request->makam_terisi,
                 'sisa_kapasitas' => $sisa_kapasitas,
                 'status_makam'   => $request->status_makam,
                 'keterangan'     => $request->keterangan,
                 'uuid_updated'   => $auth->uuid,
             ];
 
-            $save = $data->update($value);
+            $update = $data->update($value_makam);
 
-            if ($save) {
+            if ($update) {
                 // Create log
                 $aktifitas = [
                     'tabel' => ['tpu_makams'],
                     'uuid'  => [$uuid_dec],
-                    'value' => [$value],
+                    'value' => [$value_makam],
                 ];
                 $log = [
                     'apps'      => 'TPU Admin',
@@ -516,11 +523,11 @@ class TpuMakamController extends Controller
                 Helper::addToLogAktifitas($request, $log);
 
                 DB::commit();
-                alert()->success('Success', 'Berhasil Mengubah Data Makam!');
+                alert()->success('Success', 'Data Makam berhasil diperbarui!');
                 return redirect()->route('tpu.makam.index');
             } else {
                 DB::rollback();
-                alert()->error('Error', 'Gagal Mengubah Data Makam!');
+                alert()->error('Error', 'Gagal Memperbarui Data Makam!');
                 return back()->withInput();
             }
         } catch (\Exception $e) {
@@ -537,11 +544,11 @@ class TpuMakamController extends Controller
     {
         $auth = Auth::user();
 
-        // Cek akses untuk Petugas TPU
+        // Petugas TPU tidak diizinkan menghapus (tetap diblokir untuk delete)
         if ($auth->role === 'Petugas TPU') {
             return response()->json([
                 'status'  => false,
-                'message' => 'Unauthorized action.',
+                'message' => 'Anda tidak memiliki izin untuk menghapus data makam.',
             ], 403);
         }
 
@@ -555,12 +562,14 @@ class TpuMakamController extends Controller
             $uuid_dec = Helper::decode($request->uuid);
             $data     = TpuMakam::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-            // Check permission
-            if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Unauthorized action.',
-                ], 403);
+            // Check permission untuk Admin TPU
+            if ($auth->role === 'Admin TPU') {
+                if (! $auth->RelPetugasTpu || ! $data->Lahan || ! $data->Lahan->Tpu || $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Anda tidak memiliki izin untuk menghapus makam ini.',
+                    ], 403);
+                }
             }
 
             $value = $data->toArray();
@@ -635,7 +644,7 @@ class TpuMakamController extends Controller
 
                     // Check permission untuk Admin TPU
                     if ($auth->role === 'Admin TPU') {
-                        if (! $auth->RelPetugasTpu || ($data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu)) {
+                        if (! $auth->RelPetugasTpu || (! $data->Lahan || ! $data->Lahan->Tpu || $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu)) {
                             $failedItems[] = 'Tidak memiliki izin untuk menghapus makam ID: ' . $request->uuids[$index];
                             continue;
                         }
@@ -705,119 +714,192 @@ class TpuMakamController extends Controller
     }
 
     /**
-     * Calculate kapasitas based on jenis TPU and luas makam
+     * AJAX method untuk mendapatkan detail lahan dan kategori yang tersedia
      */
-    private function calculateKapasitas($lahan, $luas_makam)
+    public function getLahanDetails(Request $request)
+    {
+        try {
+            $uuid_lahan = $request->uuid_lahan;
+
+            $lahan = TpuLahan::with('Tpu')->find($uuid_lahan);
+            if (! $lahan || ! $lahan->Tpu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lahan atau TPU tidak ditemukan',
+                ]);
+            }
+
+            $available_kategori   = TpuMakam::getAvailableKategoriForLahan($uuid_lahan);
+            $existing_makam_count = TpuMakam::where('uuid_lahan', $uuid_lahan)->count();
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'lahan'                => [
+                        'kode_lahan' => $lahan->kode_lahan,
+                        'luas_m2'    => $lahan->luas_m2,
+                    ],
+                    'tpu'                  => [
+                        'nama'      => $lahan->Tpu->nama,
+                        'jenis_tpu' => $lahan->Tpu->jenis_tpu,
+                    ],
+                    'available_kategori'   => $available_kategori,
+                    'existing_makam_count' => $existing_makam_count,
+                    'max_makam_per_lahan'  => $lahan->Tpu->jenis_tpu === 'gabungan' ? 2 : 1,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX method untuk mendapatkan kategori makam yang tersedia untuk lahan
+     */
+    public function getAvailableKategoriForLahan(Request $request)
+    {
+        try {
+            $uuid_lahan         = $request->uuid_lahan;
+            $available_kategori = TpuMakam::getAvailableKategoriForLahan($uuid_lahan);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $available_kategori,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate kapasitas based on jenis TPU, luas makam, and kategori makam
+     */
+    private function calculateKapasitas($lahan, $luas_makam, $kategori_makam = null)
     {
         if (! $lahan || ! $lahan->Tpu || $luas_makam <= 0) {
             return 0;
         }
 
-        $luas_lahan = $lahan->luas_m2;
-        $jenis_tpu  = $lahan->Tpu->jenis_tpu;
-
-        // Minimal 200 m² untuk sarana prasarana
-        $luas_efektif = max(0, $luas_lahan - 200);
+        $tpu          = $lahan->Tpu;
+        $luas_lahan   = $lahan->luas_m2;
+        $luas_efektif = max(0, $luas_lahan - 200); // Minimal 200 m² untuk sarana prasarana
 
         if ($luas_efektif <= 0 || $luas_makam <= 0) {
             return 0;
         }
 
-        // Perhitungan sama untuk semua jenis TPU
-        // Karena untuk gabungan: 70% + 30% = 100% dari luas efektif
-        $kapasitas = floor($luas_efektif / $luas_makam);
+        // Perhitungan kapasitas dasar
+        $kapasitas_dasar = floor($luas_efektif / $luas_makam);
+
+        // Jika tidak ada kategori_makam (backward compatibility), gunakan perhitungan lama
+        if (! $kategori_makam) {
+            return max(0, $kapasitas_dasar);
+        }
+
+        // Penyesuaian berdasarkan jenis TPU dan kategori makam
+        switch ($tpu->jenis_tpu) {
+            case 'muslim':
+                $kapasitas = $kategori_makam == 'muslim' ? $kapasitas_dasar : 0;
+                break;
+            case 'non_muslim':
+                $kapasitas = $kategori_makam == 'non_muslim' ? $kapasitas_dasar : 0;
+                break;
+            case 'gabungan':
+                // Untuk TPU gabungan, bagi berdasarkan persentase
+                // 70% Muslim, 30% Non Muslim (sesuaikan dengan regulasi)
+                if ($kategori_makam == 'muslim') {
+                    $kapasitas = floor($kapasitas_dasar * 0.7);
+                } else {
+                    $kapasitas = floor($kapasitas_dasar * 0.3);
+                }
+                break;
+            default:
+                $kapasitas = 0;
+        }
 
         return max(0, $kapasitas);
     }
 
     /**
-     * Calculate kapasitas via AJAX
+     * AJAX method untuk menghitung kapasitas berdasarkan lahan dan kategori
      */
     public function calculateKapasitasAjax(Request $request)
     {
         try {
             $request->validate([
-                'uuid_lahan' => 'required|exists:tpu_lahans,uuid',
-                'panjang_m'  => 'required|numeric|min:0.01',
-                'lebar_m'    => 'required|numeric|min:0.01',
+                'uuid_lahan'     => 'required|exists:tpu_lahans,uuid',
+                'kategori_makam' => 'required|in:muslim,non_muslim',
+                'panjang_m'      => 'required|numeric|min:0.1',
+                'lebar_m'        => 'required|numeric|min:0.1',
             ]);
 
-            $lahan      = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-            $panjang    = (float) $request->panjang_m;
-            $lebar      = (float) $request->lebar_m;
-            $luas_makam = $panjang * $lebar;
+            $lahan = TpuLahan::with('Tpu')->find($request->uuid_lahan);
+            if (! $lahan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lahan tidak ditemukan',
+                ]);
+            }
 
-            $kapasitas = $this->calculateKapasitas($lahan, $luas_makam);
+            $luas_makam = $request->panjang_m * $request->lebar_m;
+            $kapasitas  = $this->calculateKapasitas($lahan, $luas_makam, $request->kategori_makam);
 
+            // Tambahan informasi perhitungan
             $luas_lahan   = $lahan->luas_m2;
             $luas_efektif = max(0, $luas_lahan - 200);
             $jenis_tpu    = $lahan->Tpu ? $lahan->Tpu->jenis_tpu : '';
 
             return response()->json([
-                'status' => true,
-                'data'   => [
-                    'kapasitas'         => $kapasitas,
-                    'luas_makam'        => $luas_makam,
-                    'luas_lahan'        => $luas_lahan,
-                    'luas_efektif'      => $luas_efektif,
-                    'jenis_tpu'         => $jenis_tpu,
-                    'jenis_tpu_display' => ucfirst(str_replace('_', ' ', $jenis_tpu)),
-                    'calculation_info'  => $this->getCalculationInfo($jenis_tpu, $luas_lahan, $luas_efektif, $luas_makam, $kapasitas),
+                'success' => true,
+                'data'    => [
+                    'kapasitas'        => $kapasitas,
+                    'luas_m2'          => number_format($luas_makam, 2),
+                    'luas_lahan'       => $luas_lahan,
+                    'luas_efektif'     => $luas_efektif,
+                    'jenis_tpu'        => $jenis_tpu,
+                    'kategori_makam'   => $request->kategori_makam,
+                    'calculation_info' => $this->getCalculationInfo($jenis_tpu, $luas_lahan, $luas_efektif, $luas_makam, $kapasitas, $request->kategori_makam),
                 ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => false,
+                'success' => false,
                 'message' => 'Terjadi kesalahan dalam perhitungan: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get calculation information text
+     * Get calculation information text with kategori makam
      */
-    private function getCalculationInfo($jenis_tpu, $luas_lahan, $luas_efektif, $luas_makam, $kapasitas)
+    private function getCalculationInfo($jenis_tpu, $luas_lahan, $luas_efektif, $luas_makam, $kapasitas, $kategori_makam)
     {
-        $jenis_display = ucfirst(str_replace('_', ' ', $jenis_tpu));
+        $jenis_display    = ucfirst(str_replace('_', ' ', $jenis_tpu));
+        $kategori_display = $kategori_makam == 'muslim' ? 'Muslim' : 'Non Muslim';
 
-        $info = "Perhitungan untuk TPU {$jenis_display}:\n";
+        $info = "Perhitungan untuk TPU {$jenis_display} - Kategori {$kategori_display}:\n";
         $info .= "• Luas lahan: " . number_format($luas_lahan, 2) . " m²\n";
         $info .= "• Dikurangi sarana prasarana: 200 m²\n";
         $info .= "• Luas efektif: " . number_format($luas_efektif, 2) . " m²\n";
         $info .= "• Luas per makam: " . number_format($luas_makam, 2) . " m²\n";
 
         if ($jenis_tpu === 'gabungan') {
-            $info .= "• Pembagian: 70% muslim + 30% non muslim = 100%\n";
+            $persentase = $kategori_makam == 'muslim' ? '70%' : '30%';
+            $info .= "• Alokasi untuk {$kategori_display}: {$persentase} dari luas efektif\n";
+            $luas_alokasi = $kategori_makam == 'muslim' ? ($luas_efektif * 0.7) : ($luas_efektif * 0.3);
+            $info .= "• Luas alokasi: " . number_format($luas_alokasi, 2) . " m²\n";
+            $info .= "• Kapasitas: " . number_format($luas_alokasi, 2) . " ÷ " . number_format($luas_makam, 2) . " = {$kapasitas} makam";
+        } else {
+            $info .= "• Kapasitas: " . number_format($luas_efektif, 2) . " ÷ " . number_format($luas_makam, 2) . " = {$kapasitas} makam";
         }
-
-        $info .= "• Kapasitas: " . number_format($luas_efektif, 2) . " ÷ " . number_format($luas_makam, 2) . " = {$kapasitas} makam";
 
         return $info;
-    }
-
-    /**
-     * Get lahan details for calculation
-     */
-    public function getLahanDetails(Request $request)
-    {
-        try {
-            $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-
-            return response()->json([
-                'status' => true,
-                'data'   => [
-                    'lahan'      => $lahan,
-                    'tpu'        => $lahan->Tpu,
-                    'jenis_tpu'  => $lahan->Tpu ? $lahan->Tpu->jenis_tpu : null,
-                    'luas_lahan' => $lahan->luas_m2,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Lahan tidak ditemukan',
-            ], 404);
-        }
     }
 
     /**

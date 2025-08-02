@@ -44,7 +44,7 @@ Route::group(['prefix' => 'pengaturan'], function () {
     */
     // Profile
     Route::group(['prefix' => 'profile'], function () {
-        Route::get('/profile', [ProfileController::class, 'index'])->name('prt.apps.profile.index');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('prt.apps.profile.update');
+        Route::get('/', [ProfileController::class, 'index'])->name('prt.apps.profile.index');
+        Route::put('/', [ProfileController::class, 'update'])->name('prt.apps.profile.update');
     });
 });

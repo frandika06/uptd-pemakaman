@@ -45,7 +45,8 @@ $auth = \Auth::user();
                 <div class="card h-lg-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div class="card-body d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h3 class="text-white fw-bold mb-3">Selamat Datang, {{ $auth->RelPortalActor->nama_lengkap ?? 'Pengguna' }}!</h3>
+                            <h3 class="text-white fw-bold mb-3">Selamat Datang,
+                                {{ optional($auth->RelPertugasTpu)->nama_lengkap ?? (optional($auth->RelPortalActor)->nama_lengkap ?? 'Pengguna') }}!</h3>
                             <p class="text-white opacity-75 mb-4">
                                 Anda login sebagai <strong>{{ $auth->role }}</strong>.
                                 @if ($data['personal']['last_login'])

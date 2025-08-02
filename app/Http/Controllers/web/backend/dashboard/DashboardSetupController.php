@@ -8,6 +8,7 @@ use App\Models\PortalPesan;
 use App\Models\PortalPost;
 use App\Models\SysLogAktifitas;
 use App\Models\SysLogin;
+use App\Models\TpuPetugas;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -159,9 +160,14 @@ class DashboardSetupController extends Controller
      */
     private function getUserDashboardData($auth)
     {
-        $portalActor = PortalActor::where('uuid_user', $auth->uuid)->first();
-
-        if (! $portalActor) {
+        $role     = $auth->role;
+        $userData = null;
+        if ($role == "Admin TPU" || $role == "Petugas TPU") {
+            $userData = TpuPetugas::where('uuid_user', $auth->uuid)->first();
+        } else {
+            $userData = PortalActor::where('uuid_user', $auth->uuid)->first();
+        }
+        if (! $userData) {
             return [
                 'personal' => [
                     'login_history'      => collect([]),
@@ -191,7 +197,7 @@ class DashboardSetupController extends Controller
             ->get();
 
         // Personal Activity Log
-        $myActivities = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
+        $myActivities = SysLogAktifitas::where('uuid_profile', $userData->uuid)
             ->select(
                 'created_at',
                 'subjek',
@@ -223,7 +229,7 @@ class DashboardSetupController extends Controller
             ->first();
 
         // Activity count by days
-        $activityStats = SysLogAktifitas::where('uuid_profile', $portalActor->uuid)
+        $activityStats = SysLogAktifitas::where('uuid_profile', $userData->uuid)
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
             ->groupBy('date')
@@ -233,25 +239,25 @@ class DashboardSetupController extends Controller
 
         return [
             'personal' => [
-                'login_history'      => $myLoginHistory->map(function ($log) use ($portalActor) {
+                'login_history'      => $myLoginHistory->map(function ($log) use ($userData) {
                     return [
                         'created_at' => $log->created_at,
                         'status'     => $log->status,
                         'ip'         => $log->ip,
                         'agent'      => $log->agent,
-                        'user_name'  => $portalActor->nama_lengkap ?? '-',
-                        'user_foto'  => $portalActor->foto ?? null,
+                        'user_name'  => $userData->nama_lengkap ?? '-',
+                        'user_foto'  => $userData->foto ?? null,
                     ];
                 }),
-                'activities'         => $myActivities->map(function ($log) use ($portalActor) {
+                'activities'         => $myActivities->map(function ($log) use ($userData) {
                     return [
                         'created_at' => $log->created_at,
                         'subjek'     => $log->subjek,
                         'aktifitas'  => $log->aktifitas,
                         'ip'         => $log->ip,
                         'agent'      => $log->agent,
-                        'user_name'  => $portalActor->nama_lengkap ?? '-',
-                        'user_foto'  => $portalActor->foto ?? null,
+                        'user_name'  => $userData->nama_lengkap ?? '-',
+                        'user_foto'  => $userData->foto ?? null,
                     ];
                 }),
                 'last_login'         => $lastLogin,

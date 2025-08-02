@@ -45,65 +45,6 @@ $auth = \Auth::user();
                         </div>
                         {{-- end:Menu item --}}
 
-                        {{-- begin:Menu item - Master Data --}}
-                        <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                            class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                            {{-- begin:Menu link --}}
-                            <span class="menu-link">
-                                <span class="menu-title">Master Data</span>
-                                <span class="menu-arrow d-lg-none"></span>
-                            </span>
-                            {{-- end:Menu link --}}
-                            {{-- begin:Menu sub --}}
-                            <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-                                {{-- begin:Menu item - Kategori Dokumen --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('tpu.kategori-dokumen.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="fa-solid fa-folder-tree fs-4"></i>
-                                        </span>
-                                        <span class="menu-title">Kategori Dokumen</span>
-                                    </a>
-                                </div>
-                                {{-- end:Menu item --}}
-
-                                {{-- begin:Menu item - Status Makam --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('tpu.ref-status-makam.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="fa-solid fa-clipboard-list fs-4"></i>
-                                        </span>
-                                        <span class="menu-title">Status Makam</span>
-                                    </a>
-                                </div>
-                                {{-- end:Menu item --}}
-
-                                {{-- begin:Menu item - Jenis Sarpras --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('tpu.ref-jenis-sarpras.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="fa-solid fa-list fs-4"></i>
-                                        </span>
-                                        <span class="menu-title">Jenis Sarpras</span>
-                                    </a>
-                                </div>
-                                {{-- end:Menu item --}}
-
-                                {{-- begin:Menu item - Data TPU --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('tpu.datas.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="fa-solid fa-signs-post fs-4"></i>
-                                        </span>
-                                        <span class="menu-title">Data TPU</span>
-                                    </a>
-                                </div>
-                                {{-- end:Menu item --}}
-                            </div>
-                            {{-- end:Menu sub --}}
-                        </div>
-                        {{-- end:Menu item --}}
-
                         {{-- begin:Menu item - Manajemen TPU --}}
                         <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                             class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
@@ -115,16 +56,6 @@ $auth = \Auth::user();
                             {{-- end:Menu link --}}
                             {{-- begin:Menu sub --}}
                             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-                                {{-- Data Petugas --}}
-                                <div class="menu-item">
-                                    <a class="menu-link" href="{{ route('tpu.petugas.index') }}">
-                                        <span class="menu-icon">
-                                            <i class="ki-outline ki-profile-user fs-2"></i>
-                                        </span>
-                                        <span class="menu-title">Data Petugas</span>
-                                    </a>
-                                </div>
-
                                 {{-- Data Lahan --}}
                                 <div class="menu-item">
                                     <a class="menu-link" href="{{ route('tpu.lahan.index') }}">
@@ -139,7 +70,7 @@ $auth = \Auth::user();
                                 <div class="menu-item">
                                     <a class="menu-link" href="{{ route('tpu.makam.index') }}">
                                         <span class="menu-icon">
-                                            <i class="fas fa-ribbon fs-2"></i>
+                                            <i class="ki-outline ki-home fs-2"></i>
                                         </span>
                                         <span class="menu-title">Data Makam</span>
                                     </a>

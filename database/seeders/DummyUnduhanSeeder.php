@@ -132,9 +132,7 @@ class DummyUnduhanSeeder extends Seeder
 
             // Handle sumber
             if ($sumber === 'Link') {
-                $value['url']  = "https://example.com/dokumen/" . Str::slug($title) . ".pdf";
-                $value['tipe'] = null;
-                $value['size'] = null;
+                $value['url'] = "https://example.com/dokumen/" . Str::slug($title) . ".pdf";
             } else {
                 $filename = Str::slug($title) . ".pdf";
                 $filePath = "unduhan/{$tahun}/{$uuid}/{$filename}";

@@ -132,10 +132,15 @@ class TpuLahanController extends Controller
                                 for="status_' . $data->uuid . '">' . $text . '</label>
                         </div>
                     ';
-                    } elseif ($role == 'Admin TPU') {
+                    } elseif ($role == 'Admin TPU' || $role == 'Petugas TPU') {
                         $disabled = '';
-                        // Admin TPU hanya bisa mengubah status lahan di TPU mereka
+                        // Admin TPU dan Petugas TPU hanya bisa mengubah status lahan di TPU mereka
                         if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
+                            $disabled = 'disabled';
+                        }
+
+                        // Untuk Petugas TPU, disable toggle status (hanya bisa lihat)
+                        if ($role == 'Petugas TPU') {
                             $disabled = 'disabled';
                         }
 
@@ -150,7 +155,6 @@ class TpuLahanController extends Controller
                         </div>
                     ';
                     } else {
-                        // Petugas TPU hanya read-only
                         $status = '<span class="badge badge-light-' . $color . ' fw-bold">' . $text . '</span>';
                     }
                     return $status;
@@ -161,38 +165,50 @@ class TpuLahanController extends Controller
                     $role     = $auth->role;
 
                     // Logika untuk aksi buttons
-                    $canEditDelete = false;
-                    if ($role == 'Super Admin' || $role == 'Admin') {
-                        $canEditDelete = true;
-                    } elseif ($role == 'Admin TPU') {
-                        $isSameTPU     = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
-                        $canEditDelete = $isSameTPU;
-                    }
-                    // Petugas TPU hanya read-only, tidak bisa edit/delete
+                    $canEdit   = false;
+                    $canDelete = false;
 
-                    if ($canEditDelete) {
-                        return '
-                        <div class="d-flex justify-content-center">
-                            <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
-                                <i class="ki-outline ki-pencil fs-2"></i>
-                            </a>
-                            <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete" data-uuid="' . $uuid_enc . '" data-name="' . $data->kode_lahan . '" data-bs-toggle="tooltip" title="Hapus">
-                                <i class="ki-outline ki-trash fs-2"></i>
-                            </a>
-                        </div>
-                    ';
-                    } else {
-                        return '
-                        <div class="d-flex justify-content-center">
-                            <span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
-                                <i class="ki-outline ki-pencil fs-2 text-muted"></i>
-                            </span>
-                            <span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
-                                <i class="ki-outline ki-trash fs-2 text-muted"></i>
-                            </span>
-                        </div>
-                    ';
+                    if ($role == 'Super Admin' || $role == 'Admin') {
+                        $canEdit   = true;
+                        $canDelete = true;
+                    } elseif ($role == 'Admin TPU') {
+                        $isSameTPU = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canEdit   = $isSameTPU;
+                        $canDelete = $isSameTPU;
+                    } elseif ($role == 'Petugas TPU') {
+                        // Petugas TPU bisa edit tapi tidak bisa delete
+                        $isSameTPU = ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu === $data->uuid_tpu);
+                        $canEdit   = $isSameTPU;
+                        $canDelete = false;
                     }
+
+                    $actions = '<div class="d-flex justify-content-center">';
+
+                    // Edit button
+                    if ($canEdit) {
+                        $actions .= '<a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                <i class="ki-outline ki-pencil fs-2"></i>
+                            </a>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                            </span>';
+                    }
+
+                    // Delete button
+                    if ($canDelete) {
+                        $actions .= '<a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete" data-uuid="' . $uuid_enc . '" data-name="' . $data->kode_lahan . '" data-bs-toggle="tooltip" title="Hapus">
+                                <i class="ki-outline ki-trash fs-2"></i>
+                            </a>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                            </span>';
+                    }
+
+                    $actions .= '</div>';
+
+                    return $actions;
                 })
                 ->rawColumns(['kode_lahan', 'luas_m2', 'koordinat', 'total_makam', 'status', 'actions'])
                 ->make(true);
@@ -225,7 +241,7 @@ class TpuLahanController extends Controller
     {
         $auth = Auth::user();
 
-        // Petugas TPU tidak diizinkan mengakses create
+        // Petugas TPU tidak diizinkan mengakses create (masih read-only untuk create)
         if ($auth->role === 'Petugas TPU') {
             alert()->error('Error', 'Anda tidak memiliki izin untuk menambah data lahan.');
             return redirect()->route('tpu.lahan.index');
@@ -378,14 +394,8 @@ class TpuLahanController extends Controller
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuLahan::findOrFail($uuid_dec);
 
-        // Petugas TPU tidak diizinkan mengakses edit
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit data lahan.');
-            return redirect()->route('tpu.lahan.index');
-        }
-
-        // Check permission untuk Admin TPU
-        if ($auth->role === 'Admin TPU') {
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
                 alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit lahan ini.');
                 return redirect()->route('tpu.lahan.index');
@@ -394,7 +404,7 @@ class TpuLahanController extends Controller
 
         $tpus = TpuDatas::where('status', 'Aktif');
 
-        if ($auth->role === 'Admin TPU') {
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             if ($auth->RelPetugasTpu && $auth->RelPetugasTpu->uuid_tpu) {
                 $tpus->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             }
@@ -439,14 +449,8 @@ class TpuLahanController extends Controller
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuLahan::findOrFail($uuid_dec);
 
-        // Petugas TPU tidak diizinkan mengupdate
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit data lahan.');
-            return redirect()->route('tpu.lahan.index');
-        }
-
-        // Check permission untuk Admin TPU
-        if ($auth->role === 'Admin TPU') {
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $data->uuid_tpu) {
                 alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit lahan ini.');
                 return redirect()->route('tpu.lahan.index');
@@ -492,8 +496,8 @@ class TpuLahanController extends Controller
             }
         }
 
-        // Cek hak akses untuk Admin TPU pada update
-        if ($auth->role === 'Admin TPU') {
+        // Cek hak akses untuk Admin TPU dan Petugas TPU pada update
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             if (! $auth->RelPetugasTpu || $auth->RelPetugasTpu->uuid_tpu !== $request->uuid_tpu) {
                 alert()->error('Error', 'Anda tidak memiliki izin untuk mengubah lahan pada TPU ini.');
                 return back()->withInput();
@@ -562,7 +566,7 @@ class TpuLahanController extends Controller
     {
         $auth = Auth::user();
 
-        // Petugas TPU tidak diizinkan menghapus
+        // Petugas TPU tidak diizinkan menghapus (masih tidak bisa delete)
         if ($auth->role === 'Petugas TPU') {
             return response()->json([
                 'status'  => false,

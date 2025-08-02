@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('tpu_makams', function (Blueprint $table) {
             $table->uuid('uuid')->primary();
             $table->uuid('uuid_lahan');
+            $table->enum('kategori_makam', ['muslim', 'non_muslim']);
             $table->decimal('panjang_m', 5, 2);
             $table->decimal('lebar_m', 5, 2);
             $table->decimal('luas_m2', 10, 2)->nullable();

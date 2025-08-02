@@ -130,23 +130,55 @@ class TpuSarprasController extends Controller
                     return '<span class="text-gray-600 fw-semibold d-block fs-7">' . ($data->luas_m2 ? number_format($data->luas_m2, 2) . ' m²' : '-') . '</span>';
                 })
                 ->addColumn('actions', function ($data) use ($auth) {
-                    $uuid_enc   = Helper::encode($data->uuid);
-                    $edit_url   = route('tpu.sarpras.edit', $uuid_enc);
-                    $isReadOnly = $auth->role === 'Petugas TPU';
+                    $uuid_enc = Helper::encode($data->uuid);
+                    $edit_url = route('tpu.sarpras.edit', $uuid_enc);
+                    $role     = $auth->role;
 
-                    return '
-                    <div class="d-flex justify-content-center">
-                        <a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1' . ($isReadOnly ? ' disabled' : '') . '" data-bs-toggle="tooltip" title="Edit">
-                            <i class="ki-outline ki-pencil fs-2"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete' . ($isReadOnly ? ' disabled' : '') . '"
-                           data-uuid="' . $uuid_enc . '"
-                           data-name="' . htmlspecialchars($data->nama) . '"
-                           data-bs-toggle="tooltip"
-                           title="Hapus">
-                            <i class="ki-outline ki-trash fs-2"></i>
-                        </a>
-                    </div>';
+                    // Logika untuk aksi buttons - Petugas TPU sekarang bisa edit dan delete
+                    $canEdit   = false;
+                    $canDelete = false;
+
+                    if ($role == 'Super Admin' || $role == 'Admin') {
+                        $canEdit   = true;
+                        $canDelete = true;
+                    } elseif ($role == 'Admin TPU' || $role == 'Petugas TPU') {
+                        // Admin TPU dan Petugas TPU bisa edit dan delete sarpras di TPU mereka
+                        $isSameTPU = ($auth->RelPetugasTpu && $data->Lahan && $data->Lahan->Tpu && $auth->RelPetugasTpu->uuid_tpu === $data->Lahan->Tpu->uuid);
+                        $canEdit   = $isSameTPU;
+                        $canDelete = $isSameTPU;
+                    }
+
+                    $actions = '<div class="d-flex justify-content-center">';
+
+                    // Edit button
+                    if ($canEdit) {
+                        $actions .= '<a href="' . $edit_url . '" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
+                                <i class="ki-outline ki-pencil fs-2"></i>
+                            </a>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm me-1 disabled" data-bs-toggle="tooltip" title="Edit (Tidak diizinkan)">
+                                <i class="ki-outline ki-pencil fs-2 text-muted"></i>
+                            </span>';
+                    }
+
+                    // Delete button
+                    if ($canDelete) {
+                        $actions .= '<a href="javascript:void(0);" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete"
+                               data-uuid="' . $uuid_enc . '"
+                               data-name="' . htmlspecialchars($data->nama) . '"
+                               data-bs-toggle="tooltip"
+                               title="Hapus">
+                                <i class="ki-outline ki-trash fs-2"></i>
+                            </a>';
+                    } else {
+                        $actions .= '<span class="btn btn-icon btn-bg-light btn-sm disabled" data-bs-toggle="tooltip" title="Hapus (Tidak diizinkan)">
+                                <i class="ki-outline ki-trash fs-2 text-muted"></i>
+                            </span>';
+                    }
+
+                    $actions .= '</div>';
+
+                    return $actions;
                 })
                 ->rawColumns(['nama', 'nama_tpu', 'kode_lahan', 'luas_m2', 'actions'])
                 ->make(true);
@@ -197,15 +229,9 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa membuat data baru
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.sarpras.index');
-        }
-
         $lahans = TpuLahan::with('Tpu');
 
-        if ($auth->role === 'Admin TPU') {
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             $lahans->whereHas('Tpu', function ($q) use ($auth) {
                 $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             });
@@ -240,12 +266,6 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa membuat data baru
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.sarpras.index');
-        }
-
         $request->validate([
             'uuid_lahan'    => 'required|exists:tpu_lahans,uuid',
             'nama'          => 'required|string|max:255',
@@ -278,10 +298,10 @@ class TpuSarprasController extends Controller
         try {
             DB::beginTransaction();
 
-            // Check permission for lahan
+            // Check permission for lahan - Admin TPU dan Petugas TPU
             $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-            if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-                alert()->error('Error', 'Unauthorized action.');
+            if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                alert()->error('Error', 'Anda tidak memiliki izin untuk menambahkan sarpras pada lahan ini.');
                 return back()->withInput();
             }
 
@@ -341,24 +361,18 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa mengedit
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.sarpras.index');
-        }
-
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-        // Check permission untuk Admin TPU
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-            alert()->error('Error', 'Unauthorized action.');
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit sarpras ini.');
             return redirect()->route('tpu.sarpras.index');
         }
 
         $lahans = TpuLahan::with('Tpu');
 
-        if ($auth->role === 'Admin TPU') {
+        if ($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') {
             $lahans->whereHas('Tpu', function ($q) use ($auth) {
                 $q->where('uuid', $auth->RelPetugasTpu->uuid_tpu);
             });
@@ -402,18 +416,12 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa mengedit
-        if ($auth->role === 'Petugas TPU') {
-            alert()->error('Error', 'Unauthorized action.');
-            return redirect()->route('tpu.sarpras.index');
-        }
-
         $uuid_dec = Helper::decode($uuid_enc);
         $data     = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-        // Check permission untuk Admin TPU
-        if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-            alert()->error('Error', 'Unauthorized action.');
+        // Check permission untuk Admin TPU dan Petugas TPU
+        if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+            alert()->error('Error', 'Anda tidak memiliki izin untuk mengedit sarpras ini.');
             return redirect()->route('tpu.sarpras.index');
         }
 
@@ -458,8 +466,8 @@ class TpuSarprasController extends Controller
             // Check permission for new lahan if changed
             if ($request->uuid_lahan !== $data->uuid_lahan) {
                 $lahan = TpuLahan::with('Tpu')->findOrFail($request->uuid_lahan);
-                if ($auth->role === 'Admin TPU' && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
-                    alert()->error('Error', 'Unauthorized action.');
+                if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $lahan->Tpu && $lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                    alert()->error('Error', 'Anda tidak memiliki izin untuk memindahkan sarpras ke lahan ini.');
                     return back()->withInput();
                 }
             }
@@ -522,14 +530,6 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa menghapus
-        if ($auth->role === 'Petugas TPU') {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Unauthorized action.',
-            ], 403);
-        }
-
         $request->validate([
             'uuid' => 'required|string',
         ]);
@@ -540,11 +540,11 @@ class TpuSarprasController extends Controller
             $uuid_dec = Helper::decode($request->uuid);
             $data     = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid_dec);
 
-            // Check permission untuk Admin TPU
-            if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+            // Check permission untuk Admin TPU dan Petugas TPU
+            if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
                 return response()->json([
                     'status'  => false,
-                    'message' => 'Unauthorized action.',
+                    'message' => 'Anda tidak memiliki izin untuk menghapus sarpras ini.',
                 ], 403);
             }
 
@@ -608,14 +608,6 @@ class TpuSarprasController extends Controller
     {
         $auth = Auth::user();
 
-        // Hanya Super Admin dan Admin yang bisa menghapus
-        if ($auth->role === 'Petugas TPU') {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Unauthorized action.',
-            ], 403);
-        }
-
         $request->validate([
             'uuids'   => 'required|array|min:1',
             'uuids.*' => 'required|string',
@@ -631,8 +623,8 @@ class TpuSarprasController extends Controller
                 try {
                     $data = TpuSarpras::with(['Lahan.Tpu'])->findOrFail($uuid);
 
-                    // Check permission untuk Admin TPU
-                    if ($auth->role === 'Admin TPU' && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
+                    // Check permission untuk Admin TPU dan Petugas TPU
+                    if (($auth->role === 'Admin TPU' || $auth->role === 'Petugas TPU') && $data->Lahan && $data->Lahan->Tpu && $data->Lahan->Tpu->uuid !== $auth->RelPetugasTpu->uuid_tpu) {
                         $failedItems[] = 'Tidak memiliki izin untuk menghapus: ' . $data->nama;
                         continue;
                     }

@@ -103,6 +103,48 @@
             </div>
             {{-- end::Status settings --}}
 
+            {{-- begin::Kategori Makam (Untuk Create dan Edit Mode) --}}
+            <div class="card card-flush py-4" id="kategori_makam_card" style="display: none;">
+                {{-- begin::Card header --}}
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>Kategori Makam</h2>
+                    </div>
+                </div>
+                {{-- end::Card header --}}
+
+                {{-- begin::Card body --}}
+                <div class="card-body pt-0">
+                    @if (isset($data))
+                        {{-- EDIT MODE: Show as readonly info --}}
+                        <div class="mb-2">
+                            @if ($data->kategori_makam == 'muslim')
+                                <span class="badge badge-light-primary fs-6 px-3 py-2">Muslim</span>
+                            @else
+                                <span class="badge badge-light-warning fs-6 px-3 py-2">Non Muslim</span>
+                            @endif
+                        </div>
+                        <input type="hidden" name="kategori_makam" value="{{ $data->kategori_makam }}" />
+                        <div class="text-muted fs-7">Kategori makam tidak dapat diubah saat edit data.</div>
+                    @else
+                        {{-- CREATE MODE: Show dropdown --}}
+                        <select class="form-select mb-2" data-control="select2" data-placeholder="Pilih Kategori Makam" id="kt_kategori_makam" name="kategori_makam">
+                            <option></option>
+                            <option value="muslim" {{ old('kategori_makam') == 'muslim' ? 'selected' : '' }}>Muslim</option>
+                            <option value="non_muslim" {{ old('kategori_makam') == 'non_muslim' ? 'selected' : '' }}>Non Muslim</option>
+                        </select>
+                        {{-- Hidden field untuk auto-set kategori --}}
+                        <input type="hidden" id="kategori_makam_hidden" name="kategori_makam_auto" value="">
+                        <div class="text-muted fs-7" id="kategori_info">Kategori makam berdasarkan jenis TPU</div>
+                        @error('kategori_makam')
+                            <div class="text-danger fs-7 mt-1">{{ $message }}</div>
+                        @enderror
+                    @endif
+                </div>
+                {{-- end::Card body --}}
+            </div>
+            {{-- end::Kategori Makam --}}
+
             {{-- begin::Kapasitas Info --}}
             <div class="card card-flush py-4">
                 {{-- begin::Card header --}}
@@ -170,13 +212,13 @@
                             <input type="hidden" name="uuid_lahan" value="{{ $data->uuid_lahan }}" />
                             <div class="text-muted fs-7 mb-5">Lahan tidak dapat diubah saat edit data makam.</div>
 
-                            {{-- Show detailed lahan info --}}
+                            {{-- Show detailed lahan info with kategori --}}
                             @if ($data->Lahan && $data->Lahan->Tpu)
                                 <div class="notice d-flex bg-light-info rounded border-info border border-dashed p-6">
                                     <i class="ki-outline ki-information-5 fs-2tx text-info me-4"></i>
                                     <div class="d-flex flex-stack flex-grow-1">
                                         <div class="fw-semibold">
-                                            <h4 class="text-gray-900 fw-bold">Detail Lahan</h4>
+                                            <h4 class="text-gray-900 fw-bold">Detail Lahan & Makam</h4>
                                             <div class="fs-6 text-gray-700">
                                                 <div class="d-flex align-items-center mb-2">
                                                     <span class="bullet bullet-vertical h-20px bg-info me-3"></span>
@@ -189,6 +231,16 @@
                                                 <div class="d-flex align-items-center mb-2">
                                                     <span class="bullet bullet-vertical h-20px bg-info me-3"></span>
                                                     <span><strong>Jenis TPU:</strong> {{ ucfirst(str_replace('_', ' ', $data->Lahan->Tpu->jenis_tpu)) }}</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <span class="bullet bullet-vertical h-20px bg-info me-3"></span>
+                                                    <span><strong>Kategori Makam:</strong>
+                                                        @if ($data->kategori_makam == 'muslim')
+                                                            <span class="badge badge-light-primary">Muslim</span>
+                                                        @else
+                                                            <span class="badge badge-light-warning">Non Muslim</span>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <div class="d-flex align-items-center">
                                                     <span class="bullet bullet-vertical h-20px bg-info me-3"></span>
@@ -394,11 +446,25 @@
         "use strict";
 
         var KTMakamCreateEdit = function() {
-            var form, submitButton, cancelButton, lahanSelect, panjangInput, lebarInput,
+            var form, submitButton, cancelButton, lahanSelect, kategoriMakamSelect, panjangInput, lebarInput,
                 kapasitasInput, makamTerisiInput, sisaKapasitasDisplay, autoCalculateBtn,
                 luasDisplay, luasHidden, validator;
 
             var initForm = function() {
+                // Initialize Select2
+                $('#kt_makam_status').select2({
+                    placeholder: "Pilih Status Makam",
+                    allowClear: true
+                });
+
+                // Initialize kategori makam select2 untuk create mode
+                if (!@json(isset($data))) {
+                    $('#kt_kategori_makam').select2({
+                        placeholder: "Pilih Kategori Makam",
+                        allowClear: true
+                    });
+                }
+
                 // Initialize Select2 hanya untuk create mode
                 if (lahanSelect) {
                     $(lahanSelect).select2({
@@ -409,19 +475,16 @@
                     // Event handler untuk perubahan lahan (hanya create mode)
                     $(lahanSelect).on('change', function() {
                         updateTpuInfo();
+                        updateKategoriMakam();
                         clearCalculationValues();
                     });
                 }
-
-                $('#kt_makam_status').select2({
-                    placeholder: "Pilih Status Makam",
-                    allowClear: true
-                });
 
                 // Load edit data if available
                 @isset($data)
                     var editData = {
                         uuid_lahan: "{{ $data->uuid_lahan }}",
+                        kategori_makam: "{{ $data->kategori_makam }}",
                         panjang_m: {{ $data->panjang_m }},
                         lebar_m: {{ $data->lebar_m }},
                         luas_m2: {{ $data->luas_m2 }},
@@ -432,6 +495,13 @@
                         keterangan: "{{ $data->keterangan ?? '' }}"
                     };
                     loadEditData(editData);
+                @else
+                    // Show kategori card di create mode jika ada lahan terpilih
+                    var selectedLahan = $(lahanSelect).val();
+                    if (selectedLahan) {
+                        updateTpuInfo();
+                        updateKategoriMakam();
+                    }
                 @endisset
 
                 // Auto calculate luas when dimensi changes
@@ -500,8 +570,109 @@
                 }
             };
 
+            var updateKategoriMakam = function() {
+                if (!lahanSelect) return; // Hanya untuk create mode
+
+                var selectedOption = $(lahanSelect).find('option:selected');
+                var kategoriCard = document.getElementById('kategori_makam_card');
+                var kategoriInfo = document.getElementById('kategori_info');
+                var kategoriSelect = $('#kt_kategori_makam');
+                var kategoriHidden = $('#kategori_makam_hidden');
+
+                if (selectedOption.val() && selectedOption.val() !== '') {
+                    var tpuJenis = selectedOption.data('tpu-jenis');
+                    var uuidLahan = selectedOption.val();
+
+                    if (tpuJenis === 'gabungan') {
+                        // TPU gabungan: tampilkan dropdown dan load available options
+                        kategoriCard.style.display = 'block';
+                        kategoriSelect.prop('disabled', false).attr('name', 'kategori_makam');
+                        kategoriHidden.attr('name', 'kategori_makam_auto').val('');
+                        kategoriInfo.innerHTML = 'Pilih kategori makam untuk TPU gabungan';
+
+                        // Load available kategori via AJAX
+                        loadAvailableKategori(uuidLahan);
+                    } else if (tpuJenis === 'muslim') {
+                        // TPU muslim: hide dropdown, set hidden field
+                        kategoriCard.style.display = 'none';
+                        kategoriSelect.attr('name', 'kategori_makam_display').prop('disabled', true);
+                        kategoriHidden.attr('name', 'kategori_makam').val('muslim');
+                    } else if (tpuJenis === 'non_muslim') {
+                        // TPU non_muslim: hide dropdown, set hidden field
+                        kategoriCard.style.display = 'none';
+                        kategoriSelect.attr('name', 'kategori_makam_display').prop('disabled', true);
+                        kategoriHidden.attr('name', 'kategori_makam').val('non_muslim');
+                    } else {
+                        // Unknown jenis TPU
+                        kategoriCard.style.display = 'none';
+                        kategoriSelect.attr('name', 'kategori_makam_display').prop('disabled', true);
+                        kategoriHidden.attr('name', 'kategori_makam_auto').val('');
+                    }
+                } else {
+                    // No lahan selected
+                    kategoriCard.style.display = 'none';
+                    kategoriSelect.attr('name', 'kategori_makam_display').prop('disabled', true);
+                    kategoriHidden.attr('name', 'kategori_makam_auto').val('');
+                }
+            };
+
+            var loadAvailableKategori = function(uuidLahan) {
+                if (!uuidLahan) return;
+
+                $.ajax({
+                    url: '{{ route('tpu.makam.lahan-details') }}',
+                    type: 'POST',
+                    data: {
+                        uuid_lahan: uuidLahan,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success && response.data.available_kategori) {
+                            var availableKategori = response.data.available_kategori;
+                            var kategoriSelect = $('#kt_kategori_makam');
+                            var kategoriInfo = document.getElementById('kategori_info');
+
+                            // Reset select
+                            kategoriSelect.empty().append('<option></option>');
+
+                            // Add available options
+                            $.each(availableKategori, function(index, kategori) {
+                                var displayName = kategori === 'muslim' ? 'Muslim' : 'Non Muslim';
+                                kategoriSelect.append('<option value="' + kategori + '">' + displayName + '</option>');
+                            });
+
+                            // Update info message
+                            if (availableKategori.length === 0) {
+                                kategoriInfo.innerHTML =
+                                    '<span class="text-warning">Tidak ada kategori yang tersedia untuk lahan ini. Semua kategori sudah ada.</span>';
+                                kategoriSelect.prop('disabled', true).attr('name', 'kategori_makam_display');
+                                $('#kategori_makam_hidden').attr('name', 'kategori_makam').val('');
+                            } else if (availableKategori.length === 1) {
+                                kategoriInfo.innerHTML = '<span class="text-info">Tersisa kategori: <strong>' +
+                                    (availableKategori[0] === 'muslim' ? 'Muslim' : 'Non Muslim') + '</strong></span>';
+                                // Auto select jika hanya ada 1 pilihan
+                                kategoriSelect.val(availableKategori[0]).trigger('change');
+                                kategoriSelect.prop('disabled', false).attr('name', 'kategori_makam');
+                                $('#kategori_makam_hidden').attr('name', 'kategori_makam_auto').val('');
+                            } else {
+                                kategoriInfo.innerHTML = 'Pilih kategori makam untuk TPU gabungan';
+                                kategoriSelect.prop('disabled', false).attr('name', 'kategori_makam');
+                                $('#kategori_makam_hidden').attr('name', 'kategori_makam_auto').val('');
+                            }
+
+                            // Trigger select2 refresh
+                            kategoriSelect.trigger('change.select2');
+                        }
+                    },
+                    error: function() {
+                        console.error('Failed to load available kategori');
+                        $('#kategori_info').html('<span class="text-danger">Gagal memuat kategori yang tersedia</span>');
+                    }
+                });
+            };
+
             var clearCalculationValues = function() {
-                // Clear kapasitas when lahan changes
+                // Clear kapasitas when lahan or kategori changes
                 if (kapasitasInput) {
                     kapasitasInput.value = '';
                 }
@@ -524,6 +695,12 @@
                 // Set status makam
                 if (data.status_makam) {
                     $('#kt_makam_status').val(data.status_makam).trigger('change');
+                }
+
+                // Show kategori makam card for edit mode
+                if (data.kategori_makam) {
+                    var kategoriCard = document.getElementById('kategori_makam_card');
+                    kategoriCard.style.display = 'block';
                 }
 
                 // Set keterangan
@@ -591,22 +768,40 @@
 
             var autoCalculateKapasitas = function() {
                 var uuid_lahan;
+                var kategori_makam;
                 var panjang = parseFloat($(panjangInput).val()) || 0;
                 var lebar = parseFloat($(lebarInput).val()) || 0;
 
-                // Get uuid_lahan berdasarkan mode
+                // Get uuid_lahan dan kategori_makam berdasarkan mode
                 @if (isset($data))
                     // Edit mode: ambil dari data existing
                     uuid_lahan = "{{ $data->uuid_lahan }}";
+                    kategori_makam = "{{ $data->kategori_makam }}";
                 @else
-                    // Create mode: ambil dari dropdown
+                    // Create mode: ambil dari dropdown dan form
                     uuid_lahan = $(lahanSelect).val();
+
+                    // Get kategori_makam from visible select or hidden field
+                    if ($('#kt_kategori_makam').is(':visible') && !$('#kt_kategori_makam').prop('disabled')) {
+                        kategori_makam = $('#kt_kategori_makam').val();
+                    } else {
+                        kategori_makam = $('#kategori_makam_hidden').val();
+                    }
                 @endif
 
                 if (!uuid_lahan) {
                     Swal.fire({
                         title: "Peringatan",
-                        text: "Lahan tidak tersedia",
+                        text: "Lahan belum dipilih",
+                        icon: "warning"
+                    });
+                    return;
+                }
+
+                if (!kategori_makam) {
+                    Swal.fire({
+                        title: "Peringatan",
+                        text: "Kategori makam belum dipilih",
                         icon: "warning"
                     });
                     return;
@@ -630,12 +825,13 @@
                     type: 'POST',
                     data: {
                         uuid_lahan: uuid_lahan,
+                        kategori_makam: kategori_makam,
                         panjang_m: panjang,
                         lebar_m: lebar,
                         _token: "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        if (response.status && response.data) {
+                        if (response.success && response.data) {
                             // Set kapasitas
                             $(kapasitasInput).val(response.data.kapasitas);
 
@@ -759,12 +955,19 @@
                     }
                 };
 
-                // Tambahkan validasi uuid_lahan hanya untuk create mode
+                // Tambahkan validasi hanya untuk create mode
                 @if (!isset($data))
                     fields['uuid_lahan'] = {
                         validators: {
                             notEmpty: {
                                 message: 'Lahan harus dipilih'
+                            }
+                        }
+                    };
+                    fields['kategori_makam'] = {
+                        validators: {
+                            notEmpty: {
+                                message: 'Kategori makam harus dipilih'
                             }
                         }
                     };
@@ -813,6 +1016,7 @@
                     submitButton = document.querySelector('#kt_makam_submit');
                     cancelButton = document.querySelector('#kt_makam_cancel');
                     lahanSelect = document.querySelector('#kt_makam_lahan'); // Hanya ada di create mode
+                    kategoriMakamSelect = document.querySelector('#kt_kategori_makam');
                     panjangInput = document.querySelector('#panjang_input');
                     lebarInput = document.querySelector('#lebar_input');
                     kapasitasInput = document.querySelector('#kapasitas_input');

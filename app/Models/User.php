@@ -119,7 +119,7 @@ class User extends Authenticatable
         return $this->belongsTo('App\Models\PortalActor', 'uuid', 'uuid_user')->withTrashed();
     }
 
-    public function RelPertugasTpu()
+    public function RelPetugasTpu()
     {
         return $this->belongsTo('App\Models\TpuPetugas', 'uuid', 'uuid_user')->withTrashed();
     }

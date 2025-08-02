@@ -9,4 +9,6 @@ $role = $auth->role;
     @include('partials.admin.sidebar.penulis')
 @elseif ($role == 'Operator')
     @include('partials.admin.sidebar.operator')
+@elseif ($role == 'Admin TPU' || $role == 'Petugas TPU')
+    @include('partials.admin.sidebar.tpu')
 @endif

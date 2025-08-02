@@ -194,12 +194,11 @@
                 </div>
             </div>
             <div id="kt_datatable_example_buttons" class="d-none"></div>
-            @if (Auth::user()->role !== 'Petugas TPU')
-                <a href="{{ route('tpu.sarpras.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
-                    <i class="ki-outline ki-plus fs-2"></i>
-                    <span>Tambah Data Sarpras</span>
-                </a>
-            @endif
+            {{-- Petugas TPU sekarang bisa akses tombol Tambah Data Sarpras --}}
+            <a href="{{ route('tpu.sarpras.create') }}" class="btn btn-sm btn-primary d-flex flex-center ms-3 px-4 py-3">
+                <i class="ki-outline ki-plus fs-2"></i>
+                <span>Tambah Data Sarpras</span>
+            </a>
         </div>
     </div>
 @endsection
@@ -230,23 +229,22 @@
             </div>
         </div>
         <div class="card-body py-4">
+            {{-- Bulk actions toolbar - Petugas TPU sekarang bisa akses --}}
             <div class="d-flex justify-content-between align-items-center d-none bg-light-primary rounded p-3 mb-5" data-kt-sarpras-table-toolbar="selected">
                 <div class="fw-bold text-primary">
                     <i class="ki-outline ki-check-square fs-2 me-2"></i>
                     <span data-kt-sarpras-table-select="selected_count"></span> item dipilih
                 </div>
-                @if (Auth::user()->role !== 'Petugas TPU')
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-sarpras-table-select="delete_selected" data-bs-toggle="tooltip"
-                            title="Hapus yang dipilih">
-                            <i class="ki-outline ki-trash fs-6 me-1"></i>
-                            Hapus
-                        </button>
-                        <button type="button" class="btn btn-sm btn-light" data-kt-sarpras-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
-                            <i class="ki-outline ki-cross fs-6"></i>
-                        </button>
-                    </div>
-                @endif
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-light-danger me-2" data-kt-sarpras-table-select="delete_selected" data-bs-toggle="tooltip"
+                        title="Hapus yang dipilih">
+                        <i class="ki-outline ki-trash fs-6 me-1"></i>
+                        Hapus
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light" data-kt-sarpras-table-select="cancel_selection" data-bs-toggle="tooltip" title="Batalkan pilihan">
+                        <i class="ki-outline ki-cross fs-6"></i>
+                    </button>
+                </div>
             </div>
             <div class="table-responsive position-relative">
                 <div id="datatable_processing" style="display: none;">
@@ -258,13 +256,12 @@
                 <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_sarpras_table">
                     <thead>
                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                            {{-- Checkbox column - Petugas TPU sekarang bisa akses --}}
                             <th class="w-10px pe-2">
-                                @if (Auth::user()->role !== 'Petugas TPU')
-                                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                        <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_sarpras_table .form-check-input"
-                                            value="1" />
-                                    </div>
-                                @endif
+                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                    <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_sarpras_table .form-check-input"
+                                        value="1" />
+                                </div>
                             </th>
                             <th width="30px">#</th>
                             <th width="25%">Nama</th>
@@ -353,28 +350,17 @@
                         }
                     },
                     columns: [
-                        @if (Auth::user()->role !== 'Petugas TPU')
-                            {
-                                data: null,
-                                orderable: false,
-                                searchable: false,
-                                exportable: false,
-                                render: function(data, type, row) {
-                                    return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' +
-                                        row.uuid + '" /></div>';
-                                }
-                            },
-                        @else
-                            {
-                                data: null,
-                                orderable: false,
-                                searchable: false,
-                                exportable: false,
-                                render: function() {
-                                    return '';
-                                }
-                            },
-                        @endif {
+                        {{-- Checkbox column - semua role bisa akses --}} {
+                            data: null,
+                            orderable: false,
+                            searchable: false,
+                            exportable: false,
+                            render: function(data, type, row) {
+                                return '<div class="form-check form-check-sm form-check-custom form-check-solid"><input class="form-check-input row-checkbox" type="checkbox" value="' +
+                                    row.uuid + '" /></div>';
+                            }
+                        },
+                        {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,

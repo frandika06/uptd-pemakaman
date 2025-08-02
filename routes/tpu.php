@@ -17,7 +17,12 @@ use App\Http\Controllers\web\backend\tpu\TpuSarprasController;
 */
 Route::group(['prefix' => 'tpu'], function () {
     // Dashboard TPU
-    Route::get('/', [DashboardTpuController::class, 'index'])->name('tpu.dashboard.index');
+    Route::group(['prefix' => 'dashboard'], function () {
+        Route::get('/', [DashboardTpuController::class, 'index'])->name('tpu.dashboard.index');
+        Route::post('/filter', [DashboardTpuController::class, 'filterByTpu'])->name('tpu.dashboard.filter');
+        Route::get('/statistics', [DashboardTpuController::class, 'getStatistics'])->name('tpu.dashboard.statistics');
+        Route::get('/recent-activities', [DashboardTpuController::class, 'getRecentActivities'])->name('tpu.dashboard.recent');
+    });
 
     // Master Data
     Route::group(['prefix' => 'master'], function () {
@@ -109,6 +114,7 @@ Route::group(['prefix' => 'tpu'], function () {
         Route::post('/calculate-kapasitas', [TpuMakamController::class, 'calculateKapasitasAjax'])->name('tpu.makam.calculate-kapasitas');
         Route::post('/lahan-details', [TpuMakamController::class, 'getLahanDetails'])->name('tpu.makam.lahan-details');
         Route::get('/lahan-by-tpu', [TpuMakamController::class, 'getLahanByTpu'])->name('tpu.makam.lahan-by-tpu');
+        Route::post('/available-kategori', [TpuMakamController::class, 'getAvailableKategoriForLahan'])->name('tpu.makam.available-kategori');
     });
 
     // Manajemen Petugas

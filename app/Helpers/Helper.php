@@ -292,7 +292,12 @@ class Helper
     public static function DataPP()
     {
         $auth = Auth::user();
-        return $auth->RelPortalActor;
+        $role = $auth->role;
+        if ($role == "Admin TPU" || $role == "Petugas TPU") {
+            return $auth->RelPetugasTpu;
+        } else {
+            return $auth->RelPortalActor;
+        }
     }
 
     // get file icons
@@ -632,9 +637,15 @@ class Helper
     public static function welcomeBack()
     {
         $auth         = Auth::user();
-        $nama_lengkap = $auth->RelPortalActor->nama_lengkap;
-        $waktu        = self::Greeting();
-        $welcome      = $waktu . " <strong>" . $nama_lengkap . "</strong>";
+        $role         = $auth->role;
+        $nama_lengkap = "";
+        if ($role == "Admin TPU" || $role == "Petugas TPU") {
+            $nama_lengkap = $auth->RelPetugasTpu->nama_lengkap;
+        } else {
+            $nama_lengkap = $auth->RelPortalActor->nama_lengkap;
+        }
+        $waktu   = self::Greeting();
+        $welcome = $waktu . " <strong>" . $nama_lengkap . "</strong>";
 
         return $welcome;
     }
@@ -2463,10 +2474,17 @@ class Helper
     {
         if (Auth::check()) {
             // User
-            $user = Auth::user();
+            $user         = Auth::user();
+            $role         = $user->role;
+            $uuid_profile = "";
+            if ($role == "Admin TPU" || $role == "Petugas TPU") {
+                $uuid_profile = $user->RelPetugasTpu->uuid;
+            } else {
+                $uuid_profile = $user->RelPortalActor->uuid;
+            }
             // Log
             $log                 = [];
-            $log['uuid_profile'] = $user->RelPortalActor->uuid;
+            $log['uuid_profile'] = $uuid_profile;
             $log['apps']         = $detail['apps'];
             $log['role']         = $user->role;
             $log['subjek']       = $detail['subjek'];

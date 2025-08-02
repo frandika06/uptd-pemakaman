@@ -17,56 +17,56 @@ class DummyTpuMakamSeeder extends Seeder
      */
     public function run()
     {
-        // Mendapatkan data user admin
-        $this->command->info('Memeriksa user admin...');
-        $user = User::whereUsername("admin@mail.com")->first();
+        // Validasi user admin
+        $user = User::where('username', 'admin@mail.com')->first();
         if (! $user) {
-            $this->command->error('User dengan username "admin@mail.com" tidak ditemukan.');
             return;
         }
 
-        // Truncate tabel TpuMakam untuk memulai dengan data baru
-        $this->command->info('Menghapus data lama di tabel tpu_makams...');
+        // Truncate tabel TpuMakam
         TpuMakam::truncate();
 
-        // Mendapatkan semua lahan yang aktif
-        $this->command->info('Mengambil data lahan aktif...');
+        // Ambil data lahan aktif
         $lahans = TpuLahan::with('Tpu')->get();
         if ($lahans->isEmpty()) {
-            $this->command->error('Tidak ada data lahan aktif yang ditemukan.');
             return;
         }
 
-        // Mendapatkan status makam yang aktif
-        $this->command->info('Mengambil data status makam aktif...');
+        // Ambil status makam aktif
         $statusMakam = TpuRefStatusMakam::where('status', '1')->pluck('nama')->toArray();
         if (empty($statusMakam)) {
-            $this->command->error('Tidak ada data status makam aktif yang ditemukan.');
             return;
         }
 
         $makamData  = [];
         $totalItems = 0;
 
-        // Iterasi setiap lahan untuk membuat 1 hingga 3 makam
-        $this->command->info('Mengumpulkan data makam untuk setiap lahan...');
+        // Iterasi setiap lahan untuk membuat makam
         foreach ($lahans as $lahan) {
-            $this->command->info("Memproses lahan: {$lahan->kode_lahan}...");
-            // Tentukan jumlah makam secara acak (1-3)
-            $jumlahMakam = rand(1, 3);
+            if (! $lahan->Tpu) {
+                continue;
+            }
 
-            for ($i = 1; $i <= $jumlahMakam; $i++) {
-                $panjang_m      = round(rand(150, 300) / 100, 2); // Panjang antara 1.5m - 3m
-                $lebar_m        = round(rand(80, 150) / 100, 2);  // Lebar antara 0.8m - 1.5m
-                $luas_m2        = $panjang_m * $lebar_m;
-                $kapasitas      = $this->calculateKapasitas($lahan, $luas_m2);
-                $makam_terisi   = rand(0, 100);
-                $sisa_kapasitas = $kapasitas - $makam_terisi;
-                $status         = $statusMakam[array_rand($statusMakam)]; // Pilih status secara acak
-                $keterangan     = "Makam {$i} untuk lahan {$lahan->kode_lahan}";
+            $tpu           = $lahan->Tpu;
+            $kategoriMakam = $this->getKategoriMakam($tpu->jenis_tpu);
+            if (empty($kategoriMakam)) {
+                continue;
+            }
+
+            foreach ($kategoriMakam as $kategori) {
+                $panjang_m        = round(rand(150, 300) / 100, 2);
+                $lebar_m          = round(rand(80, 150) / 100, 2);
+                $luas_m2          = $panjang_m * $lebar_m;
+                $kapasitas        = $this->calculateKapasitas($lahan, $luas_m2, $kategori);
+                $makam_terisi     = rand(0, min($kapasitas, 50));
+                $sisa_kapasitas   = $kapasitas - $makam_terisi;
+                $status           = $statusMakam[array_rand($statusMakam)];
+                $kategori_display = $kategori == 'muslim' ? 'Muslim' : 'Non Muslim';
+                $keterangan       = "Makam {$kategori_display} untuk lahan {$lahan->kode_lahan}";
 
                 $makamData[] = [
                     'uuid_lahan'     => $lahan->uuid,
+                    'kategori_makam' => $kategori,
                     'panjang_m'      => $panjang_m,
                     'lebar_m'        => $lebar_m,
                     'luas_m2'        => $luas_m2,
@@ -80,28 +80,25 @@ class DummyTpuMakamSeeder extends Seeder
             }
         }
 
-        // Mulai progress bar
-        $this->command->info("Memulai proses seeding untuk {$totalItems} data makam...");
+        // Proses seeding dengan progress bar
         $this->command->getOutput()->progressStart($totalItems);
 
-        // Proses penyimpanan data
-        foreach ($makamData as $index => $makam) {
-            // Validasi data sebelum proses
-            if (empty($makam['uuid_lahan']) || empty($makam['status_makam'])) {
-                $this->command->warn("Data makam tidak valid untuk index: {$index}. Dilewati.");
+        foreach ($makamData as $makam) {
+            if (empty($makam['uuid_lahan']) || empty($makam['status_makam']) || empty($makam['kategori_makam'])) {
                 $this->command->getOutput()->progressAdvance();
                 continue;
             }
 
-            // Cek apakah makam sudah ada berdasarkan uuid_lahan dan keterangan
-            $cek_makam = TpuMakam::where('uuid_lahan', $makam['uuid_lahan'])
-                ->where('keterangan', $makam['keterangan'])
+            // Cek duplikasi makam
+            $cekMakam = TpuMakam::where('uuid_lahan', $makam['uuid_lahan'])
+                ->where('kategori_makam', $makam['kategori_makam'])
                 ->first();
-            if (! $cek_makam) {
-                // Jika makam belum ada, buat yang baru
-                $value_makam = [
+
+            if (! $cekMakam) {
+                TpuMakam::create([
                     'uuid'           => Str::uuid(),
                     'uuid_lahan'     => $makam['uuid_lahan'],
+                    'kategori_makam' => $makam['kategori_makam'],
                     'panjang_m'      => $makam['panjang_m'],
                     'lebar_m'        => $makam['lebar_m'],
                     'luas_m2'        => $makam['luas_m2'],
@@ -112,42 +109,63 @@ class DummyTpuMakamSeeder extends Seeder
                     'keterangan'     => $makam['keterangan'],
                     'uuid_created'   => $user->uuid,
                     'uuid_updated'   => $user->uuid,
-                ];
-                TpuMakam::create($value_makam);
-                $this->command->info("Data makam '{$makam['keterangan']}' berhasil dibuat.");
-            } else {
-                $this->command->warn("Data makam '{$makam['keterangan']}' sudah ada, dilewati.");
+                ]);
             }
 
-            // Update progress bar
             $this->command->getOutput()->progressAdvance();
         }
 
-        // Selesaikan progress bar
         $this->command->getOutput()->progressFinish();
-
-        $this->command->info("Seeder TpuMakam selesai dijalankan. {$totalItems} data makam telah diproses.");
     }
 
     /**
-     * Calculate kapasitas based on jenis TPU and luas makam
+     * Determine kategori makam based on jenis TPU.
+     *
+     * @param string $jenisTpu
+     * @return array
      */
-    private function calculateKapasitas($lahan, $luas_makam)
+    private function getKategoriMakam($jenisTpu)
     {
-        if (! $lahan || ! $lahan->Tpu || $luas_makam <= 0) {
+        if ($jenisTpu == 'muslim') {
+            return ['muslim'];
+        } elseif ($jenisTpu == 'non_muslim') {
+            return ['non_muslim'];
+        } elseif ($jenisTpu == 'gabungan') {
+            return ['muslim', 'non_muslim'];
+        }
+        return [];
+    }
+
+    /**
+     * Calculate kapasitas based on jenis TPU, luas makam, and kategori makam.
+     *
+     * @param object $lahan
+     * @param float $luasMakam
+     * @param string $kategoriMakam
+     * @return int
+     */
+    private function calculateKapasitas($lahan, $luasMakam, $kategoriMakam)
+    {
+        if (! $lahan || ! $lahan->Tpu || $luasMakam <= 0) {
             return 0;
         }
 
-        $luas_lahan   = $lahan->luas_m2;
-        $luas_efektif = max(0, $luas_lahan - 200); // Minimal 200 m² untuk sarana prasarana
-
-        if ($luas_efektif <= 0 || $luas_makam <= 0) {
+        $luasEfektif = max(0, $lahan->luas_m2 - 200);
+        if ($luasEfektif <= 0) {
             return 0;
         }
 
-        // Perhitungan kapasitas
-        $kapasitas = floor($luas_efektif / $luas_makam);
+        $kapasitasDasar = floor($luasEfektif / $luasMakam);
 
-        return max(0, $kapasitas);
+        if ($lahan->Tpu->jenis_tpu == 'muslim' || $lahan->Tpu->jenis_tpu == 'non_muslim') {
+            return $kapasitasDasar;
+        } elseif ($lahan->Tpu->jenis_tpu == 'gabungan') {
+            if ($kategoriMakam == 'muslim') {
+                return floor($kapasitasDasar * 0.7);
+            } else {
+                return floor($kapasitasDasar * 0.3);
+            }
+        }
+        return 0;
     }
 }

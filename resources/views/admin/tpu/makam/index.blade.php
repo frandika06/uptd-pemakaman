@@ -132,7 +132,7 @@
             <div class="me-3">
                 <a href="#" class="btn btn-sm btn-flex btn-outline btn-color-gray-700 btn-active-color-primary bg-body h-40px fs-7 fw-bold" data-kt-menu-trigger="click"
                     data-kt-menu-placement="bottom-end">
-                    <i class="ki-outline ki-filter fs- VITAMIN 6 text-muted me-1"></i>
+                    <i class="ki-outline ki-filter fs-6 text-muted me-1"></i>
                     Filter: <span id="filter-text" class="ms-1">
                         @if (in_array($user_role, ['Admin TPU', 'Petugas TPU']) && $tpus->first())
                             {{ $tpus->first()->nama }}
@@ -299,11 +299,12 @@
                                 </div>
                             </th>
                             <th width="30px">#</th>
-                            <th width="25%">Lahan / TPU</th>
-                            <th width="20%">Dimensi</th>
+                            <th width="20%">Lahan / TPU</th>
+                            <th width="10%">Kategori</th>
+                            <th width="15%">Dimensi</th>
                             <th width="15%">Kapasitas</th>
-                            <th width="15%">Status</th>
-                            <th width="25%">Keterangan</th>
+                            <th width="10%">Status</th>
+                            <th width="20%">Keterangan</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -338,7 +339,7 @@
                     serverSide: true, // Tetap server-side untuk filter
                     searching: false, // Disable built-in search DataTables
                     order: [
-                        [4, 'desc'] // Order by kapasitas (kolom index 4) - kolom yang aman
+                        [5, 'desc'] // Order by kapasitas (kolom index 5) - kolom yang aman
                     ],
                     stateSave: false,
                     select: {
@@ -354,7 +355,7 @@
                         infoEmpty: "Menampilkan 0 sampai 0 dari 0 data makam",
                         infoFiltered: "(disaring dari _MAX_ total data makam)",
                         loadingRecords: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
-                        processing: '<div class="d-fle align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
+                        processing: '<div class="d-flex align-items-center"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>',
                         zeroRecords: "Tidak ditemukan data yang sesuai",
                         paginate: {
                             next: '<i class="ki-outline ki-arrow-right"></i>',
@@ -421,6 +422,12 @@
                             searchable: false
                         },
                         {
+                            data: 'kategori_makam',
+                            name: 'kategori_makam',
+                            orderable: true,
+                            searchable: true
+                        },
+                        {
                             data: 'dimensi',
                             name: 'panjang_m',
                             orderable: true,
@@ -453,7 +460,7 @@
                     ],
                     columnDefs: [{
                         className: "text-center",
-                        targets: [0, 1, 3, 4, 7] // Checkbox, Index, Dimensi, Kapasitas, Aksi
+                        targets: [0, 1, 3, 4, 5, 8] // Checkbox, Index, Kategori, Dimensi, Kapasitas, Aksi
                     }],
                     drawCallback: function(settings) {
                         $('#datatable_processing').hide();
@@ -483,7 +490,7 @@
                                 return documentTitle + ' - ' + currentFilter;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6] // Index, Lahan/TPU, Dimensi, Kapasitas, Status, Keterangan
+                                columns: [1, 2, 3, 4, 5, 6, 7] // Index, Lahan/TPU, Kategori, Dimensi, Kapasitas, Status, Keterangan
                             }
                         },
                         {
@@ -498,7 +505,7 @@
                                 return `data-makam-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6] // Index, Lahan/TPU, Dimensi, Kapasitas, Status, Keterangan
+                                columns: [1, 2, 3, 4, 5, 6, 7] // Index, Lahan/TPU, Kategori, Dimensi, Kapasitas, Status, Keterangan
                             }
                         },
                         {
@@ -513,7 +520,7 @@
                                 return `data-makam-${filter}-${date}`;
                             },
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6] // Index, Lahan/TPU, Dimensi, Kapasitas, Status, Keterangan
+                                columns: [1, 2, 3, 4, 5, 6, 7] // Index, Lahan/TPU, Kategori, Dimensi, Kapasitas, Status, Keterangan
                             }
                         },
                         {
@@ -530,10 +537,10 @@
                             orientation: 'landscape',
                             pageSize: 'A4',
                             exportOptions: {
-                                columns: [1, 2, 3, 4, 5, 6] // Index, Lahan/TPU, Dimensi, Kapasitas, Status, Keterangan
+                                columns: [1, 2, 3, 4, 5, 6, 7] // Index, Lahan/TPU, Kategori, Dimensi, Kapasitas, Status, Keterangan
                             },
                             customize: function(doc) {
-                                doc.content[1].table.widths = ['10%', '25%', '20%', '15%', '15%', '25%'];
+                                doc.content[1].table.widths = ['10%', '20%', '10%', '15%', '15%', '10%', '20%'];
                                 doc.styles.tableHeader.fontSize = 9;
                                 doc.styles.tableBodyOdd.fontSize = 8;
                                 doc.styles.tableBodyEven.fontSize = 8;
@@ -626,9 +633,10 @@
                     const rowData = row.data();
                     const rowNode = $(row.node());
 
-                    // Fields to search in (tanpa makam_info)
+                    // Fields to search in (termasuk kategori_makam)
                     const searchableText = [
                         stripHtml(rowData.lahan_info || ''),
+                        stripHtml(rowData.kategori_makam || ''),
                         stripHtml(rowData.dimensi || ''),
                         stripHtml(rowData.kapasitas || ''),
                         stripHtml(rowData.status_makam || ''),

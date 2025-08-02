@@ -16,7 +16,8 @@ return new class() extends Migration
             $table->string('nama_pengaturan', 100)->nullable();
             $table->longText('value_pengaturan')->nullable();
             $table->string('kategori', 100)->nullable(); // 'Menus', dll
-            $table->string('sites', 100)->nullable();    // 'Portal', 'Tanos'
+            $table->string('sites', 100)->nullable();    // 'Portal'
+            $table->text('keterangan')->nullable();
             $table->enum('status', ['0', '1'])->default("1");
             $table->uuid('uuid_created')->nullable();
             $table->uuid('uuid_updated')->nullable();

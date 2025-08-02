@@ -7,6 +7,7 @@ use App\Http\Controllers\web\backend\galeri\GaleriController;
 use App\Http\Controllers\web\backend\links\LinksController;
 use App\Http\Controllers\web\backend\master\KategoriController;
 use App\Http\Controllers\web\backend\master\KategoriSubController;
+use App\Http\Controllers\web\backend\master\PortalSetupController;
 use App\Http\Controllers\web\backend\pages\HalamanController;
 use App\Http\Controllers\web\backend\posts\PostinganController;
 use App\Http\Controllers\web\backend\unduhan\UnduhanController;
@@ -56,6 +57,24 @@ Route::group(['prefix' => 'cms'], function () {
                 // New bulk operation routes
                 Route::post('/bulk-destroy', [KategoriSubController::class, 'bulkDestroy'])->name('prt.apps.mst.tags.sub.destroy.bulk');
                 Route::post('/bulk-status', [KategoriSubController::class, 'bulkStatus'])->name('prt.apps.mst.tags.sub.status.bulk');
+            });
+            // portal setup
+            Route::group(['prefix' => 'portal-setup'], function () {
+                // Index - Tampilkan semua atau filter by kategori
+                Route::get('/', [PortalSetupController::class, 'index'])->name('prt.apps.mst.portal_setup.index');
+                Route::get('/{kategori}', [PortalSetupController::class, 'index'])->name('prt.apps.mst.portal_setup.index.kategori');
+                // Create
+                Route::get('/create', [PortalSetupController::class, 'create'])->name('prt.apps.mst.portal_setup.create');
+                Route::post('/create', [PortalSetupController::class, 'store'])->name('prt.apps.mst.portal_setup.store');
+                // Edit/Update
+                Route::get('/edit/{uuid}', [PortalSetupController::class, 'edit'])->name('prt.apps.mst.portal_setup.edit');
+                Route::put('/edit/{uuid}', [PortalSetupController::class, 'update'])->name('prt.apps.mst.portal_setup.update');
+                // Single Actions
+                Route::post('/status', [PortalSetupController::class, 'status'])->name('prt.apps.mst.portal_setup.status');
+                Route::post('/delete', [PortalSetupController::class, 'destroy'])->name('prt.apps.mst.portal_setup.destroy');
+                // Bulk Operations
+                Route::post('/bulk-destroy', [PortalSetupController::class, 'bulkDestroy'])->name('prt.apps.mst.portal_setup.destroy.bulk');
+                Route::post('/bulk-status', [PortalSetupController::class, 'bulkStatus'])->name('prt.apps.mst.portal_setup.status.bulk');
             });
         });
     });

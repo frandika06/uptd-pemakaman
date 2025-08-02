@@ -125,6 +125,17 @@ $auth = \Auth::user();
                                 </div>
                                 {{-- end:Menu item --}}
 
+                                {{-- begin::Pengaturan Portal --}}
+                                <div class="menu-item">
+                                    <a class="menu-link" href="{{ route('prt.apps.mst.portal_setup.index') }}">
+                                        <span class="menu-icon">
+                                            <i class="fa-solid fa-cog fs-4"></i>
+                                        </span>
+                                        <span class="menu-title">Pengaturan Portal</span>
+                                    </a>
+                                </div>
+                                {{-- end::Pengaturan Portal --}}
+
                                 {{-- begin:Menu item - Kategori --}}
                                 <div class="menu-item">
                                     <a class="menu-link" href="{{ route('prt.apps.mst.sosmed.index') }}">

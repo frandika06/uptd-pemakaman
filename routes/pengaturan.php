@@ -6,6 +6,7 @@
 */
 use App\Http\Controllers\web\backend\dashboard\DashboardSetupController;
 use App\Http\Controllers\web\backend\log\AuditTrailController;
+use App\Http\Controllers\web\backend\master\PortalSetupController;
 use App\Http\Controllers\web\backend\master\SosmedController;
 use App\Http\Controllers\web\backend\master\UsersController;
 use App\Http\Controllers\web\backend\profile\ProfileController;
@@ -28,6 +29,24 @@ Route::group(['prefix' => 'pengaturan'], function () {
             Route::put('/edit/{uuid}', [UsersController::class, 'update'])->name('prt.apps.mst.users.update');
             Route::post('/status', [UsersController::class, 'status'])->name('prt.apps.mst.users.status');
             Route::post('/delete', [UsersController::class, 'destroy'])->name('prt.apps.mst.users.destroy');
+        });
+
+        // portal setup
+        Route::group(['prefix' => 'portal-setup'], function () {
+            // Index - Tampilkan semua atau filter by kategori
+            Route::get('/', [PortalSetupController::class, 'index'])->name('prt.apps.mst.portal_setup.index');
+            // Create
+            Route::get('/create', [PortalSetupController::class, 'create'])->name('prt.apps.mst.portal_setup.create');
+            Route::post('/create', [PortalSetupController::class, 'store'])->name('prt.apps.mst.portal_setup.store');
+            // Edit/Update
+            Route::get('/edit/{uuid}', [PortalSetupController::class, 'edit'])->name('prt.apps.mst.portal_setup.edit');
+            Route::put('/edit/{uuid}', [PortalSetupController::class, 'update'])->name('prt.apps.mst.portal_setup.update');
+            // Single Actions
+            Route::post('/status', [PortalSetupController::class, 'status'])->name('prt.apps.mst.portal_setup.status');
+            Route::post('/delete', [PortalSetupController::class, 'destroy'])->name('prt.apps.mst.portal_setup.destroy');
+            // Bulk Operations
+            Route::post('/bulk-destroy', [PortalSetupController::class, 'bulkDestroy'])->name('prt.apps.mst.portal_setup.destroy.bulk');
+            Route::post('/bulk-status', [PortalSetupController::class, 'bulkStatus'])->name('prt.apps.mst.portal_setup.status.bulk');
         });
 
         // Portal sosmed
